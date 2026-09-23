@@ -1,0 +1,16 @@
+<view class="page">
+  <button class="btn-primary" bindtap="add">设计一个纪念日</button>
+  <view class="empty" wx:if="{{!list.length}}">第一次见面、在一起、每一次旅行，都可以变成一张卡片。</view>
+  <view
+    class="card anni"
+    wx:for="{{list}}"
+    wx:key="_id"
+    data-id="{{item._id}}"
+    bindtap="open"
+    style="border-left: 12rpx solid {{item.color}};"
+  >
+    <view class="title">{{item.emoji}} {{item.title}}</view>
+    <view class="muted">{{item.next}} · {{item.repeatYearly ? '每年' : '一次'}} · 还有 {{item.left}} 天</view>
+    <view class="note" wx:if="{{item.note}}">{{item.note}}</view>
+  </view>
+</view>

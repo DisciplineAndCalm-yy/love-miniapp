@@ -1,0 +1,11 @@
+<view class="page">
+  <view class="card">
+    <input class="title-input" placeholder="标题" value="{{title}}" bindinput="onTitle" />
+    <textarea class="body" placeholder="写给对方看的内容" value="{{content}}" bindinput="onContent" maxlength="5000" />
+    <view class="photos">
+      <image wx:for="{{photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="thumb" />
+      <view class="thumb add" wx:if="{{photos.length < 9}}" bindtap="addPhoto">+</view>
+    </view>
+    <button class="btn-primary" loading="{{saving}}" bindtap="save">发布到空间</button>
+  </view>
+</view>

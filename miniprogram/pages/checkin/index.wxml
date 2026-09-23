@@ -1,0 +1,41 @@
+<view class="page">
+  <view class="streaks" wx:if="{{streaks.mine || streaks.partner || streaks.together}}">
+    <view class="streak">
+      <view class="num">{{streaks.mine}}</view>
+      <view class="muted">我的连续</view>
+    </view>
+    <view class="streak">
+      <view class="num">{{streaks.partner}}</view>
+      <view class="muted">TA 的连续</view>
+    </view>
+    <view class="streak">
+      <view class="num">{{streaks.together}}</view>
+      <view class="muted">同一天</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="title">今天的心情</view>
+    <view class="moods">
+      <view
+        class="mood {{mood === item.id ? 'on' : ''}}"
+        wx:for="{{moods}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="onMood"
+      >{{item.label}}</view>
+    </view>
+    <textarea class="area" maxlength="120" placeholder="想和对方说的一句…" value="{{content}}" bindinput="onContent" />
+    <view class="photo-wrap" bindtap="onPickPhoto">
+      <image wx:if="{{photo}}" src="{{photo}}" mode="aspectFill" class="photo" />
+      <view wx:else class="photo-add">添加一张图（可选）</view>
+    </view>
+    <button class="btn-primary" loading="{{saving}}" bindtap="onSubmit">{{mine ? '更新打卡' : '完成打卡'}}</button>
+  </view>
+
+  <view class="card" wx:if="{{partner}}">
+    <view class="title">对方今天</view>
+    <view class="muted" style="margin: 12rpx 0;">{{partner.mood}} · {{partner.content || '打卡了'}}</view>
+    <image wx:if="{{partner.photo}}" src="{{partner.photo}}" mode="aspectFill" class="photo" />
+  </view>
+</view>

@@ -1,0 +1,38 @@
+<view class="page">
+  <view class="card nav">
+    <view class="nav-btn" bindtap="prevMonth">‹</view>
+    <view class="title">{{monthLabel}}</view>
+    <view class="nav-btn" bindtap="nextMonth">›</view>
+  </view>
+
+  <view class="card">
+    <view class="week">
+      <text wx:for="{{weekdays}}" wx:key="*this">{{item}}</text>
+    </view>
+    <view class="grid">
+      <view
+        class="cell {{item.dateKey === selected ? 'sel' : ''}} {{item.dateKey === today ? 'today' : ''}}"
+        wx:for="{{cells}}"
+        wx:key="dateKey"
+        data-key="{{item.dateKey}}"
+        bindtap="selectDay"
+      >
+        <block wx:if="{{item}}">
+          <text>{{item.day}}</text>
+          <view class="dots">
+            <view class="dot pink" wx:if="{{checkinMap[item.dateKey]}}"></view>
+            <view class="dot gold" wx:if="{{anniMap[item.dateKey]}}"></view>
+          </view>
+        </block>
+      </view>
+    </view>
+    <view class="legend muted">粉点打卡 · 金点纪念日</view>
+  </view>
+
+  <view class="card">
+    <view class="title">{{selected}}</view>
+    <view class="muted" wx:if="{{!dayCheckins.length && !dayAnnis.length}}">这一天还很安静</view>
+    <view wx:for="{{dayAnnis}}" wx:key="_id" class="line">{{item.emoji || '♡'}} {{item.title}}</view>
+    <view wx:for="{{dayCheckins}}" wx:key="_id" class="line">打卡 · {{item.content || item.mood}}</view>
+  </view>
+</view>

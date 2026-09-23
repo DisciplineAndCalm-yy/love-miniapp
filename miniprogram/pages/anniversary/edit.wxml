@@ -1,0 +1,30 @@
+<view class="page">
+  <view class="preview" style="background: {{color}};">
+    <view>{{emoji}}</view>
+    <view class="preview-title">{{title || '纪念日标题'}}</view>
+    <view>{{date}} {{repeatYearly ? '· 每年' : ''}}</view>
+    <view class="preview-note" wx:if="{{note}}">{{note}}</view>
+  </view>
+
+  <view class="card">
+    <input class="field" placeholder="标题，比如第一次见面" value="{{title}}" bindinput="onTitle" />
+    <input class="field" placeholder="一个符号，比如 ♡" value="{{emoji}}" bindinput="onEmoji" />
+    <picker mode="date" value="{{date}}" bindchange="onDate">
+      <view class="field">日期 {{date}}</view>
+    </picker>
+    <switch checked="{{repeatYearly}}" bindchange="onRepeat" color="#E86A7A" /> 每年重复
+    <view class="colors">
+      <view
+        wx:for="{{colors}}"
+        wx:key="*this"
+        class="swatch {{color === item ? 'on' : ''}}"
+        style="background: {{item}};"
+        data-color="{{item}}"
+        bindtap="onColor"
+      ></view>
+    </view>
+    <textarea class="field area" placeholder="想写在卡片上的话" value="{{note}}" bindinput="onNote" />
+    <button class="btn-primary" bindtap="save">保存卡片</button>
+    <button class="btn-ghost" wx:if="{{id}}" bindtap="remove">删除</button>
+  </view>
+</view>

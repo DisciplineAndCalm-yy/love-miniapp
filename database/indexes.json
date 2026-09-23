@@ -1,0 +1,15 @@
+{
+  "checkins": [
+    { "keys": { "coupleId": 1, "dateKey": 1, "_openid": 1 }, "unique": true },
+    { "keys": { "coupleId": 1, "dateKey": 1 } }
+  ],
+  "posts": [
+    { "keys": { "coupleId": 1, "createdAt": -1 } }
+  ],
+  "anniversaries": [
+    { "keys": { "coupleId": 1, "date": 1 } }
+  ],
+  "couples": [
+    { "keys": { "inviteCode": 1 }, "unique": true }
+  ]
+}

@@ -1,0 +1,14 @@
+.field {
+  margin: 24rpx 0;
+  background: #fff8f5;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+}
+
+.code {
+  font-size: 56rpx;
+  letter-spacing: 8rpx;
+  color: #c94b5c;
+  font-weight: 700;
+  margin: 20rpx 0;
+}

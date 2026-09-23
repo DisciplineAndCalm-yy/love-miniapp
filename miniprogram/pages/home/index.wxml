@@ -1,0 +1,43 @@
+<view class="page">
+  <view class="hero" wx:if="{{paired}}">
+    <view class="pill">只属于两个人的小宇宙</view>
+    <view class="days">{{days}}</view>
+    <view class="hero-sub">天在一起</view>
+    <view class="muted" wx:if="{{togetherSince}}">从 {{togetherSince}} 开始</view>
+    <view class="muted link" bindtap="goBind">空间设置</view>
+  </view>
+
+  <view class="hero" wx:else>
+    <view class="pill">还没有绑定</view>
+    <view class="title" style="margin-top: 24rpx;">先把 TA 接进来</view>
+    <view class="muted" style="margin: 16rpx 0 32rpx;">生成邀请码，或输入对方的码，两个人就共用一个空间。</view>
+    <button class="btn-primary" bindtap="goBind">去绑定</button>
+  </view>
+
+  <view class="card" wx:if="{{paired}}">
+    <view class="row-title">今天</view>
+    <view class="status-row">
+      <view class="status">
+        <view class="muted">我</view>
+        <view wx:if="{{myCheckin}}">{{moodMap[myCheckin.mood]}} · {{myCheckin.content || '已打卡'}}</view>
+        <view wx:else class="muted">还没打卡</view>
+      </view>
+      <view class="status">
+        <view class="muted">TA</view>
+        <view wx:if="{{partnerCheckin}}">{{moodMap[partnerCheckin.mood]}} · {{partnerCheckin.content || '已打卡'}}</view>
+        <view wx:else class="muted">还在路上</view>
+      </view>
+    </view>
+    <view class="streak-line muted">连续 {{streaks.mine}} 天 · 两人同一天 {{streaks.together}} 天</view>
+    <button class="btn-ghost" bindtap="goCheckin">{{myCheckin ? '看看打卡' : '去打卡'}}</button>
+  </view>
+
+  <view class="card" wx:if="{{paired}}" bindtap="goAnniversary">
+    <view class="row-title">下一个纪念日</view>
+    <block wx:if="{{nextDay}}">
+      <view class="anni">{{nextDay.emoji || '♡'}} {{nextDay.title}}</view>
+      <view class="muted">{{nextDay.next}} · 还有 {{nextDay.left}} 天</view>
+    </block>
+    <view class="muted" wx:else>还没有纪念日，点这里添加</view>
+  </view>
+</view>

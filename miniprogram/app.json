@@ -1,0 +1,55 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/checkin/index",
+    "pages/calendar/index",
+    "pages/blog/index",
+    "pages/blog/edit",
+    "pages/blog/detail",
+    "pages/profile/index",
+    "pages/anniversary/index",
+    "pages/anniversary/edit"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#FFF8F5",
+    "navigationBarTitleText": "我们",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FFF8F5",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#9A7F82",
+    "selectedColor": "#E86A7A",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "assets/tab/home.png",
+        "selectedIconPath": "assets/tab/home-active.png"
+      },
+      {
+        "pagePath": "pages/checkin/index",
+        "text": "打卡",
+        "iconPath": "assets/tab/checkin.png",
+        "selectedIconPath": "assets/tab/checkin-active.png"
+      },
+      {
+        "pagePath": "pages/calendar/index",
+        "text": "日历",
+        "iconPath": "assets/tab/calendar.png",
+        "selectedIconPath": "assets/tab/calendar-active.png"
+      },
+      {
+        "pagePath": "pages/blog/index",
+        "text": "空间",
+        "iconPath": "assets/tab/blog.png",
+        "selectedIconPath": "assets/tab/blog-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

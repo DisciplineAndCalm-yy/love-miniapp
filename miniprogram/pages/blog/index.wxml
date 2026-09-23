@@ -1,0 +1,14 @@
+<view class="page">
+  <view class="hero">
+    <view class="title">共同博客</view>
+    <view class="muted" style="margin: 12rpx 0 24rpx;">把日常写成给彼此看的长信。</view>
+    <button class="btn-primary" bindtap="write">写一篇</button>
+  </view>
+
+  <view class="empty" wx:if="{{!posts.length}}">还没有文字，从今天的一件小事开始。</view>
+
+  <view class="card post" wx:for="{{posts}}" wx:key="_id" data-id="{{item._id}}" bindtap="open">
+    <view class="title">{{item.title}}</view>
+    <view class="muted excerpt">{{item.content}}</view>
+  </view>
+</view>

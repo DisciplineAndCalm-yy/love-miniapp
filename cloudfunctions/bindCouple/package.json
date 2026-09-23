@@ -1,0 +1,9 @@
+{
+  "name": "bindCouple",
+  "version": "1.0.0",
+  "description": "Create or join a couple space",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

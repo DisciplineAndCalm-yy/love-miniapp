@@ -1,0 +1,46 @@
+.days {
+  font-size: 120rpx;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-top: 20rpx;
+  color: #c94b5c;
+}
+
+.hero-sub {
+  font-size: 32rpx;
+  margin-bottom: 12rpx;
+}
+
+.row-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+}
+
+.status-row {
+  display: flex;
+  gap: 24rpx;
+  margin-bottom: 28rpx;
+}
+
+.status {
+  flex: 1;
+  background: #fff8f5;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  min-height: 120rpx;
+}
+
+.anni {
+  font-size: 34rpx;
+  margin-bottom: 8rpx;
+}
+
+.link {
+  margin-top: 16rpx;
+  text-decoration: underline;
+}
+
+.streak-line {
+  margin-bottom: 20rpx;
+}
