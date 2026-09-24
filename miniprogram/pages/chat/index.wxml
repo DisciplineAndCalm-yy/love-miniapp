@@ -1,0 +1,48 @@
+<view class="chat-page">
+  <view class="chat-bg">
+    <image src="/assets/deco/hearts.svg" mode="aspectFit" />
+    <text class="float-heart fh1">💗</text>
+    <text class="float-heart fh2">✨</text>
+    <text class="float-heart fh3">💌</text>
+    <text class="float-heart fh4">🌸</text>
+    <text class="float-heart fh5">💕</text>
+    <text class="float-heart fh6">☁️</text>
+  </view>
+  <view class="chat-head">
+    <view class="chat-tip">🔒 只属于两个人的悄悄话 · 长按自己消息可撤回</view>
+    <view class="quick-bar" wx:if="{{showQuick}}">
+      <scroll-view scroll-x class="quick-scroll" enhanced="{{true}}" show-scrollbar="{{false}}">
+        <text class="quick" wx:for="{{quicks}}" wx:key="*this" bindtap="sendQuick" data-text="{{item}}">{{item}}</text>
+      </scroll-view>
+    </view>
+  </view>
+  <scroll-view scroll-y class="msg-scroll" scroll-into-view="{{toView}}" bindscrolltoupper="loadMore" enhanced="{{true}}" show-scrollbar="{{false}}">
+    <view class="empty muted" wx:if="{{loading}}">正在接通心电感应… ♡</view>
+    <view class="empty muted" wx:elif="{{!list.length}}">还没有悄悄话\n发一句“在吗”打破沉默吧 ♡</view>
+    <block wx:for="{{list}}" wx:key="_id">
+      <view class="msg-row {{item.isMine ? 'mine' : 'ta'}}">
+        <image class="msg-avatar" src="{{item.authorAvatar}}" wx:if="{{item.authorAvatar}}" />
+        <view class="msg-avatar avatar-fallback" wx:else>{{item.isMine ? '我' : 'TA'}}</view>
+        <view class="msg-body">
+          <view class="msg-meta">{{item.isMine ? '' : (item.authorName + ' · ')}}{{item.time}}</view>
+          <view class="bubble" wx:if="{{item.kind !== 'image'}}" bindlongpress="recall" data-id="{{item._id}}">{{item.content}}</view>
+          <image class="bubble-img" wx:else src="{{item.url || item.content}}" mode="widthFix" bindtap="preview" data-url="{{item.url || item.content}}" bindlongpress="recall" data-id="{{item._id}}" binderror="imgError" />
+        </view>
+      </view>
+    </block>
+    <view id="bottom-anchor" class="bottom-anchor"></view>
+  </scroll-view>
+  <view class="read-mark" wx:if="{{peerRead}}">✓✓ 对方已读 ♡</view>
+</view>
+<view class="composer">
+  <view class="emoji-panel" wx:if="{{emojiPanel}}">
+    <text class="emoji" wx:for="{{emojis}}" wx:key="*this" bindtap="addEmoji" data-ch="{{item}}">{{item}}</text>
+  </view>
+  <view class="composer-row">
+    <text class="icon-btn" bindtap="toggleQuick" title="快捷短语">{{showQuick ? '▼' : '⚡'}}</text>
+    <text class="icon-btn" bindtap="toggleEmoji">😊</text>
+    <input class="chat-input" value="{{input}}" bindinput="onInput" confirm-type="send" bindconfirm="send" placeholder="说什么悄悄话…" maxlength="500" cursor-spacing="12" adjust-position="{{false}}" />
+    <text class="icon-btn" bindtap="sendImage">📷</text>
+    <button class="btn-primary send-btn" bindtap="send" loading="{{sending}}" disabled="{{sending}}">发送</button>
+  </view>
+</view>

@@ -1,0 +1,48 @@
+.night-page{background:linear-gradient(180deg,#2B2A4A 0%,#4A3A5C 45%,#FFF6F1 100%);min-height:100vh;}
+.night-sky{position:relative;height:380rpx;overflow:hidden;}
+.star{position:absolute;font-size:30rpx;animation:twinkle 2.4s ease-in-out infinite;}
+.s1{left:10%;top:40rpx;}.s2{left:26%;top:120rpx;font-size:24rpx;animation-delay:-.6s;}
+.s3{left:48%;top:60rpx;animation-delay:-1.2s;}.s4{left:66%;top:140rpx;font-size:24rpx;animation-delay:-1.8s;}
+.s5{left:82%;top:50rpx;animation-delay:-.3s;}.s6{left:36%;top:180rpx;font-size:22rpx;animation-delay:-2s;}
+@keyframes twinkle{0%,100%{opacity:.3;transform:scale(.85);}50%{opacity:1;transform:scale(1.15);}}
+.moon-wrap{position:absolute;right:30rpx;top:24rpx;width:220rpx;height:200rpx;animation:moonFloat 5s ease-in-out infinite;}
+.moon{width:100%;height:100%;}
+@keyframes moonFloat{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-14rpx) rotate(3deg);}}
+.streak-card{background:rgba(255,255,255,.96);border-radius:40rpx;padding:30rpx;margin:-60rpx 0 22rpx;position:relative;z-index:2;text-align:center;border:3rpx solid #fff;box-shadow:var(--shadow);}
+.streak-face{font-size:64rpx;}
+.streak-num{font-size:52rpx;font-weight:900;color:#4A3A5C;}
+.pair-row{display:flex;align-items:center;gap:14rpx;margin-bottom:22rpx;position:relative;z-index:2;}
+.pair{flex:1;background:rgba(255,255,255,.9);border-radius:28rpx;padding:24rpx 0;text-align:center;border:2rpx solid #fff;display:flex;flex-direction:column;gap:6rpx;box-shadow:var(--shadow-sm);}
+.pair.on{background:linear-gradient(180deg,#FFF6D6,#FFE9A8);border-color:#F5C542;}
+.pair-icon{font-size:56rpx;}
+.pair-name{font-size:28rpx;font-weight:800;}
+.pair-state{font-size:23rpx;color:var(--muted);}
+.pair-heart{font-size:48rpx;animation:beat 1.8s infinite;flex-shrink:0;}
+@keyframes beat{0%,100%{transform:scale(1);}30%{transform:scale(1.2);}60%{transform:scale(1);}}
+.night-page .card{position:relative;z-index:2;}
+.word-chips{display:flex;flex-wrap:wrap;gap:14rpx;margin:6rpx 0 20rpx;}
+.word-chip{background:#FFF6F7;border:2rpx dashed #C9A0DC;border-radius:999rpx;padding:12rpx 24rpx;font-size:25rpx;font-weight:700;color:#6A4A7A;transition:transform .15s ease;}
+.word-chip:active{transform:scale(.94);}
+.word-chip.on{background:linear-gradient(135deg,#8A76D6,#5A468C);color:#fff;border:2rpx solid #fff;box-shadow:0 10rpx 22rpx rgba(122,106,201,.45);}
+.say-card{padding:36rpx 32rpx 30rpx;overflow:hidden;}
+.say-title{margin-bottom:20rpx;}
+.say-badge{display:inline-flex;align-items:center;justify-content:center;width:56rpx;height:56rpx;border-radius:50%;background:linear-gradient(135deg,#8A76D6,#5A468C);font-size:30rpx;box-shadow:0 8rpx 18rpx rgba(122,106,201,.4);}
+.say-divider{display:flex;align-items:center;gap:14rpx;color:#C9A0DC;font-size:24rpx;margin:4rpx 0 20rpx;}
+.say-divider::before,.say-divider::after{content:"";flex:1;height:2rpx;background:linear-gradient(90deg,transparent,#DCCDF0,transparent);}
+.say-input{margin-bottom:24rpx;}
+.night-btn{animation:glow 2.4s ease-in-out infinite;}
+@keyframes glow{0%,100%{box-shadow:0 12rpx 26rpx rgba(74,58,140,.35);}50%{box-shadow:0 12rpx 30rpx rgba(74,58,140,.6),0 0 0 12rpx rgba(122,106,201,.15);}}
+.say-foot{text-align:center;font-size:23rpx;color:var(--muted);margin-top:18rpx;letter-spacing:.06em;}
+.night-page .field{font-size:27rpx;padding:18rpx 22rpx;}
+.night-btn{font-size:28rpx;}
+.night-btn{background:linear-gradient(135deg,#7A6AC9,#4A3A8C 70%,#3A2A6E);box-shadow:0 14rpx 30rpx rgba(74,58,140,.4),inset 0 2rpx 0 rgba(255,255,255,.4);border:2rpx solid rgba(255,255,255,.9);}
+.done-tonight{text-align:center;background:linear-gradient(180deg,#fff,#FFF6D6);}
+.msg-item{display:flex;align-items:center;gap:16rpx;padding:16rpx 0;border-top:2rpx dashed var(--line);}
+.msg-icon{font-size:44rpx;flex-shrink:0;}
+.msg-body{flex:1;}
+.msg-text{font-size:28rpx;font-weight:700;}
+.dream-mask{position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(43,42,74,.55);z-index:100;display:flex;align-items:center;justify-content:center;}
+.dream-word{font-size:52rpx;font-weight:900;color:#FFF3D6;text-shadow:0 4rpx 20rpx rgba(255,200,100,.6);animation:popIn .5s cubic-bezier(.2,1.4,.4,1);}
+@keyframes popIn{from{transform:scale(.6);opacity:0;}to{transform:scale(1);opacity:1;}}
+.burst{position:absolute;top:35%;pointer-events:none;animation:burstUp 2.2s ease-out forwards;}
+@keyframes burstUp{from{transform:translateY(0) scale(.5);opacity:1;}to{transform:translateY(300rpx) scale(1.2);opacity:0;}}

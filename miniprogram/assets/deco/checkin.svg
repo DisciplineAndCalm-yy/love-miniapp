@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160">
+  <ellipse cx="100" cy="142" rx="54" ry="10" fill="#F9DCDD"/>
+  <rect x="52" y="30" width="96" height="96" rx="30" fill="#fff" stroke="#F5B3BE" stroke-width="4"/>
+  <rect x="52" y="30" width="96" height="30" rx="15" fill="#FFE1E7"/>
+  <circle cx="74" cy="45" r="5" fill="#F0627E"/><circle cx="90" cy="45" r="5" fill="#FFC978"/><circle cx="106" cy="45" r="5" fill="#9BDFB2"/>
+  <text x="100" y="102" text-anchor="middle" font-size="42" font-weight="900" fill="#D14E64">e</text>
+  <text x="100" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#B39496">EVERY DAY</text>
+  <path d="M36 96c-9-7-12-13-9-17 2-3 8-2 10 2 1-4 7-5 9-2 3 5 0 11-10 17z" fill="#FF9EB2"/>
+  <path d="M164 96c-9-7-12-13-9-17 2-3 8-2 10 2 1-4 7-5 9-2 3 5 0 11-10 17z" fill="#FF9EB2"/>
+</svg>

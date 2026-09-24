@@ -1,0 +1,39 @@
+<view class="page tl-page">
+  <view class="tl-hero">
+    <image class="tl-hero-art" src="/assets/deco/moments.svg" mode="aspectFit" />
+    <view>
+      <view class="tl-hero-title">日常时间线 ✨</view>
+      <view class="muted">一顿饭、一次午睡、一次发呆都值得记录</view>
+    </view>
+    <text class="tl-hero-heart">💌</text>
+  </view>
+  <scroll-view scroll-x class="tags" enhanced="{{true}}" show-scrollbar="{{false}}">
+    <view wx:for="{{doings}}" wx:key="id" class="tag {{filter===item.id?'on':''}}" data-id="{{item.id}}" bindtap="onFilter">{{item.label}}</view>
+  </scroll-view>
+  <view wx:if="{{loading}}" class="muted center">正在翻开回忆… ♡</view>
+  <view wx:elif="{{!list.length}}" class="card center empty-card">
+    <image class="empty-art" src="/assets/deco/moments.svg" mode="aspectFit" />
+    <view class="title">还没有动态</view>
+    <view class="muted">记录一顿饭、一次午睡、一次发呆吧</view>
+    <button class="btn-primary" bindtap="goEdit" style="margin-top:24rpx">📸 发第一条动态</button>
+  </view>
+  <block wx:else>
+    <view class="tl">
+      <view class="tl-item" wx:for="{{list}}" wx:key="_id">
+        <view class="tl-dot {{item._openid===authorOpenid?'me':''}}"></view>
+        <view class="tl-line"></view>
+        <view class="tl-card" data-id="{{item._id}}" bindtap="goDetail">
+          <view class="doing-badge">{{item.icon}}</view>
+          <view class="tl-head"><text class="doing">{{item.doing}}</text><text class="time">{{item.time}}</text></view>
+          <view class="tl-author">{{item.author ? item.author.nickName : ''}}</view>
+          <view wx:if="{{item.content}}" class="tl-content">{{item.content}}</view>
+          <view wx:if="{{item.photos.length}}" class="pics">
+            <image wx:for="{{item.photos}}" wx:for-item="p" wx:key="*this" src="{{p}}" mode="aspectFill" class="pic" data-src="{{p}}" data-urls="{{item.photos}}" bindtap="preview" catchtap="preview" />
+          </view>
+        </view>
+      </view>
+    </view>
+    <button class="btn-ghost" bindtap="more" wx:if="{{hasMore}}" loading="{{moreLoading}}">加载更多 ↓</button>
+  </block>
+  <view class="fab" bindtap="goEdit"><text class="fab-icon">📸</text><text class="fab-plus">＋</text></view>
+</view>

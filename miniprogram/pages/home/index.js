@@ -1,13 +1,6 @@
-const { todayKey, daysBetween, nextOccurrence } = require('../../utils/date')
-const { callApi } = require('../../utils/cloud')
-
-const MOOD = {
-  love: '爱你',
-  miss: '想你',
-  calm: '平静',
-  busy: '忙碌',
-  sad: '难过'
-}
+const { todayKey, daysBetween, nextOccurrence, leftText } = require('../../utils/date')
+const { callApi, shareCard } = require('../../utils/cloud')
+const { MOOD_MAP } = require('../../utils/mood')
 
 Page({
   data: {
@@ -17,20 +10,34 @@ Page({
     togetherSince: '',
     myCheckin: null,
     partnerCheckin: null,
+    myName: '我',
+    partnerName: 'TA',
     nextDay: null,
     streaks: { mine: 0, partner: 0, together: 0 },
-    moodMap: MOOD
+    moodMap: MOOD_MAP,
+    showDeco: true,
+    showMascot: true,
   },
+  hideDeco() { this.setData({ showDeco: false }) },
+  hideMascot() { this.setData({ showMascot: false }) },
 
   onShow() {
     this.load()
   },
 
+  onPullDownRefresh() {
+    this.load().finally(() => wx.stopPullDownRefresh())
+  },
+
   async load() {
     const app = getApp()
     await app.whenReady()
+    await app.refreshCouple()
     const couple = app.globalData.couple
     const openid = app.globalData.openid
+    const user = app.globalData.user || {}
+    const partner = app.globalData.partner
+
     if (!couple) {
       this.setData({ ready: true, paired: false })
       return
@@ -59,7 +66,9 @@ Page({
     const upcoming = anniRes.data
       .map((item) => {
         const next = nextOccurrence(item.date, item.repeatYearly, today)
-        return next ? { ...item, next, left: daysBetween(today, next) } : null
+        if (!next) return null
+        const left = daysBetween(today, next)
+        return { ...item, next, left, leftLabel: leftText(left) }
       })
       .filter(Boolean)
       .sort((a, b) => a.left - b.left)[0] || null
@@ -71,6 +80,8 @@ Page({
       togetherSince: couple.togetherSince || '',
       myCheckin,
       partnerCheckin,
+      myName: user.nickName || '我',
+      partnerName: (partner && partner.nickName) || 'TA',
       nextDay: upcoming,
       streaks
     })
@@ -86,5 +97,47 @@ Page({
 
   goAnniversary() {
     wx.navigateTo({ url: '/pages/anniversary/index' })
+  },
+
+  goQuiz() {
+    wx.navigateTo({ url: '/pages/quiz/index' })
+  },
+
+  goBlog() {
+    wx.switchTab({ url: '/pages/blog/index' })
+  },
+
+  goPet() {
+    wx.navigateTo({ url: '/pages/pet/index' })
+  },
+
+  goGame() {
+    wx.navigateTo({ url: '/pages/game/index' })
+  },
+
+  goWish() {
+    wx.navigateTo({ url: '/pages/wish/index' })
+  },
+
+  goDice() {
+    wx.navigateTo({ url: '/pages/dice/index' })
+  },
+
+  goCards() {
+    wx.navigateTo({ url: '/pages/cards/index' })
+  },
+
+  goNight() {
+    wx.navigateTo({ url: '/pages/night/index' })
+  },
+
+  goChat() {
+    wx.switchTab({ url: '/pages/chat/index' })
+  },
+
+  onShareAppMessage() { return shareCard(`我们已经在一起 ${this.data.days || 0} 天啦 ♡`) },
+
+  goMoments() {
+    wx.navigateTo({ url: '/pages/moments/index' })
   }
 })

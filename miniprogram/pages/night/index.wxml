@@ -1,0 +1,64 @@
+<view class="page night-page">
+  <view class="night-sky">
+    <text class="star s1">✨</text>
+    <text class="star s2">⭐</text>
+    <text class="star s3">✨</text>
+    <text class="star s4">💫</text>
+    <text class="star s5">⭐</text>
+    <text class="star s6">✨</text>
+    <view class="moon-wrap">
+      <image class="moon" src="/assets/deco/moon.svg" mode="aspectFit" />
+    </view>
+  </view>
+
+  <view class="streak-card">
+    <text class="streak-face">🌙</text>
+    <view class="streak-num">{{streak}} 天</view>
+    <view class="muted">连续同频晚安 · 一天都不能断哦</view>
+  </view>
+
+  <view class="pair-row">
+    <view class="pair me {{mineDone ? 'on' : ''}}">
+      <text class="pair-icon">{{mineDone ? '😴' : '🥱'}}</text>
+      <text class="pair-name">我</text>
+      <text class="pair-state">{{mineDone ? '已说晚安' : '还没说'}}</text>
+    </view>
+    <text class="pair-heart">💗</text>
+    <view class="pair ta {{partnerDone ? 'on' : ''}}">
+      <text class="pair-icon">{{partnerDone ? '😴' : '👀'}}</text>
+      <text class="pair-name">TA</text>
+      <text class="pair-state">{{partnerDone ? '已说晚安' : '等TA中…'}}</text>
+    </view>
+  </view>
+
+  <view class="card say-card" wx:if="{{!mineDone}}">
+    <view class="row-title say-title"><text class="say-badge">💬</text> 留一句晚安</view>
+    <view class="word-chips">
+      <text class="word-chip {{pickedWord === item ? 'on' : ''}}" wx:for="{{words}}" wx:key="*this" data-w="{{item}}" bindtap="pickWord">{{item}}</text>
+    </view>
+    <view class="say-divider"><text>✦</text></view>
+    <input class="field say-input" placeholder="或自己写一句…" value="{{word}}" bindinput="onWord" maxlength="60" cursor-spacing="80" />
+    <button class="btn-primary night-btn" bindtap="send" loading="{{sending}}" disabled="{{sending}}">🌙 说晚安</button>
+    <view class="say-foot">🌟 每天一次 · 对方会收到你的留言</view>
+  </view>
+  <view class="card done-tonight" wx:else>
+    <view class="title">今晚已说晚安 🌙</view>
+    <view class="muted">好梦，明天见 ♡</view>
+  </view>
+
+  <view class="card" wx:if="{{list.length}}">
+    <view class="row-title">💌 今晚的留言</view>
+    <view class="msg-item" wx:for="{{list}}" wx:key="_id">
+      <text class="msg-icon">{{item.isMine ? '🌙' : '⭐'}}</text>
+      <view class="msg-body">
+        <view class="msg-text">{{item.word || '晚安，好梦 ♡'}}</view>
+        <view class="muted">{{item.byName}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="dream-mask" wx:if="{{showDream}}">
+    <text class="dream-word">晚安，好梦 🌙</text>
+    <text class="burst" wx:for="{{particles}}" wx:key="id" style="left:{{item.x}}%;font-size:{{item.s}}rpx;animation-duration:{{item.d}}s;animation-delay:{{item.delay}}s;">{{item.t}}</text>
+  </view>
+</view>

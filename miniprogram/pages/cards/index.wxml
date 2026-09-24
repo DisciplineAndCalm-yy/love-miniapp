@@ -1,0 +1,49 @@
+<view class="page cards-page">
+  <view class="cards-bg">
+    <text class="float-heart fh1">💬</text>
+    <text class="float-heart fh2">⚡</text>
+    <text class="float-heart fh3">✨</text>
+    <text class="float-heart fh4">🔥</text>
+  </view>
+
+  <view class="cards-hero">
+    <image class="cards-art" src="/assets/deco/cards.svg" mode="aspectFit" />
+    <view>
+      <view class="cards-title">真心话大冒险 🃏</view>
+      <view class="muted">睡前小游戏，翻到什么做什么</view>
+    </view>
+  </view>
+
+  <view class="mode-row">
+    <view class="mode {{mode==='truth'?'on truth-on':''}}" data-k="truth" bindtap="pickMode"><text class="mode-icon">💬</text><text>真心话</text></view>
+    <view class="mode {{mode==='dare'?'on dare-on':''}}" data-k="dare" bindtap="pickMode"><text class="mode-icon">⚡</text><text>大冒险</text></view>
+  </view>
+
+  <view class="stage">
+    <text class="burst" wx:for="{{particles}}" wx:key="id" style="left:{{item.x}}%;font-size:{{item.s}}rpx;animation-duration:{{item.d}}s;animation-delay:{{item.delay}}s;">{{item.t}}</text>
+    <view class="poker {{flipping ? 'flipping' : ''}} {{current && current.back ? 'back' : ''}}" bindtap="flip">
+      <view class="face front">
+        <text class="front-icon">{{mode === 'truth' ? '💬' : '⚡'}}</text>
+        <text class="front-text">{{flipping ? '洗牌中…' : '点我翻牌'}}</text>
+      </view>
+      <view class="face backside {{current && current.kind === 'dare' ? 'dare-bg' : ''}}">
+        <text class="back-kind">{{current && current.kind === 'dare' ? '⚡ 大冒险' : '💬 真心话'}}</text>
+        <text class="back-text">{{current ? current.text : ''}}</text>
+      </view>
+    </view>
+    <view class="muted tip">👆 点卡牌翻一张 · 双方记录可见</view>
+  </view>
+
+  <view class="card">
+    <view class="row-title">🕘 翻牌记录</view>
+    <view class="muted" wx:if="{{loading}}">加载中…</view>
+    <view class="muted" wx:elif="{{!history.length}}">还没人翻过第一张 ✨</view>
+    <view class="hi-item" wx:for="{{history}}" wx:key="_id">
+      <text class="hi-icon {{item.kind}}">{{item.kind === 'dare' ? '⚡' : '💬'}}</text>
+      <view class="hi-body">
+        <view class="hi-text">{{item.text}}</view>
+        <view class="muted">{{item.byName}} · {{item.time}}</view>
+      </view>
+    </view>
+  </view>
+</view>

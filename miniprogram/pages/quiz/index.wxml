@@ -1,0 +1,59 @@
+<view class="page quiz-page">
+  <view class="quiz-bg">
+    <text class="float-heart fh1">💗</text>
+    <text class="float-heart fh2">✨</text>
+    <text class="float-heart fh3">🌸</text>
+    <text class="float-heart fh4">💌</text>
+  </view>
+
+  <view class="quiz-hero">
+    <image class="quiz-art" src="/assets/deco/quiz.svg" mode="aspectFit" />
+    <view class="quiz-hero-text">
+      <view class="quiz-hero-title">默契大考验 💞</view>
+      <view class="muted">各自回答同样的问题，看看你们多懂彼此</view>
+    </view>
+  </view>
+
+  <view class="progress-card">
+    <view class="prog-row">
+      <text class="prog-label">我 {{mineCount}}/{{questions.length}}</text>
+      <text class="prog-label ta">TA {{partnerCount}}/{{questions.length}}</text>
+    </view>
+    <view class="prog-track"><view class="prog-fill me" style="width:{{mineCount / questions.length * 100}}%"></view></view>
+    <view class="prog-track"><view class="prog-fill ta" style="width:{{partnerCount / questions.length * 100}}%"></view></view>
+    <view class="muted prog-tip">{{result ? '两人都答完啦，看结果👇' : (mineCount >= questions.length ? '等 TA 答完你的分数就出来啦 ⏳' : '答完 8 题就能看到默契值 ♡')}}</view>
+  </view>
+
+  <view class="qnav">
+    <view wx:for="{{questions}}" wx:key="text" class="qnav-dot {{picked[index] !== undefined ? 'done' : ''}} {{current === index ? 'cur' : ''}}" data-q="{{index}}" bindtap="goQ">{{index + 1}}</view>
+  </view>
+
+  <view class="card q-card" wx:if="{{!result}}">
+    <view class="q-icon">{{questions[current].icon}}</view>
+    <view class="q-text">{{questions[current].text}}</view>
+    <view class="options">
+      <view wx:for="{{questions[current].options}}" wx:key="*this" class="option {{picked[current] === index ? 'on' : ''}}" data-i="{{index}}" bindtap="pick">
+        <text class="opt-mark">{{picked[current] === index ? '💗' : optLetters[index]}}</text>
+        <text class="opt-text">{{item}}</text>
+      </view>
+    </view>
+    <view class="q-foot muted">第 {{current + 1}} / {{questions.length}} 题 · 答案只有你们的默契知道 ♡</view>
+  </view>
+
+  <view class="card result-card" wx:else>
+    <text class="burst" wx:for="{{particles}}" wx:key="id" style="left:{{item.x}}%;font-size:{{item.s}}rpx;animation-duration:{{item.d}}s;animation-delay:{{item.delay}}s;">{{item.t}}</text>
+    <view class="result-face">{{result.face}}</view>
+    <view class="result-title">{{result.title}}</view>
+    <view class="result-pct"><text class="pct-num">{{result.pct}}</text><text class="pct-unit">%</text></view>
+    <view class="result-sub">答对 {{result.same}} / {{result.total}} 题</view>
+    <view class="result-tip">{{result.tip}}</view>
+    <view class="detail-list">
+      <view wx:for="{{result.detail}}" wx:key="i" class="detail-row {{item.hit ? 'hit' : ''}}">
+        <text class="d-icon">{{questions[item.i].icon}}</text>
+        <text class="d-q">{{questions[item.i].text}}</text>
+        <text class="d-mark">{{item.hit ? '💞' : '·'}}</text>
+      </view>
+    </view>
+    <button class="btn-primary" bindtap="again">🔄 再来一轮</button>
+  </view>
+</view>

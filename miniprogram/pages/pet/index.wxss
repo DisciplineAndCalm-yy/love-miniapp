@@ -1,0 +1,467 @@
+/* ===== 页面底板 ===== */
+.pet-page {
+  position: relative;
+}
+
+/* 领养前 hero */
+.adopt-hero {
+  background: linear-gradient(160deg, #BEE3F8 0%, #D8F0E4 45%, #FFF6F1 100%);
+  border-radius: 40rpx;
+  padding: 44rpx 36rpx 40rpx;
+  margin-bottom: 26rpx;
+  position: relative;
+  overflow: hidden;
+  border: 3rpx solid #fff;
+  box-shadow: 0 14rpx 34rpx rgba(209, 78, 100, 0.1);
+}
+.adopt-title {
+  font-size: 46rpx;
+  font-weight: 800;
+  color: #2F4A5A;
+}
+.adopt-sub {
+  font-size: 26rpx;
+  color: #5C7382;
+  margin-top: 14rpx;
+  line-height: 1.6;
+}
+.adopt-cloud {
+  position: absolute;
+  font-size: 70rpx;
+  opacity: 0.85;
+}
+.adopt-cloud.c1 { right: 30rpx; top: 20rpx; }
+.adopt-cloud.c2 { right: 130rpx; top: 90rpx; font-size: 50rpx; }
+
+/* ===== 通用小标题 ===== */
+.sec-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  margin-bottom: 22rpx;
+  color: #4A3236;
+}
+
+/* ===== 领养选择 ===== */
+.species-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18rpx;
+}
+.species {
+  position: relative;
+  box-sizing: border-box;
+  background: #FFF8F5;
+  border: 3rpx solid #F9DCDD;
+  border-radius: 28rpx;
+  padding: 18rpx 10rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.15s ease;
+}
+.species.active {
+  border-color: #F06A80;
+  background: #fff;
+  box-shadow: 0 10rpx 24rpx rgba(240, 106, 128, 0.22);
+  transform: translateY(-6rpx);
+}
+.species-art {
+  position: relative;
+  width: 130rpx;
+  height: 130rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.species-art .art-fallback {
+  position: absolute;
+  font-size: 84rpx;
+  line-height: 1;
+}
+.species-art image {
+  position: relative;
+  width: 130rpx;
+  height: 130rpx;
+}
+.species-label {
+  font-size: 27rpx;
+  font-weight: 700;
+  color: #4A3236;
+  margin-top: 6rpx;
+}
+.species-desc {
+  font-size: 21rpx;
+  color: #B79497;
+  margin-top: 4rpx;
+  text-align: center;
+}
+.species-check {
+  position: absolute;
+  top: -10rpx;
+  right: -10rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #F06A80;
+  color: #fff;
+  font-size: 24rpx;
+  text-align: center;
+  line-height: 40rpx;
+  border: 3rpx solid #fff;
+  box-shadow: 0 6rpx 14rpx rgba(240, 106, 128, 0.4);
+}
+
+/* ===== 宠物场景(吸顶,互动时宠物保持可见) ===== */
+.scene {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-radius: 44rpx;
+  overflow: hidden;
+  margin-bottom: 26rpx;
+  padding: 26rpx 26rpx 0;
+  min-height: 560rpx;
+  background: linear-gradient(180deg, #CDEBFB 0%, #DCF3E9 46%, #E7F6DD 72%, #F3F7E3 100%);
+  border: 3rpx solid #fff;
+  box-shadow: 0 16rpx 40rpx rgba(120, 160, 180, 0.2);
+  box-sizing: border-box;
+}
+.scene-sky {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 320rpx;
+  pointer-events: none;
+}
+.scene-sky .cloud {
+  position: absolute;
+  font-size: 76rpx;
+  opacity: 0.9;
+}
+.scene-sky .float-a { left: 26rpx; top: 100rpx; animation: drift 10s ease-in-out infinite; }
+.scene-sky .float-b { right: 46rpx; top: 132rpx; font-size: 54rpx; animation: drift 13s ease-in-out infinite reverse; }
+
+.scene-ground {
+  height: 90rpx;
+  margin: 0 -26rpx;
+  background: linear-gradient(180deg, #CFE8B7, #B7DD9A);
+  border-radius: 50% 50% 0 0 / 40rpx 40rpx 0 0;
+}
+
+.topbar {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+.name-plate {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12rpx;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999rpx;
+  padding: 10rpx 24rpx;
+  box-shadow: 0 8rpx 18rpx rgba(120, 160, 180, 0.2);
+}
+.name-plate .pet-name {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #4A3236;
+}
+.name-plate .lv {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #F06A80;
+  background: #FFEEE9;
+  border-radius: 999rpx;
+  padding: 2rpx 14rpx;
+}
+.mood-chip {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999rpx;
+  padding: 10rpx 22rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #4A3236;
+  box-shadow: 0 8rpx 18rpx rgba(120, 160, 180, 0.2);
+}
+
+.speech-row {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  margin-top: 22rpx;
+}
+.speech {
+  display: inline-block;
+  max-width: 80%;
+  background: #fff;
+  border: 3rpx solid #F9DCDD;
+  border-radius: 999rpx;
+  padding: 12rpx 32rpx;
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #D14E64;
+  box-shadow: 0 10rpx 22rpx rgba(209, 78, 100, 0.16);
+  animation: pop 0.35s ease;
+}
+
+/* 舞台区 */
+.stage {
+  position: relative;
+  z-index: 2;
+  height: 380rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10rpx;
+}
+.pet-box {
+  position: relative;
+  width: 320rpx;
+  height: 320rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pet-box .big-face {
+  position: absolute;
+  font-size: 220rpx;
+  line-height: 1;
+  z-index: 0;
+}
+.pet-art {
+  position: relative;
+  z-index: 1;
+  width: 320rpx;
+  height: 320rpx;
+  filter: drop-shadow(0 16rpx 16rpx rgba(74, 50, 54, 0.22));
+  animation: breath 2.6s ease-in-out infinite;
+}
+.pet-shadow {
+  position: absolute;
+  bottom: 42rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220rpx;
+  height: 30rpx;
+  background: rgba(74, 50, 54, 0.14);
+  border-radius: 50%;
+  animation: shadow 2.6s ease-in-out infinite;
+}
+.prop {
+  position: absolute;
+  top: 60rpx;
+  font-size: 72rpx;
+  animation: propFloat 2s ease-in-out infinite;
+}
+.prop-left { left: 6%; }
+.prop-right { right: 6%; animation-delay: -1s; }
+
+.bubbles {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+.bubble {
+  position: absolute;
+  bottom: 70rpx;
+  font-size: 48rpx;
+  will-change: transform;
+}
+.reaction {
+  position: absolute;
+  top: -34rpx;
+  left: 50%;
+  margin-left: -60rpx;
+  width: 120rpx;
+  text-align: center;
+  font-size: 110rpx;
+  line-height: 1;
+  z-index: 8;
+  animation: pop 0.5s ease;
+  filter: drop-shadow(0 8rpx 10rpx rgba(209, 78, 100, 0.3));
+}
+.reaction-flash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 280rpx;
+  height: 280rpx;
+  margin: -140rpx 0 0 -140rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.85) 0%, rgba(255,255,255,0) 65%);
+  z-index: 0;
+  animation: flash 0.6s ease;
+  pointer-events: none;
+}
+@keyframes flash { from { opacity: 0; transform: scale(.5); } 40% { opacity: 1; } to { opacity: 0; transform: scale(1.15); } }
+
+/* 动画 */
+.anim-eat { animation: munch 0.5s infinite; }
+.anim-play { animation: jumpPlay 0.7s infinite; }
+.anim-love { animation: love 0.8s ease; }
+.anim-bath { animation: wiggle 0.5s infinite; }
+.anim-sleep { animation: sleepTilt 3s ease-in-out infinite; }
+.anim-dance { animation: dance 0.6s infinite; }
+
+/* ===== 状态条 ===== */
+.bar { margin: 18rpx 0; }
+.bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 26rpx;
+  color: #8A6B6E;
+  font-weight: 600;
+  margin-bottom: 10rpx;
+}
+.bar-val { color: #B79497; font-weight: 700; }
+.track {
+  height: 20rpx;
+  background: #F6E7E9;
+  border-radius: 999rpx;
+  overflow: hidden;
+}
+.fill {
+  height: 100%;
+  border-radius: 999rpx;
+  transition: width 0.5s ease;
+}
+.fill.food { background: linear-gradient(90deg, #FFD59E, #F5A653); }
+.fill.mood { background: linear-gradient(90deg, #FFB3C1, #F06A80); }
+.fill.clean { background: linear-gradient(90deg, #A6E1F7, #5AA9E6); }
+.fill.energy { background: linear-gradient(90deg, #C6E9AE, #6ABF69); }
+.fill.exp { background: linear-gradient(90deg, #FFE3A6, #F5C542); }
+
+/* ===== 互动按钮(紧凑版,防小屏挤压) ===== */
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14rpx;
+}
+.act {
+  box-sizing: border-box;
+  background: #fff;
+  border: 3rpx solid #F9DCDD;
+  border-radius: 24rpx;
+  padding: 16rpx 0 14rpx;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4rpx;
+  transition: transform 0.12s ease;
+}
+.act-hover {
+  transform: scale(0.94);
+  background: #FFF1EC;
+}
+.act-icon { font-size: 42rpx; line-height: 1.1; }
+.act-name { font-size: 23rpx; font-weight: 700; color: #4A3236; }
+.tap-hint {
+  text-align: center;
+  font-size: 24rpx;
+  color: #B79497;
+  margin: -8rpx 0 22rpx;
+}
+.tip {
+  font-size: 23rpx;
+  color: #B79497;
+  text-align: center;
+  margin-top: 22rpx;
+}
+
+/* ===== 小档案 ===== */
+.info-row {
+  display: flex;
+  gap: 16rpx;
+}
+.info-cell {
+  flex: 1;
+  background: linear-gradient(180deg, #FFF6F1, #FFF0E6);
+  border: 2rpx solid #F9DCDD;
+  border-radius: 24rpx;
+  padding: 22rpx 0;
+  text-align: center;
+}
+.info-num {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: #D14E64;
+}
+.info-label {
+  font-size: 23rpx;
+  color: #B79497;
+  margin-top: 6rpx;
+}
+.info-tip {
+  font-size: 24rpx;
+  color: #B79497;
+  margin-top: 20rpx;
+  text-align: center;
+}
+
+/* ===== loading ===== */
+.center {
+  text-align: center;
+  padding: 120rpx 20rpx;
+}
+
+/* ===== keyframes ===== */
+@keyframes breath {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-14rpx) scale(1.02); }
+}
+@keyframes shadow {
+  0%, 100% { transform: translateX(-50%) scaleX(1); opacity: 0.8; }
+  50% { transform: translateX(-50%) scaleX(0.85); opacity: 0.5; }
+}
+@keyframes drift {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(40rpx); }
+}
+@keyframes rise {
+  to { transform: translateY(-240rpx) scale(1.3); opacity: 0; }
+}
+@keyframes pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes munch {
+  0%, 100% { transform: scale(1) rotate(0); }
+  50% { transform: scale(1.08, 0.92) rotate(-3deg); }
+}
+@keyframes jumpPlay {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-56rpx) rotate(6deg); }
+}
+@keyframes love {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.15) rotate(-4deg); }
+  70% { transform: scale(1.1) rotate(4deg); }
+  100% { transform: scale(1); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-6deg); }
+  50% { transform: rotate(6deg); }
+}
+@keyframes sleepTilt {
+  0%, 100% { transform: rotate(-4deg) translateY(0); }
+  50% { transform: rotate(4deg) translateY(10rpx); }
+}
+@keyframes dance {
+  0%, 100% { transform: rotate(-10deg) translateY(0); }
+  50% { transform: rotate(10deg) translateY(-24rpx); }
+}
+@keyframes propFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-18rpx); }
+}

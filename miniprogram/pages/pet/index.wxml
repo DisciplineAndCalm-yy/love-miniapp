@@ -1,0 +1,143 @@
+<view class="page pet-page">
+  <!-- 领养前 -->
+  <block wx:if="{{!pet}}">
+    <view class="adopt-hero">
+      <view class="adopt-title">云养宠物 🐾</view>
+      <view class="adopt-sub">两个人一起领养一只小可爱，喂食·陪玩·洗澡·哄睡，看它慢慢长大</view>
+      <view class="adopt-cloud c1">☁️</view>
+      <view class="adopt-cloud c2">☁️</view>
+    </view>
+
+    <view class="card">
+      <view class="sec-title">选一只你的小可爱</view>
+      <view class="species-grid">
+        <view
+          wx:for="{{speciesList}}"
+          wx:key="k"
+          class="species {{species===item.k?'active':''}}"
+          data-s="{{item.k}}"
+          bindtap="pickSpecies"
+        >
+          <view class="species-art">
+            <text wx:if="{{!imgOk[item.k]}}" class="art-fallback">{{item.emoji}}</text>
+            <image src="/assets/pet/{{item.k}}.svg" mode="aspectFit" data-k="{{item.k}}" bindload="onImgLoad" binderror="onImgError" />
+          </view>
+          <view class="species-label">{{item.label}}</view>
+          <view class="species-desc">{{item.desc}}</view>
+          <view wx:if="{{species===item.k}}" class="species-check">✓</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="sec-title">给它起个名字</view>
+      <input class="field" placeholder="比如：团子 / 布丁 / 小笨蛋" value="{{name}}" bindinput="onName" maxlength="10" />
+      <button class="btn-primary" bindtap="adopt">领养回家 ♡</button>
+    </view>
+  </block>
+
+  <!-- 领养后 -->
+  <block wx:else>
+    <view class="scene">
+      <view class="scene-sky">
+        <text class="cloud float-a">☁️</text>
+        <text class="cloud float-b">☁️</text>
+      </view>
+
+      <view class="topbar">
+        <view class="name-plate">
+          <text class="pet-name">{{pet.name}}</text>
+          <text class="lv">Lv.{{pet.level}}</text>
+        </view>
+        <view class="mood-chip">{{moodFace}} {{moodText}}</view>
+      </view>
+
+      <view wx:if="{{toastMsg}}" class="speech-row"><view class="speech">{{toastMsg}}</view></view>
+
+      <view class="stage" bindtap="tapPet">
+        <text class="prop prop-left">{{leftProp}}</text>
+        <view class="pet-box">
+          <view wx:if="{{reaction}}" class="reaction-flash"></view>
+          <text wx:if="{{!imgOk.pet}}" class="art-fallback big-face">{{petFace}}</text>
+          <image class="pet-art anim-{{animating}}" src="/assets/pet/{{pet.species}}.svg" mode="aspectFit" data-k="pet" bindload="onImgLoad" binderror="onImgError" />
+          <text wx:if="{{reaction}}" class="reaction">{{reaction}}</text>
+        </view>
+        <view class="pet-shadow"></view>
+        <text class="prop prop-right">{{rightProp}}</text>
+        <view class="bubbles">
+          <text
+            wx:for="{{bubbles}}"
+            wx:key="id"
+            class="bubble"
+            style="left:{{item.x}}%;animation:rise {{item.d}}s ease-out forwards"
+          >{{item.t}}</text>
+        </view>
+      </view>
+
+      <view class="scene-ground"></view>
+    </view>
+
+    <view class="tap-hint">💡 点一点它，会有反应哦</view>
+
+    <view class="card">
+      <view class="sec-title">成长状态</view>
+      <view class="bar">
+        <view class="bar-label"><text>🍗 饱食</text><text class="bar-val">{{pet.hunger}}</text></view>
+        <view class="track"><view class="fill food" style="width:{{pet.hunger}}%"></view></view>
+      </view>
+      <view class="bar">
+        <view class="bar-label"><text>💗 心情</text><text class="bar-val">{{pet.mood}}</text></view>
+        <view class="track"><view class="fill mood" style="width:{{pet.mood}}%"></view></view>
+      </view>
+      <view class="bar">
+        <view class="bar-label"><text>🫧 清洁</text><text class="bar-val">{{pet.clean}}</text></view>
+        <view class="track"><view class="fill clean" style="width:{{pet.clean}}%"></view></view>
+      </view>
+      <view class="bar">
+        <view class="bar-label"><text>⚡ 精力</text><text class="bar-val">{{pet.energy}}</text></view>
+        <view class="track"><view class="fill energy" style="width:{{pet.energy}}%"></view></view>
+      </view>
+      <view class="bar">
+        <view class="bar-label"><text>✨ 经验</text><text class="bar-val">{{pet.exp}} / {{nextExp}}</text></view>
+        <view class="track"><view class="fill exp" style="width:{{expPercent}}%"></view></view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="sec-title">陪它玩一玩</view>
+      <view class="action-grid">
+        <view
+          wx:for="{{actions}}"
+          wx:key="kind"
+          class="act"
+          hover-class="act-hover"
+          data-k="{{item.kind}}"
+          bindtap="act"
+        >
+          <text class="act-icon">{{item.icon}}</text>
+          <text class="act-name">{{item.label}}</text>
+        </view>
+      </view>
+      <view class="tip">✨ 每种互动都有专属动画和经验，多陪陪它会长大哦</view>
+    </view>
+
+    <view class="card">
+      <view class="sec-title">小档案</view>
+      <view class="info-row">
+        <view class="info-cell">
+          <view class="info-num">{{pet.level}}</view>
+          <view class="info-label">等级</view>
+        </view>
+        <view class="info-cell">
+          <view class="info-num">{{pet.exp}}</view>
+          <view class="info-label">总经验</view>
+        </view>
+        <view class="info-cell">
+          <view class="info-num">{{togetherDays}}</view>
+          <view class="info-label">陪伴天数</view>
+        </view>
+      </view>
+      <view class="info-tip">🐱{{speciesLabel}} · 由你们两个共同养育</view>
+    </view>
+  </block>
+</view>

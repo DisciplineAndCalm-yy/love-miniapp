@@ -1,0 +1,30 @@
+{
+  "users": {
+    "read": "doc._openid == auth.openid",
+    "write": false
+  },
+  "couples": {
+    "read": "doc.memberOpenids.includes(auth.openid)",
+    "write": false
+  },
+  "checkins": {
+    "read": "get(`database.couples.${doc.coupleId}`).memberOpenids.includes(auth.openid)",
+    "write": false
+  },
+  "posts": {
+    "read": "get(`database.couples.${doc.coupleId}`).memberOpenids.includes(auth.openid)",
+    "write": false
+  },
+  "anniversaries": {
+    "read": "get(`database.couples.${doc.coupleId}`).memberOpenids.includes(auth.openid)",
+    "write": false
+  },
+  "chats": {
+    "read": "get(`database.couples.${doc.coupleId}`).memberOpenids.includes(auth.openid)",
+    "write": false
+  },
+  "chatReads": {
+    "read": "get(`database.couples.${doc.coupleId}`).memberOpenids.includes(auth.openid)",
+    "write": false
+  }
+}

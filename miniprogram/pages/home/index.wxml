@@ -1,43 +1,78 @@
 <view class="page">
-  <view class="hero" wx:if="{{paired}}">
-    <view class="pill">只属于两个人的小宇宙</view>
-    <view class="days">{{days}}</view>
-    <view class="hero-sub">天在一起</view>
+  <view class="hero cute-hero" wx:if="{{paired}}">
+    <image class="hero-deco" src="/assets/deco/hearts.svg" mode="aspectFit" binderror="hideDeco" wx:if="{{showDeco}}" />
+    <view class="pill">♥ 只属于两个人的小宇宙 ♥</view>
+    <view class="couple-line">
+      <text class="who">{{myName}}</text>
+      <text class="plus">＋</text>
+      <text class="who">{{partnerName}}</text>
+    </view>
+    <view class="days"><text class="num">{{days}}</text><text class="unit">天</text></view>
+    <view class="hero-sub">♡ 在一起的每一天都值得纪念 ♡</view>
     <view class="muted" wx:if="{{togetherSince}}">从 {{togetherSince}} 开始</view>
-    <view class="muted link" bindtap="goBind">空间设置</view>
+    <view class="hero-actions">
+      <text class="link" bindtap="goBind">🏠 空间设置</text>
+      <text class="link link-chat" bindtap="goChat">💬 悄悄话</text>
+      <text class="link" bindtap="goGame">🎰 扭蛋机</text>
+      <text class="link" bindtap="goQuiz">💞 默契考验</text>
+      <text class="link" bindtap="goBlog">✏️ 写点什么</text>
+      <text class="link" bindtap="goMoments">📸 日常动态</text>
+      <text class="link" bindtap="goPet">🐾 云宠物</text>
+      <text class="link" bindtap="goWish">🍾 心愿瓶</text>
+      <text class="link" bindtap="goDice">🎲 吃点啥</text>
+      <text class="link" bindtap="goCards">🃏 真心话</text>
+      <text class="link" bindtap="goNight">🌙 晚安</text>
+    </view>
+    <view class="mascot-wrap"><text class="mascot-fallback">🐱</text><image class="mascot" src="/assets/pet/cat.svg" mode="aspectFit" binderror="hideMascot" wx:if="{{showMascot}}" /></view>
   </view>
 
-  <view class="hero" wx:else>
-    <view class="pill">还没有绑定</view>
-    <view class="title" style="margin-top: 24rpx;">先把 TA 接进来</view>
-    <view class="muted" style="margin: 16rpx 0 32rpx;">生成邀请码，或输入对方的码，两个人就共用一个空间。</view>
-    <button class="btn-primary" bindtap="goBind">去绑定</button>
+  <view class="hero cute-hero" wx:else>
+    <image class="hero-deco" src="/assets/deco/hearts.svg" mode="aspectFit" binderror="hideDeco" wx:if="{{showDeco}}" />
+    <view class="pill">♥ 还没有绑定 ♥</view>
+    <view class="title" style="margin-top: 20rpx;">先把 TA 接进来吧 ~</view>
+    <view class="muted" style="margin: 14rpx 0 28rpx;">生成邀请码，或输入对方的码，两个人就共用一个小家啦 🏡</view>
+    <button class="btn-primary" bindtap="goBind">去绑定 ♡</button>
   </view>
 
   <view class="card" wx:if="{{paired}}">
-    <view class="row-title">今天</view>
+    <view class="row-title">💌 今天的心情电报</view>
     <view class="status-row">
-      <view class="status">
-        <view class="muted">我</view>
-        <view wx:if="{{myCheckin}}">{{moodMap[myCheckin.mood]}} · {{myCheckin.content || '已打卡'}}</view>
-        <view wx:else class="muted">还没打卡</view>
+      <view class="status me">
+        <view class="who-tag">{{myName}} 🐱</view>
+        <view class="status-body" wx:if="{{myCheckin}}">{{moodMap[myCheckin.mood]}} · {{myCheckin.content || '已签到'}}</view>
+        <view wx:else class="muted status-body">还没签到，快去盖章！</view>
       </view>
-      <view class="status">
-        <view class="muted">TA</view>
-        <view wx:if="{{partnerCheckin}}">{{moodMap[partnerCheckin.mood]}} · {{partnerCheckin.content || '已打卡'}}</view>
-        <view wx:else class="muted">还在路上</view>
+      <view class="heart-mid">♥</view>
+      <view class="status ta">
+        <view class="who-tag">{{partnerName}} 🐶</view>
+        <view class="status-body" wx:if="{{partnerCheckin}}">{{moodMap[partnerCheckin.mood]}} · {{partnerCheckin.content || '已签到'}}</view>
+        <view wx:else class="muted status-body">TA 还在路上…</view>
       </view>
     </view>
-    <view class="streak-line muted">连续 {{streaks.mine}} 天 · 两人同一天 {{streaks.together}} 天</view>
-    <button class="btn-ghost" bindtap="goCheckin">{{myCheckin ? '看看打卡' : '去打卡'}}</button>
+    <view class="streak-line muted">🔥 连续 {{streaks.mine}} 天 · 👫 两人同频 {{streaks.together}} 天</view>
+    <button class="btn-ghost" bindtap="goCheckin">{{myCheckin ? '看看签到 ♡' : '去签到 ♡'}}</button>
+    <button class="btn-ghost" bindtap="goMoments" style="margin-top:16rpx">日常动态时间线 →</button>
   </view>
 
-  <view class="card" wx:if="{{paired}}" bindtap="goAnniversary">
-    <view class="row-title">下一个纪念日</view>
+  <view class="card anni-card cute-anni" wx:if="{{paired}}" bindtap="goAnniversary">
+    <text class="sticker" style="right:20rpx;top:14rpx">🎀</text>
+    <view class="row-title">🎈 下一个纪念日</view>
     <block wx:if="{{nextDay}}">
-      <view class="anni">{{nextDay.emoji || '♡'}} {{nextDay.title}}</view>
-      <view class="muted">{{nextDay.next}} · 还有 {{nextDay.left}} 天</view>
+      <view class="anni-row">
+        <text class="anni-emoji-big">{{nextDay.emoji || '♡'}}</text>
+        <view class="anni-info">
+          <view class="anni">{{nextDay.title}}</view>
+          <view class="muted">{{nextDay.next}}</view>
+        </view>
+        <view class="count-pill">{{nextDay.leftLabel}}</view>
+      </view>
     </block>
-    <view class="muted" wx:else>还没有纪念日，点这里添加</view>
+    <view class="muted" wx:else>还没有纪念日，点这里许个愿吧 ✨</view>
+  </view>
+
+  <view class="card pet-banner" wx:if="{{paired}}" bindtap="goPet">
+    <view class="mini-wrap"><text>🐾</text><image src="/assets/pet/cat.svg" class="mini-pet" mode="aspectFit" binderror="hideMascot" wx:if="{{showMascot}}" /></view>
+    <view><view class="title" style="font-size:32rpx">云养宠物</view><view class="muted">喂食 + 陪玩，一起升级 ♡</view></view>
+    <text class="chev">〉</text>
   </view>
 </view>

@@ -1,0 +1,43 @@
+.wish-page{position:relative;}
+.wish-bg{position:fixed;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden;}
+.wish-page > .bottle-card, .wish-page > .card{position:relative;z-index:1;}
+.float-heart{position:absolute;bottom:-60rpx;font-size:40rpx;opacity:0;animation:driftUp 13s linear infinite;}
+.fh1{left:12%;animation-delay:0s;font-size:46rpx;}
+.fh2{left:40%;animation-delay:4s;font-size:32rpx;animation-duration:15s;}
+.fh3{left:66%;animation-delay:7s;font-size:44rpx;}
+.fh4{left:86%;animation-delay:2s;font-size:38rpx;animation-duration:11s;}
+@keyframes driftUp{0%{transform:translateY(0);opacity:0;}10%{opacity:.8;}85%{opacity:.5;}100%{transform:translateY(-110vh);opacity:0;}}
+.bottle-card{background:linear-gradient(165deg,#DCE9FB 0%,#FFE9EE 55%,#FFF6F1 100%);border-radius:44rpx;padding:36rpx 32rpx 0;margin-bottom:26rpx;text-align:center;border:3rpx solid #fff;outline:2rpx solid var(--line);outline-offset:-2rpx;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.bottle{width:280rpx;height:238rpx;margin:16rpx auto 0;filter:drop-shadow(0 14rpx 16rpx rgba(122,163,201,.35));animation:bob 3s ease-in-out infinite;}
+.bottle.shaking{animation:shake .9s ease;}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-12rpx) rotate(2deg);}}
+@keyframes shake{0%,100%{transform:rotate(0);}20%{transform:rotate(-10deg);}40%{transform:rotate(10deg);}60%{transform:rotate(-6deg);}80%{transform:rotate(6deg);}}
+.tip{margin:6rpx 0 0;position:relative;z-index:1;}
+.sea{position:relative;height:90rpx;margin-top:6rpx;overflow:hidden;}
+.wave{position:absolute;font-size:64rpx;opacity:.9;animation:waveMove 5s linear infinite;}
+.w1{left:-10%;}
+.w2{left:40%;animation-delay:-2.5s;opacity:.6;}
+@keyframes waveMove{0%{transform:translateX(0);}100%{transform:translateX(60rpx);}}
+.type-row{display:flex;gap:14rpx;margin-bottom:18rpx;}
+.type{flex:1;display:flex;align-items:center;justify-content:center;gap:10rpx;background:#FFFAF7;border:2rpx solid var(--line);border-radius:22rpx;padding:18rpx 0;font-size:27rpx;font-weight:800;color:#9a7f82;}
+.type:active{transform:scale(.95);}
+.type.on{background:linear-gradient(135deg,#FF8A9C,#E14E68);color:#fff;border-color:#fff;box-shadow:0 10rpx 22rpx rgba(232,106,122,.35);}
+.type-icon{font-size:34rpx;line-height:1;}
+.area{width:100%;min-height:150rpx;box-sizing:border-box;}
+.wish-item{display:flex;align-items:center;gap:18rpx;padding:20rpx 0;border-top:2rpx dashed var(--line);animation:slideUp .3s ease;}
+.wish-icon{width:76rpx;height:76rpx;border-radius:50%;background:linear-gradient(180deg,#DCE9FB,#FFF6F1);border:2rpx solid var(--line);font-size:40rpx;text-align:center;line-height:76rpx;flex-shrink:0;box-shadow:var(--shadow-sm);}
+.wish-item.done .wish-icon{filter:grayscale(.4);opacity:.7;}
+.wish-body{flex:1;min-width:0;}
+.wish-text{font-size:28rpx;font-weight:700;line-height:1.5;}
+.wish-item.done .wish-text{text-decoration:line-through;color:var(--muted);}
+.done-btn{font-size:24rpx;padding:0 24rpx;line-height:2.2;flex-shrink:0;}
+.done-stamp{font-size:52rpx;flex-shrink:0;animation:popIn .4s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(16rpx);}to{opacity:1;transform:none;}}
+@keyframes popIn{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+.grant-mask{position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(74,50,54,.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:0 60rpx;}
+.grant-card{position:relative;background:linear-gradient(180deg,#fff,#FFF8E9);border-radius:44rpx;padding:60rpx 40rpx 44rpx;text-align:center;border:3rpx solid #fff;box-shadow:0 30rpx 80rpx rgba(0,0,0,.25);animation:popIn .4s cubic-bezier(.2,1.4,.4,1);overflow:hidden;width:100%;}
+.burst{position:absolute;top:28%;pointer-events:none;animation:burstUp 1.6s ease-out forwards;}
+@keyframes burstUp{from{transform:translateY(0) scale(.5);opacity:1;}to{transform:translateY(-260rpx) scale(1.2);opacity:0;}}
+.grant-face{font-size:100rpx;line-height:1;animation:float 2.6s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-6deg);}50%{transform:translateY(-12rpx) rotate(6deg);}}
+.grant-text{font-size:31rpx;font-weight:800;color:var(--rose-deep);margin:14rpx 0 10rpx;line-height:1.6;}

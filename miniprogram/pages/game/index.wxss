@@ -1,0 +1,38 @@
+.game-page{position:relative;}
+.game-bg{position:fixed;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden;}
+.game-page > .machine-card, .game-page > .card{position:relative;z-index:1;}
+.float-heart{position:absolute;bottom:-80rpx;font-size:44rpx;opacity:0;animation:driftUp 13s linear infinite;}
+.fh1{left:10%;animation-delay:0s;font-size:52rpx;}
+.fh2{left:35%;animation-delay:4s;font-size:36rpx;animation-duration:15s;}
+.fh3{left:60%;animation-delay:7s;font-size:48rpx;}
+.fh4{left:85%;animation-delay:2s;font-size:38rpx;animation-duration:11s;}
+@keyframes driftUp{0%{transform:translateY(0) rotate(0);opacity:0;}10%{opacity:.85;}85%{opacity:.6;}100%{transform:translateY(-120vh) rotate(24deg);opacity:0;}}
+.machine-card{background:linear-gradient(160deg,#FFE1E7,#FFF6F1 55%,#FFF0C8);border-radius:44rpx;padding:36rpx 32rpx;margin-bottom:26rpx;text-align:center;border:3rpx solid #fff;outline:2rpx solid var(--line);outline-offset:-2rpx;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.machine{width:300rpx;height:255rpx;margin:18rpx auto 8rpx;filter:drop-shadow(0 14rpx 16rpx rgba(209,78,100,.25));}
+.machine.shaking{animation:shake 1.2s ease;}
+@keyframes shake{0%,100%{transform:rotate(0);}15%{transform:rotate(-8deg) translateY(-8rpx);}30%{transform:rotate(8deg);}45%{transform:rotate(-6deg) translateY(-6rpx);}60%{transform:rotate(6deg);}75%{transform:rotate(-3deg);}90%{transform:rotate(2deg);}}
+.sweet-meter{font-size:27rpx;font-weight:800;color:var(--rose-deep);margin:10rpx 0;}
+.meter-track{height:20rpx;background:rgba(255,255,255,.8);border-radius:999rpx;overflow:hidden;margin:0 20rpx 22rpx;border:2rpx solid #fff;}
+.meter-fill{height:100%;border-radius:999rpx;background:linear-gradient(90deg,#FF9EB2,#E14E68);transition:width .6s ease;}
+.draw-btn{font-size:30rpx;animation:glow 2s ease-in-out infinite;}
+.draw-btn:active{transform:scale(.95);}
+@keyframes glow{0%,100%{box-shadow:0 14rpx 30rpx rgba(240,106,128,.35),inset 0 2rpx 0 rgba(255,255,255,.5);}50%{box-shadow:0 14rpx 34rpx rgba(240,106,128,.6),0 0 0 14rpx rgba(240,106,128,.12),inset 0 2rpx 0 rgba(255,255,255,.5);}}
+.tip{margin-top:16rpx;}
+.result-mask{position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(74,50,54,.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:0 60rpx;}
+.result-card{position:relative;background:linear-gradient(180deg,#fff,#FFF3F4);border-radius:44rpx;padding:60rpx 40rpx 44rpx;text-align:center;border:3rpx solid #fff;box-shadow:0 30rpx 80rpx rgba(0,0,0,.25);animation:popIn .4s cubic-bezier(.2,1.4,.4,1);overflow:hidden;width:100%;}
+@keyframes popIn{from{transform:scale(.6) rotate(-4deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
+.capsule{width:170rpx;height:170rpx;margin:0 auto 16rpx;border-radius:50%;background:linear-gradient(180deg,#FF9EB2 50%,#FFF0C8 50%);border:4rpx solid #fff;box-shadow:0 14rpx 30rpx rgba(209,78,100,.3);display:flex;align-items:center;justify-content:center;animation:bounce 1s ease infinite;}
+.capsule-icon{font-size:80rpx;line-height:1;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-14rpx);}}
+.burst{position:absolute;top:30%;pointer-events:none;animation:burstUp 1.6s ease-out forwards;}
+@keyframes burstUp{from{transform:translateY(0) scale(.5);opacity:1;}to{transform:translateY(-260rpx) scale(1.2);opacity:0;}}
+.result-text{font-size:33rpx;font-weight:800;color:var(--rose-deep);margin:14rpx 0 30rpx;line-height:1.6;}
+.draw-item{display:flex;align-items:center;gap:18rpx;padding:20rpx 0;border-top:2rpx dashed var(--line);animation:slideUp .3s ease;}
+.draw-icon{width:76rpx;height:76rpx;border-radius:50%;background:linear-gradient(180deg,#FFE9EE,#FFF6F1);border:2rpx solid var(--line);font-size:40rpx;text-align:center;line-height:76rpx;flex-shrink:0;}
+.draw-item.done .draw-icon{filter:grayscale(.4);opacity:.7;}
+.draw-body{flex:1;min-width:0;}
+.draw-text{font-size:28rpx;font-weight:700;line-height:1.5;}
+.draw-item.done .draw-text{text-decoration:line-through;color:var(--muted);}
+.done-btn{font-size:24rpx;padding:0 26rpx;line-height:2.2;flex-shrink:0;}
+.done-stamp{font-size:52rpx;flex-shrink:0;animation:popIn .4s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(16rpx);}to{opacity:1;transform:none;}}

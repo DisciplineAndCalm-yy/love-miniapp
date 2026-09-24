@@ -1,12 +1,17 @@
-const { todayKey, daysBetween, nextOccurrence } = require('../../utils/date')
+const { todayKey, daysBetween, nextOccurrence, leftText } = require('../../utils/date')
 
 Page({
   data: {
-    list: []
+    list: [],
+    paired: false
   },
 
   onShow() {
     this.load()
+  },
+
+  onPullDownRefresh() {
+    this.load().finally(() => wx.stopPullDownRefresh())
   },
 
   async load() {
@@ -14,20 +19,26 @@ Page({
     await app.whenReady()
     const couple = app.globalData.couple
     if (!couple) {
-      this.setData({ list: [] })
+      this.setData({ list: [], paired: false })
       return
     }
     const today = todayKey()
     const { data } = await app.db().collection('anniversaries').where({ coupleId: couple._id }).get()
     const list = data.map((item) => {
       const next = nextOccurrence(item.date, item.repeatYearly, today)
+      const left = next ? daysBetween(today, next) : -daysBetween(item.date, today)
       return {
         ...item,
         next: next || item.date,
-        left: next ? daysBetween(today, next) : daysBetween(item.date, today)
+        left,
+        leftLabel: leftText(left),
+        past: !next
       }
-    }).sort((a, b) => (a.next > b.next ? 1 : -1))
-    this.setData({ list })
+    }).sort((a, b) => {
+      if (a.past !== b.past) return a.past ? 1 : -1
+      return a.next > b.next ? 1 : -1
+    })
+    this.setData({ list, paired: true })
   },
 
   add() {

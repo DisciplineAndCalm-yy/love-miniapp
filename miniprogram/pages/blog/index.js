@@ -1,10 +1,17 @@
+const { formatDateTime } = require('../../utils/date')
+
 Page({
   data: {
-    posts: []
+    posts: [],
+    paired: false
   },
 
   onShow() {
     this.load()
+  },
+
+  onPullDownRefresh() {
+    this.load().finally(() => wx.stopPullDownRefresh())
   },
 
   async load() {
@@ -12,7 +19,7 @@ Page({
     await app.whenReady()
     const couple = app.globalData.couple
     if (!couple) {
-      this.setData({ posts: [] })
+      this.setData({ posts: [], paired: false })
       return
     }
     const { data } = await app.db().collection('posts')
@@ -20,7 +27,20 @@ Page({
       .orderBy('createdAt', 'desc')
       .limit(50)
       .get()
-    this.setData({ posts: data })
+const STAMPS = ['💌', '🌷', '🍓', '🌙', '☁️', '🐱']
+    const posts = data.map((item, i) => {
+      const photos = item.photos || []
+      return {
+        ...item,
+        photos,
+        coverPhotos: photos.slice(0, 3),
+        authorName: app.memberName(item._openid),
+        timeText: formatDateTime(item.createdAt),
+        excerpt: (item.content || '').slice(0, 80),
+        stamp: STAMPS[i % STAMPS.length]
+      }
+    })
+    this.setData({ posts, paired: true })
   },
 
   write() {
@@ -29,6 +49,10 @@ Page({
       return
     }
     wx.navigateTo({ url: '/pages/blog/edit' })
+  },
+
+  goBind() {
+    wx.navigateTo({ url: '/pages/profile/index' })
   },
 
   open(e) {

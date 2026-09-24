@@ -1,20 +1,33 @@
+.blog-detail{padding-bottom:60rpx;}
+.detail-card{position:relative;overflow:hidden;animation:slideUp .35s ease;}
+.detail-stamp{position:absolute;right:16rpx;top:12rpx;font-size:88rpx;opacity:.16;transform:rotate(10deg);pointer-events:none;}
+.detail-title{font-size:42rpx;margin:18rpx 0 10rpx;line-height:1.4;}
+.author-chip{display:inline-block;font-size:24rpx;font-weight:700;color:var(--rose-deep);background:linear-gradient(180deg,#FFF6F7,var(--blush));border:2rpx solid #F6BCC5;border-radius:999rpx;padding:8rpx 24rpx;margin-bottom:24rpx;box-shadow:var(--shadow-sm);}
 .body {
-  font-size: 30rpx;
-  line-height: 1.7;
   white-space: pre-wrap;
+  line-height: 1.9;
+  font-size: 30rpx;
+  color: #3d2c2e;
+  letter-spacing:.02em;
 }
-
+.body::first-letter{font-size:44rpx;font-weight:800;color:var(--rose-deep);}
+.meta {
+  margin: 12rpx 0 28rpx;
+}
 .photo {
   width: 100%;
   margin-top: 24rpx;
-  border-radius: 16rpx;
+  border-radius: 20rpx;
+  border: 3rpx solid #fff;
+  box-shadow: var(--shadow);
 }
-
+.detail-foot{text-align:center;font-size:25rpx;color:var(--muted);margin-top:36rpx;letter-spacing:.1em;}
 .actions {
   display: flex;
   gap: 16rpx;
 }
-
 .actions button {
   flex: 1;
 }
+.act-btn{font-size:26rpx;}
+@keyframes slideUp{from{opacity:0;transform:translateY(20rpx);}to{opacity:1;transform:none;}}

@@ -1,4 +1,5 @@
 const { todayKey, buildMonthCells } = require('../../utils/date')
+const { callApi } = require('../../utils/cloud')
 
 Page({
   data: {
@@ -12,7 +13,9 @@ Page({
     checkinMap: {},
     anniMap: {},
     dayCheckins: [],
-    dayAnnis: []
+    dayAnnis: [],
+    paired: false,
+    monthSummary: { mine: 0, partner: 0, together: 0 }
   },
 
   onShow() {
@@ -28,6 +31,10 @@ Page({
     this.render()
   },
 
+  onPullDownRefresh() {
+    this.render().finally(() => wx.stopPullDownRefresh())
+  },
+
   async render() {
     const { year, month } = this.data
     const cells = buildMonthCells(year, month)
@@ -38,7 +45,9 @@ Page({
     await app.whenReady()
     const couple = app.globalData.couple
     if (!couple) {
-      this.setData({ checkinMap: {}, anniMap: {} })
+      this._annis = []
+      this._checkins = []
+      this.setData({ checkinMap: {}, anniMap: {}, paired: false })
       this.refreshDay()
       return
     }
@@ -46,16 +55,28 @@ Page({
     const start = `${year}-${String(month + 1).padStart(2, '0')}-01`
     const endDay = new Date(year, month + 1, 0).getDate()
     const end = `${year}-${String(month + 1).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`
-    const _ = app.db().command
 
-    const checkins = await app.db().collection('checkins').where({
-      coupleId: couple._id,
-      dateKey: _.gte(start).and(_.lte(end))
-    }).limit(100).get()
+    let checkinList = []
+    try {
+      const res = await callApi('listMonthCheckins', { start, end }, { silent: true })
+      checkinList = res.list || []
+    } catch (err) {
+      console.warn('listMonthCheckins failed', err)
+    }
 
+    const myOpenid = app.globalData.openid
     const checkinMap = {}
-    checkins.data.forEach((item) => {
+    const daySets = {}
+    const monthSummary = { mine: 0, partner: 0, together: 0 }
+    checkinList.forEach((item) => {
       checkinMap[item.dateKey] = (checkinMap[item.dateKey] || 0) + 1
+      if (item.isMine || item._openid === myOpenid) monthSummary.mine += 1
+      else monthSummary.partner += 1
+      daySets[item.dateKey] = daySets[item.dateKey] || new Set()
+      daySets[item.dateKey].add(item._openid)
+    })
+    Object.keys(daySets).forEach((k) => {
+      if (daySets[k].size >= 2) monthSummary.together += 1
     })
 
     const annis = await app.db().collection('anniversaries').where({ coupleId: couple._id }).get()
@@ -76,8 +97,8 @@ Page({
     })
 
     this._annis = annis.data
-    this._checkins = checkins.data
-    this.setData({ checkinMap, anniMap })
+    this._checkins = checkinList
+    this.setData({ checkinMap, anniMap, paired: true, monthSummary })
     this.refreshDay()
   },
 
@@ -86,6 +107,26 @@ Page({
     const dayCheckins = (this._checkins || []).filter((item) => item.dateKey === key)
     const dayAnnis = (this.data.anniMap[key] || [])
     this.setData({ dayCheckins, dayAnnis })
+  },
+
+  previewPhoto(e) {
+    const url = e.currentTarget.dataset.url
+    const urls = (this.data.dayCheckins || []).map((c) => c.photoUrl || c.photo).filter(Boolean)
+    wx.previewImage({ urls: urls.length ? urls : [url], current: url })
+  },
+
+  avatarError(e) {
+    const id = e.currentTarget.dataset.id
+    this.setData({
+      dayCheckins: (this.data.dayCheckins || []).map((c) => c._id === id ? { ...c, authorAvatarUrl: '' } : c)
+    })
+  },
+
+  photoError(e) {
+    const id = e.currentTarget.dataset.id
+    this.setData({
+      dayCheckins: (this.data.dayCheckins || []).map((c) => c._id === id ? { ...c, photoUrl: '' } : c)
+    })
   },
 
   prevMonth() {
@@ -115,5 +156,9 @@ Page({
     if (!key) return
     this.setData({ selected: key })
     this.refreshDay()
+  },
+
+  goBind() {
+    wx.navigateTo({ url: '/pages/profile/index' })
   }
 })

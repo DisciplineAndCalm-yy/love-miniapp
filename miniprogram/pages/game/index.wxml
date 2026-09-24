@@ -1,0 +1,42 @@
+<view class="page game-page">
+  <view class="game-bg">
+    <text class="float-heart fh1">💗</text>
+    <text class="float-heart fh2">✨</text>
+    <text class="float-heart fh3">🎈</text>
+    <text class="float-heart fh4">🌸</text>
+  </view>
+
+  <view class="machine-card">
+    <view class="pill">🎰 两人互动 · 甜蜜扭蛋机</view>
+    <image class="machine {{drawing ? 'shaking' : ''}}" src="/assets/deco/gacha.svg" mode="aspectFit" />
+    <view class="sweet-meter">🍬 已完成 {{doneCount}} / {{total}} 个甜蜜任务</view>
+    <view class="meter-track"><view class="meter-fill" style="width:{{total ? (doneCount / total * 100) : 0}}%"></view></view>
+    <button class="btn-primary draw-btn" bindtap="draw" loading="{{drawing}}" disabled="{{drawing}}">{{drawing ? '摇奖中…' : '🎰 摇一颗扭蛋'}}</button>
+    <view class="muted tip">一人摇，两人一起完成 ♡</view>
+  </view>
+
+  <view class="result-mask" wx:if="{{showResult}}" bindtap="closeResult">
+    <view class="result-card" catchtap="closeResult">
+      <text class="burst" wx:for="{{particles}}" wx:key="id" style="left:{{item.x}}%;font-size:{{item.s}}rpx;animation-duration:{{item.d}}s;animation-delay:{{item.delay}}s;">{{item.t}}</text>
+      <view class="capsule"><text class="capsule-icon">{{result.icon}}</text></view>
+      <view class="title">抽中啦！</view>
+      <view class="result-text">{{result.text}}</view>
+      <button class="btn-primary" bindtap="closeResult">好，一起完成 ♡</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="row-title">🎟 我们的扭蛋历史</view>
+    <view class="muted" wx:if="{{loading}}">正在打开扭蛋盒…</view>
+    <view class="muted" wx:elif="{{!list.length}}">还没摇过第一颗，快去试试手气 ✨</view>
+    <view class="draw-item {{item.done ? 'done' : ''}}" wx:for="{{list}}" wx:key="_id">
+      <text class="draw-icon">{{item.icon}}</text>
+      <view class="draw-body">
+        <view class="draw-text">{{item.mission}}</view>
+        <view class="muted">{{item.byName}} 摇出 · {{item.done ? '已完成 ✓' : '待完成'}}</view>
+      </view>
+      <button class="btn-ghost done-btn" wx:if="{{!item.done}}" data-id="{{item._id}}" bindtap="markDone">✓ 完成</button>
+      <text class="done-stamp" wx:else>💮</text>
+    </view>
+  </view>
+</view>

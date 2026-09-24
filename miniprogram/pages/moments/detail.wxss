@@ -1,0 +1,1 @@
+.head{display:flex;justify-content:space-between;align-items:center}.doing{font-size:36rpx;font-weight:700;color:#E86A7A}.author{color:#B79A9E;font-size:26rpx;margin:8rpx 0}.content{font-size:32rpx;line-height:1.8;margin:16rpx 0}.big{width:100%;border-radius:20rpx;margin-top:16rpx}

@@ -1,0 +1,21 @@
+<view class="page">
+  <view class="card moment-card">
+    <view class="edit-hero">
+      <text class="edit-hero-icon">📸</text>
+      <view>
+        <view class="title">此刻在干嘛？</view>
+        <view class="muted">记录下来，变成两个人的回忆 ♡</view>
+      </view>
+    </view>
+    <view class="sec-mini">🏷️ 选个标签</view>
+    <view class="tags"><view wx:for="{{tags}}" wx:key="t" class="tag {{doing===item.t?'on':''}}" data-t="{{item.t}}" bindtap="pickTag"><text class="tag-icon">{{item.icon}}</text>{{item.t}}</view></view>
+    <view class="sec-mini">💬 说点什么</view>
+    <textarea class="area" maxlength="500" placeholder="比如：刚吃完午饭，困…" value="{{content}}" bindinput="onContent" cursor-spacing="80" />
+    <view class="sec-mini">🖼️ 加几张照片 <text class="muted">（{{photos.length}}/6）</text></view>
+    <view class="pics">
+      <block wx:for="{{photos}}" wx:key="*this"><view class="pic-wrap"><image src="{{item}}" mode="aspectFill" class="pic" /><text class="del" data-i="{{index}}" bindtap="delPhoto">×</text></view></block>
+      <view wx:if="{{photos.length<6}}" class="add" bindtap="addPhoto"><text class="add-icon">📷</text><text>＋照片</text></view>
+    </view>
+    <button class="btn-primary pub-btn" loading="{{saving}}" bindtap="submit">💌 发布动态</button>
+  </view>
+</view>

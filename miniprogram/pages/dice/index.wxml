@@ -1,0 +1,63 @@
+<view class="page dice-page">
+  <view class="dice-bg">
+    <text class="float-heart fh1">🎲</text>
+    <text class="float-heart fh2">✨</text>
+    <text class="float-heart fh3">⭐</text>
+    <text class="float-heart fh4">🎉</text>
+  </view>
+
+  <view class="dice-hero">
+    <image class="dice-art" src="/assets/deco/dice.svg" mode="aspectFit" />
+    <view>
+      <view class="dice-title">今天吃点啥？🎲</view>
+      <view class="muted">选择困难症救星，摇一摇听天由命</view>
+    </view>
+  </view>
+
+  <view class="machine">
+    <text class="big-face {{rolling ? 'shaking' : ''}}">{{faces[face - 1]}}</text>
+    <view class="result-text" wx:if="{{result}}">🎉 就是它了：<text class="hl">{{result.text}}</text></view>
+    <view class="result-text muted" wx:else>点下面按钮摇一次 ♡</view>
+    <button class="btn-primary roll-btn" bindtap="roll" loading="{{rolling}}" disabled="{{rolling}}">{{rolling ? '摇一摇…' : '🎲 摇骰子'}}</button>
+  </view>
+
+  <view class="card opt-card">
+    <view class="row-title opt-title"><text class="opt-badge">🍽</text> 选项（{{options.length}}/8）</view>
+    <view class="tpl-row">
+      <view wx:for="{{templates}}" wx:key="name" class="tpl {{tplIndex === index ? 'on' : ''}}" data-i="{{index}}" bindtap="switchTpl"><text>{{item.icon}} {{item.name}}</text></view>
+    </view>
+    <view class="opt-divider"><text>✦</text></view>
+    <view class="chips">
+      <view wx:for="{{options}}" wx:key="*this" class="chip" data-i="{{index}}" bindtap="delOption">{{item}}<text class="chip-x">×</text></view>
+    </view>
+    <view class="opt-divider"><text>✦</text></view>
+    <view class="add-row">
+      <input class="field add-input" placeholder="加一个选项…" value="{{editText}}" bindinput="onEditInput" confirm-type="done" bindconfirm="addOption" cursor-spacing="80" maxlength="12" />
+      <button class="btn-primary add-btn" bindtap="addOption">＋ 加</button>
+    </view>
+    <view class="opt-foot">💡 点选项可删除 · 至少留 2 个</view>
+  </view>
+
+  <view class="card">
+    <view class="row-title">🕘 摇骰子记录</view>
+    <view class="muted" wx:if="{{loading}}">加载中…</view>
+    <view class="muted" wx:elif="{{!history.length}}">还没摇过，快来第一发 ✨</view>
+    <view class="hi-item" wx:for="{{history}}" wx:key="_id">
+      <text class="hi-face">{{faces[item.face - 1]}}</text>
+      <view class="hi-body">
+        <view class="hi-text">{{item.text}}</view>
+        <view class="muted">{{item.byName}} · {{item.time}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="result-mask" wx:if="{{result}}" bindtap="closeResult">
+    <view class="result-pop" catchtap="closeResult">
+      <text class="burst" wx:for="{{particles}}" wx:key="id" style="left:{{item.x}}%;font-size:{{item.s}}rpx;animation-duration:{{item.d}}s;animation-delay:{{item.delay}}s;">{{item.t}}</text>
+      <text class="pop-face">{{result.face}}</text>
+      <view class="title">就决定是你了！</view>
+      <view class="pop-text">{{result.text}}</view>
+      <button class="btn-primary" bindtap="closeResult">好耶 ♡</button>
+    </view>
+  </view>
+</view>

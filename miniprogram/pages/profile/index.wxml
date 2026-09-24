@@ -1,43 +1,106 @@
-<view class="page">
-  <view class="card">
-    <view class="title">我的名字</view>
-    <input class="field" value="{{nickName}}" bindinput="onNick" placeholder="给自己起个昵称" />
-    <button class="btn-ghost" bindtap="saveNick">保存昵称</button>
+<view class="page profile-page">
+  <view class="profile-card">
+    <view class="profile-deco">💗</view>
+    <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <view class="avatar lg">
+        <image wx:if="{{avatarUrlShown}}" src="{{avatarUrlShown}}" mode="aspectFill" data-which="mine" binderror="avatarError" />
+        <view wx:else class="avatar-fallback">{{myInitial}}</view>
+      </view>
+      <view class="avatar-edit"><image src="/assets/deco/camera.svg" mode="aspectFit" /></view>
+    </button>
+    <view class="profile-meta">
+      <view class="name-line">
+        <text class="name">{{nickName || '给自己起个名字'}}</text>
+      </view>
+      <view class="status-dot {{paired ? 'on' : ''}}">{{paired ? '💕 已绑定' : '🌱 未绑定'}}</view>
+      <view class="muted avatar-hint">点相机换头像，或 <text class="link-inline" bindtap="pickAvatar">从相册上传</text></view>
+    </view>
   </view>
 
   <view class="card">
-    <view class="title">在一起的日子</view>
+    <view class="sec-mini">✏️ 我的名字</view>
+    <input class="field" type="nickname" value="{{nickName}}" bindinput="onNick" placeholder="比如：小草莓" cursor-spacing="80" maxlength="20" />
+    <button class="btn-ghost sm-btn" bindtap="saveNick">保存昵称</button>
+  </view>
+
+  <view class="card">
+    <view class="sec-mini">📅 在一起的日子</view>
     <picker mode="date" value="{{togetherSince}}" bindchange="onTogether">
-      <view class="field">{{togetherSince || '选择日期'}}</view>
+      <view class="field date-field">
+        <text>📅 {{togetherSince || '选择日期'}}</text>
+        <text class="chev">〉</text>
+      </view>
     </picker>
-    <button class="btn-ghost" bindtap="saveTogether" wx:if="{{inviteCode}}">保存日期</button>
+    <button class="btn-ghost sm-btn" bindtap="saveTogether" wx:if="{{paired}}">保存日期</button>
   </view>
 
   <view class="card" wx:if="{{!inviteCode}}">
-    <view class="title">绑定两个人</view>
-    <view class="muted" style="margin: 12rpx 0 24rpx;">一个人生成邀请码，另一个人输入。</view>
-    <button class="btn-primary" bindtap="create">生成邀请码</button>
-    <input class="field" placeholder="输入对方邀请码" value="{{joinCode}}" bindinput="onJoinCode" />
-    <button class="btn-ghost" bindtap="join">加入空间</button>
+    <view class="sec-mini">🔗 绑定两个人</view>
+    <view class="muted bind-desc">一个人点下面生成邀请码，另一个人输入 👇</view>
+    <button class="btn-primary" loading="{{creating}}" disabled="{{creating}}" bindtap="create">生成邀请码</button>
+    <view class="or-line"><text>或输入对方的码</text></view>
+    <input class="field code-input" placeholder="6 位邀请码" value="{{joinCode}}" bindinput="onJoinCode" maxlength="6" cursor-spacing="80" />
+    <button class="btn-ghost sm-btn" bindtap="join">加入空间</button>
   </view>
 
   <view class="card" wx:else>
-    <view class="title">情侣空间</view>
-    <view class="code" bindtap="copyCode">{{inviteCode}}</view>
-    <view class="muted">{{paired ? '已经两个人了' : '等待对方加入 · 点邀请码可复制'}}</view>
-    <view class="muted" style="margin-top: 8rpx;">成员 {{memberCount}} / 2</view>
+    <view class="sec-mini">🏠 情侣空间</view>
+    <view class="code-box" bindtap="copyCode">
+      <view class="code">{{inviteCode}}</view>
+      <view class="muted">点一下复制，发给 TA 👆</view>
+    </view>
+    <view class="member-line">
+      <text class="muted">{{paired ? '💕 已经两个人啦' : '⏳ 等待对方加入…'}}</text>
+      <text class="member-count">{{memberCount}} / 2</text>
+    </view>
+    <view class="member-bar"><view class="member-fill" style="width:{{memberCount >= 2 ? 100 : 50}}%"></view></view>
+    <button class="btn-danger quit-btn" loading="{{unbinding}}" bindtap="unbind">退出空间</button>
   </view>
 
-  <view class="card" bindtap="goAnniversary">
-    <view class="title">纪念日</view>
-    <view class="muted">设计你们的重要日子和卡片文案</view>
+  <view class="card" wx:if="{{paired && partnerName}}">
+    <view class="sec-mini">💌 对方</view>
+    <view class="partner-row">
+      <view class="avatar sm">
+        <image wx:if="{{partnerAvatarUrl || partnerAvatar}}" src="{{partnerAvatarUrl || partnerAvatar}}" mode="aspectFill" data-which="partner" binderror="avatarError" />
+        <view wx:else class="avatar-fallback">{{partnerInitial}}</view>
+      </view>
+      <view class="partner-meta">
+        <view class="partner-name">{{partnerName}}</view>
+        <view class="muted">和你共享一个小宇宙 ✨</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="menu" bindtap="goAnniversary">
+    <text class="menu-icon">🎈</text>
+    <view class="menu-body">
+      <view class="menu-title">纪念日</view>
+      <view class="muted">重要日子和卡片文案</view>
+    </view>
+    <text class="menu-go">›</text>
+  </view>
+
+  <view class="menu" bindtap="goPet">
+    <text class="menu-icon">🐾</text>
+    <view class="menu-body">
+      <view class="menu-title">云养宠物</view>
+      <view class="muted">喂食陪玩，看它长大</view>
+    </view>
+    <text class="menu-go">›</text>
+  </view>
+
+  <view class="menu" bindtap="goMoments">
+    <text class="menu-icon">📸</text>
+    <view class="menu-body">
+      <view class="menu-title">日常动态</view>
+      <view class="muted">记录此刻在做什么</view>
+    </view>
+    <text class="menu-go">›</text>
   </view>
 
   <view class="card">
-    <view class="title">纪念日提醒</view>
-    <view class="muted" style="margin: 12rpx 0 24rpx;">
-      {{remindEnabled ? '已授权。微信订阅消息是一次性的，想长期提醒就偶尔再点一次。' : '当天和前一天早上 9 点推送，需要微信订阅消息授权。'}}
-    </view>
+    <view class="sec-mini">🔔 纪念日提醒</view>
+    <view class="muted" style="margin-bottom:18rpx">{{remindEnabled ? '已授权，当天早上 9 点推送 ♡' : '当天早上 9 点推送，需微信授权一次'}}</view>
     <button class="btn-primary" bindtap="enableRemind">{{remindEnabled ? '再授权一次' : '开启提醒'}}</button>
   </view>
 </view>

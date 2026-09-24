@@ -1,4 +1,5 @@
 {
-  "name": "home",
-  "navigationBarTitleText": "今天"
+  "navigationBarTitleText": "首页",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
 }

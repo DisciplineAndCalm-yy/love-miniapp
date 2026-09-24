@@ -11,5 +11,26 @@
   ],
   "couples": [
     { "keys": { "inviteCode": 1 }, "unique": true }
+  ],
+  "chats": [
+    { "keys": { "coupleId": 1, "createdAt": -1 } }
+  ],
+  "chatReads": [
+    { "keys": { "coupleId": 1, "_openid": 1 }, "unique": true }
+  ],
+  "draws": [
+    { "keys": { "coupleId": 1, "createdAt": -1 } }
+  ],
+  "quiz": [
+    { "keys": { "coupleId": 1, "round": 1 } }
+  ],
+  "dices": [
+    { "keys": { "coupleId": 1, "createdAt": -1 } }
+  ],
+  "cards": [
+    { "keys": { "coupleId": 1, "createdAt": -1 } }
+  ],
+  "nights": [
+    { "keys": { "coupleId": 1, "dateKey": 1 } }
   ]
 }

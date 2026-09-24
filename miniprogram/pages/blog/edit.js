@@ -17,7 +17,14 @@ Page({
   },
 
   async loadPost(id) {
-    const { data } = await getApp().db().collection('posts').doc(id).get()
+    const app = getApp()
+    await app.whenReady()
+    const { data } = await app.db().collection('posts').doc(id).get()
+    if (!data || data._openid !== app.globalData.openid) {
+      wx.showToast({ title: '只能编辑自己的文章', icon: 'none' })
+      setTimeout(() => wx.navigateBack(), 800)
+      return
+    }
     this.setData({
       title: data.title,
       content: data.content,
@@ -44,6 +51,13 @@ Page({
     }
   },
 
+  removePhoto(e) {
+    const index = e.currentTarget.dataset.index
+    const photos = this.data.photos.slice()
+    photos.splice(index, 1)
+    this.setData({ photos })
+  },
+
   async save() {
     if (!requireCouple()) return
     const title = this.data.title.trim()
@@ -60,7 +74,8 @@ Page({
         content,
         photos: this.data.photos
       })
-      wx.navigateBack()
+      wx.showToast({ title: this.data.id ? '已更新' : '已发布' })
+      setTimeout(() => wx.navigateBack(), 400)
     } catch (err) {
       console.error(err)
     } finally {

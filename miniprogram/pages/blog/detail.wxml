@@ -1,12 +1,23 @@
-<view class="page" wx:if="{{post}}">
-  <view class="card">
-    <view class="title">{{post.title}}</view>
-    <view class="muted" style="margin: 12rpx 0 28rpx;">{{post.createdAt}}</view>
-    <text class="body">{{post.content}}</text>
-    <image wx:for="{{post.photos}}" wx:key="*this" src="{{item}}" mode="widthFix" class="photo" />
+<view class="page blog-detail" wx:if="{{post}}">
+  <view class="card detail-card">
+    <text class="detail-stamp">💌</text>
+    <view class="pill">💌 我们的长信</view>
+    <view class="title detail-title">{{post.title}}</view>
+    <view class="author-chip">✎ {{authorName}} · {{timeText}}</view>
+    <text class="body" user-select>{{post.content}}</text>
+    <image
+      wx:for="{{post.photos}}"
+      wx:key="*this"
+      src="{{item}}"
+      mode="widthFix"
+      class="photo"
+      data-src="{{item}}"
+      bindtap="preview"
+    />
+    <view class="detail-foot">— 写给最爱的你 ♡ —</view>
   </view>
   <view class="actions" wx:if="{{mine}}">
-    <button class="btn-ghost" bindtap="edit">编辑</button>
-    <button class="btn-ghost" bindtap="remove">删除</button>
+    <button class="btn-ghost act-btn" bindtap="edit">✏️ 编辑</button>
+    <button class="btn-danger act-btn" bindtap="remove">🗑 删除</button>
   </view>
 </view>

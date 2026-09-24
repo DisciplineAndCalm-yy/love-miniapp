@@ -1,8 +1,28 @@
-.anni {
-  margin-top: 24rpx;
-}
-
-.note {
-  margin-top: 16rpx;
-  line-height: 1.6;
-}
+.anni-page{position:relative;}
+.anni-bg{position:fixed;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden;}
+.anni-page > .anni-hero, .anni-page > .add-btn, .anni-page > .card{position:relative;z-index:1;}
+.float-heart{position:absolute;bottom:-80rpx;font-size:44rpx;opacity:0;animation:driftUp 12s linear infinite;}
+.fh1{left:8%;animation-delay:0s;font-size:52rpx;}
+.fh2{left:28%;animation-delay:3s;font-size:36rpx;animation-duration:14s;}
+.fh3{left:50%;animation-delay:6s;font-size:48rpx;}
+.fh4{left:70%;animation-delay:2s;font-size:38rpx;animation-duration:11s;}
+.fh5{left:88%;animation-delay:8s;font-size:54rpx;}
+@keyframes driftUp{0%{transform:translateY(0) rotate(0);opacity:0;}10%{opacity:.85;}85%{opacity:.6;}100%{transform:translateY(-120vh) rotate(24deg);opacity:0;}}
+.anni-hero{display:flex;align-items:center;gap:18rpx;background:linear-gradient(135deg,#FFE9EE,#FFF6F1 60%,#FFF4D9);border-radius:36rpx;padding:24rpx 26rpx;margin-bottom:20rpx;border:2rpx solid #fff;outline:2rpx solid var(--line);outline-offset:-2rpx;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.anni-hero-art{width:110rpx;height:96rpx;flex-shrink:0;animation:float 3.4s ease-in-out infinite;}
+.anni-hero-title{font-size:36rpx;font-weight:800;}
+.anni-hero-title::after{content:" ♡";color:var(--rose);font-size:28rpx;}
+.anni-hero-float{position:absolute;right:22rpx;top:14rpx;font-size:40rpx;animation:float 3s ease-in-out infinite;}
+.add-btn{margin-bottom:6rpx;animation:slideUp .3s ease;}
+.add-btn:active{transform:scale(.97);}
+.empty-art{width:220rpx;height:176rpx;margin:0 auto 10rpx;}
+.empty-card{text-align:center;margin-top:24rpx;}
+.anni{margin-top:24rpx;position:relative;overflow:hidden;animation:slideUp .35s ease;}
+.anni:active{transform:scale(.99);}
+.anni-emoji{position:absolute;right:20rpx;top:16rpx;font-size:64rpx;opacity:.3;transform:rotate(8deg);pointer-events:none;}
+.countdown{display:inline-block;font-size:30rpx;font-weight:900;color:#fff;background:linear-gradient(135deg,#FF8A9C,#E14E68);border-radius:999rpx;padding:8rpx 28rpx;margin:12rpx 0 8rpx;box-shadow:0 10rpx 22rpx rgba(232,106,122,.35);border:2rpx solid #fff;}
+.date-chip{display:inline-block;font-size:24rpx;font-weight:700;color:#A98385;background:#FFF6F1;border:2rpx solid var(--line);border-radius:999rpx;padding:6rpx 20rpx;margin-top:4rpx;}
+.shine{position:absolute;top:0;bottom:0;left:-40%;width:36%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-18deg);animation:sweep 4.5s ease-in-out infinite;pointer-events:none;}
+@keyframes sweep{0%,55%{left:-40%;}90%,100%{left:130%;}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20rpx);}to{opacity:1;transform:none;}}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10rpx);}}

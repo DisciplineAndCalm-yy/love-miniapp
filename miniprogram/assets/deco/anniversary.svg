@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160">
+  <ellipse cx="100" cy="142" rx="56" ry="10" fill="#F9DCDD"/>
+  <rect x="52" y="34" width="96" height="92" rx="22" fill="#fff" stroke="#F5B3BE" stroke-width="4"/>
+  <rect x="52" y="34" width="96" height="28" rx="14" fill="#FFE1E7"/>
+  <text x="100" y="55" text-anchor="middle" font-size="16" font-weight="800" fill="#D14E64">e LOVE e</text>
+  <path d="M100 74c-10-8-17-14-17-21a9.5 9.5 0 0 1 17-6 9.5 9.5 0 0 1 17 6c0 7-7 13-17 21z" fill="#F0627E"/>
+  <text x="100" y="116" text-anchor="middle" font-size="13" font-weight="700" fill="#B39496">FOREVER</text>
+  <path d="M36 92c-9-7-12-13-9-17 2-3 8-2 10 2 1-4 7-5 9-2 3 5 0 11-10 17z" fill="#FF9EB2"/>
+  <path d="M164 92c-9-7-12-13-9-17 2-3 8-2 10 2 1-4 7-5 9-2 3 5 0 11-10 17z" fill="#FF9EB2"/>
+</svg>

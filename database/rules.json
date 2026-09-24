@@ -1,4 +1,5 @@
 {
+  "_comment": "思路文档（Firebase 风格）。生产请用 rules.wechat.json 在云开发控制台配置。",
   "users": {
     ".read": "doc._openid == auth.openid",
     ".write": false
@@ -16,6 +17,18 @@
     ".write": false
   },
   "anniversaries": {
+    ".read": "auth.openid != null && get(`database.couples.${doc.coupleId}`).memberOpenids.includes(auth.openid)",
+    ".write": false
+  },
+  "chats": {
+    ".read": "auth.openid != null && get(`database.couples.${doc.coupleId}`).memberOpenids.includes(auth.openid)",
+    ".write": false
+  },
+  "chatReads": {
+    ".read": "auth.openid != null && get(`database.couples.${doc.coupleId}`).memberOpenids.includes(auth.openid)",
+    ".write": false
+  },
+  "draws": {
     ".read": "auth.openid != null && get(`database.couples.${doc.coupleId}`).memberOpenids.includes(auth.openid)",
     ".write": false
   }

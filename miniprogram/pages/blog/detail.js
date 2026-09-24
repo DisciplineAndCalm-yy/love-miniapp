@@ -1,9 +1,12 @@
 const { callApi } = require('../../utils/cloud')
+const { formatDateTime } = require('../../utils/date')
 
 Page({
   data: {
     post: null,
-    mine: false
+    mine: false,
+    authorName: '',
+    timeText: ''
   },
 
   onLoad(query) {
@@ -17,7 +20,17 @@ Page({
     const { data } = await app.db().collection('posts').doc(this._id).get()
     this.setData({
       post: data,
-      mine: data._openid === app.globalData.openid
+      mine: data._openid === app.globalData.openid,
+      authorName: app.memberName(data._openid),
+      timeText: formatDateTime(data.createdAt)
+    })
+  },
+
+  preview(e) {
+    const urls = this.data.post.photos || []
+    wx.previewImage({
+      current: e.currentTarget.dataset.src,
+      urls
     })
   },
 

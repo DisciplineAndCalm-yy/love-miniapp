@@ -7,8 +7,19 @@
     "pages/blog/edit",
     "pages/blog/detail",
     "pages/profile/index",
+    "pages/pet/index",
+    "pages/moments/index",
+    "pages/moments/edit",
+    "pages/moments/detail",
     "pages/anniversary/index",
-    "pages/anniversary/edit"
+    "pages/anniversary/edit",
+    "pages/chat/index",
+    "pages/game/index",
+    "pages/quiz/index",
+    "pages/wish/index",
+    "pages/dice/index",
+    "pages/cards/index",
+    "pages/night/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#FFF8F5",
@@ -31,9 +42,15 @@
       },
       {
         "pagePath": "pages/checkin/index",
-        "text": "打卡",
+        "text": "签到",
         "iconPath": "assets/tab/checkin.png",
         "selectedIconPath": "assets/tab/checkin-active.png"
+      },
+      {
+        "pagePath": "pages/chat/index",
+        "text": "悄悄话",
+        "iconPath": "assets/tab/chat.png",
+        "selectedIconPath": "assets/tab/chat-active.png"
       },
       {
         "pagePath": "pages/calendar/index",

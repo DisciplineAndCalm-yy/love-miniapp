@@ -1,7 +1,8 @@
 const { requireCouple, callApi } = require('../../utils/cloud')
 const { todayKey } = require('../../utils/date')
 
-const COLORS = ['#E86A7A', '#D4A574', '#7AA3C9', '#C9A0DC', '#7BC4A0']
+const COLORS = ['#E86A7A', '#F5A653', '#7AA3C9', '#C9A0DC', '#6ABF69', '#F5C542']
+const EMOJI_PRESETS = ['♡', '🎈', '💍', '🎂', '✈️', '🏠', '🐱', '🌸', '🎓', '⚽']
 
 Page({
   data: {
@@ -12,6 +13,7 @@ Page({
     emoji: '♡',
     color: '#E86A7A',
     colors: COLORS,
+    emojiPresets: EMOJI_PRESETS,
     note: ''
   },
 
@@ -40,6 +42,7 @@ Page({
   onDate(e) { this.setData({ date: e.detail.value }) },
   onRepeat(e) { this.setData({ repeatYearly: e.detail.value }) },
   onColor(e) { this.setData({ color: e.currentTarget.dataset.color }) },
+  pickEmoji(e) { this.setData({ emoji: e.currentTarget.dataset.e }) },
 
   async save() {
     if (!requireCouple()) return

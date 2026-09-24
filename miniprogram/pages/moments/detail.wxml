@@ -1,0 +1,8 @@
+<view class="page"><view wx:if="{{detail}}" class="card detail-card">
+<view class="head"><text class="doing-big">{{icon}}</text><view><view class="doing">{{detail.doing}}</view><text class="muted">{{time}}</text></view></view>
+<view class="author">✎ {{detail.author ? detail.author.nickName : ''}}</view>
+<view wx:if="{{detail.content}}" class="content">{{detail.content}}</view>
+<image wx:for="{{detail.photos}}" wx:key="*this" src="{{item}}" mode="widthFix" class="big" data-src="{{item}}" bindtap="preview" />
+<button class="btn-ghost del-btn" bindtap="remove" wx:if="{{mine}}">🗑 删除这条</button>
+<view class="muted ta-note" wx:else>💌 这是 TA 的回忆，只能看不能动哦</view>
+</view></view>

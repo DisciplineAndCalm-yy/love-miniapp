@@ -3,7 +3,7 @@
   "cloudfunctionRoot": "cloudfunctions/",
   "srcMiniprogramRoot": "miniprogram/",
   "compileType": "miniprogram",
-  "appid": "wx067ad2cb06e72482",
+  "appid": "wxc6fbc745eef9eeaf",
   "projectname": "love-miniapp",
   "libVersion": "3.7.0",
   "packOptions": {

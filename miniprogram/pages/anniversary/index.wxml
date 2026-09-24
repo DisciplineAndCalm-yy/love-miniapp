@@ -1,6 +1,25 @@
-<view class="page">
-  <button class="btn-primary" bindtap="add">设计一个纪念日</button>
-  <view class="empty" wx:if="{{!list.length}}">第一次见面、在一起、每一次旅行，都可以变成一张卡片。</view>
+<view class="page anni-page">
+  <view class="anni-bg">
+    <text class="float-heart fh1">💗</text>
+    <text class="float-heart fh2">✨</text>
+    <text class="float-heart fh3">🎈</text>
+    <text class="float-heart fh4">🌸</text>
+    <text class="float-heart fh5">💕</text>
+  </view>
+  <view class="anni-hero">
+    <image class="anni-hero-art" src="/assets/deco/anniversary.svg" mode="aspectFit" />
+    <view>
+      <view class="anni-hero-title">纪念日 🎈</view>
+      <view class="muted">每一个心动的日子都值得倒数</view>
+    </view>
+    <text class="anni-hero-float">🎀</text>
+  </view>
+  <button class="btn-primary add-btn" bindtap="add">🎈 设计一个纪念日</button>
+  <view class="card empty-card" wx:if="{{!list.length}}">
+    <image class="empty-art" src="/assets/deco/anniversary.svg" mode="aspectFit" />
+    <view class="title">还没有纪念卡片</view>
+    <view class="muted">第一次见面、在一起、每一次旅行，都可以变成一张卡片。</view>
+  </view>
   <view
     class="card anni"
     wx:for="{{list}}"
@@ -9,8 +28,11 @@
     bindtap="open"
     style="border-left: 12rpx solid {{item.color}};"
   >
-    <view class="title">{{item.emoji}} {{item.title}}</view>
-    <view class="muted">{{item.next}} · {{item.repeatYearly ? '每年' : '一次'}} · 还有 {{item.left}} 天</view>
-    <view class="note" wx:if="{{item.note}}">{{item.note}}</view>
+    <text class="anni-emoji">{{item.emoji}}</text>
+    <view class="title">{{item.title}}</view>
+    <view class="countdown">{{item.leftLabel}}</view>
+    <view class="date-chip">📅 {{item.next}} · {{item.repeatYearly ? '每年 ♻️' : '仅一次'}}</view>
+    <view class="note" wx:if="{{item.note}}">💬 {{item.note}}</view>
+    <view class="shine"></view>
   </view>
 </view>

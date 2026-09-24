@@ -1,14 +1,40 @@
-<view class="page">
-  <view class="hero">
-    <view class="title">共同博客</view>
-    <view class="muted" style="margin: 12rpx 0 24rpx;">把日常写成给彼此看的长信。</view>
-    <button class="btn-primary" bindtap="write">写一篇</button>
+<view class="page blog-page">
+  <view class="hero blog-hero">
+    <image class="blog-art" src="/assets/deco/blog.svg" mode="aspectFit" />
+    <view>
+      <view class="pill">💌 共同博客</view>
+      <view class="title" style="margin-top: 14rpx;">写给彼此的长信</view>
+      <view class="muted" style="margin: 10rpx 0 24rpx;">把日常、旅行和想说的话留在这里。</view>
+      <button class="btn-primary blog-write" bindtap="write" wx:if="{{paired}}">✏️ 写一篇</button>
+      <button class="btn-primary blog-write" bindtap="goBind" wx:else>先去绑定 ♡</button>
+    </view>
+    <text class="blog-sticker">🌷</text>
   </view>
 
-  <view class="empty" wx:if="{{!posts.length}}">还没有文字，从今天的一件小事开始。</view>
+  <view class="card empty-card" wx:if="{{paired && !posts.length}}">
+    <image class="empty-art" src="/assets/deco/blog.svg" mode="aspectFit" />
+    <view class="title">第一页还是空白</view>
+    <view class="muted">从今天的一件小事开始写起吧 ✨</view>
+  </view>
+  <view class="empty" wx:if="{{!paired}}">绑定后，这里会成为只属于你们的空间。</view>
 
   <view class="card post" wx:for="{{posts}}" wx:key="_id" data-id="{{item._id}}" bindtap="open">
-    <view class="title">{{item.title}}</view>
-    <view class="muted excerpt">{{item.content}}</view>
+    <text class="post-stamp">{{item.stamp || '💌'}}</text>
+    <view class="post-head">
+      <view class="title">{{item.title}}</view>
+      <view class="muted post-meta">✎ {{item.authorName}} · {{item.timeText}}</view>
+    </view>
+    <view class="excerpt">{{item.excerpt}}</view>
+    <view class="thumb-row" wx:if="{{item.coverPhotos.length}}">
+      <image
+        wx:for="{{item.coverPhotos}}"
+        wx:for-item="photo"
+        wx:key="*this"
+        src="{{photo}}"
+        mode="aspectFill"
+        class="mini-thumb"
+      />
+    </view>
+    <view class="read-more">阅读全文 →</view>
   </view>
 </view>

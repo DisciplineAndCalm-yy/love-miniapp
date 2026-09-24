@@ -1,3 +1,4 @@
 {
-  "navigationBarTitleText": "我们的空间"
+  "navigationBarTitleText": "空间",
+  "enablePullDownRefresh": true
 }

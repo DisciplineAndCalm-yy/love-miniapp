@@ -1,8 +1,27 @@
 <view class="page">
-  <view class="card nav">
-    <view class="nav-btn" bindtap="prevMonth">‹</view>
-    <view class="title">{{monthLabel}}</view>
-    <view class="nav-btn" bindtap="nextMonth">›</view>
+  <view class="cal-hero">
+    <text class="cal-cloud c1">☁️</text>
+    <text class="cal-cloud c2">☁️</text>
+    <text class="cal-star">✨</text>
+    <view class="cal-nav">
+      <view class="nav-btn" bindtap="prevMonth">‹</view>
+      <view class="cal-title">{{monthLabel}}</view>
+      <view class="nav-btn" bindtap="nextMonth">›</view>
+    </view>
+    <view class="cal-summary">
+      <view class="sum-cell">
+        <view class="sum-num">{{monthSummary.mine}}</view>
+        <view class="sum-label">我的签到</view>
+      </view>
+      <view class="sum-cell">
+        <view class="sum-num">{{monthSummary.partner}}</view>
+        <view class="sum-label">TA 的签到</view>
+      </view>
+      <view class="sum-cell">
+        <view class="sum-num">{{monthSummary.together}}</view>
+        <view class="sum-label">同一天</view>
+      </view>
+    </view>
   </view>
 
   <view class="card">
@@ -18,7 +37,7 @@
         bindtap="selectDay"
       >
         <block wx:if="{{item}}">
-          <text>{{item.day}}</text>
+          <text class="day-num">{{item.day}}</text>
           <view class="dots">
             <view class="dot pink" wx:if="{{checkinMap[item.dateKey]}}"></view>
             <view class="dot gold" wx:if="{{anniMap[item.dateKey]}}"></view>
@@ -26,13 +45,31 @@
         </block>
       </view>
     </view>
-    <view class="legend muted">粉点打卡 · 金点纪念日</view>
+    <view class="legend"><text class="dot pink"></text> 签到　<text class="dot gold"></text> 纪念日　<span>📅 点日期看那天的故事</span></view>
   </view>
 
   <view class="card">
-    <view class="title">{{selected}}</view>
-    <view class="muted" wx:if="{{!dayCheckins.length && !dayAnnis.length}}">这一天还很安静</view>
-    <view wx:for="{{dayAnnis}}" wx:key="_id" class="line">{{item.emoji || '♡'}} {{item.title}}</view>
-    <view wx:for="{{dayCheckins}}" wx:key="_id" class="line">打卡 · {{item.content || item.mood}}</view>
+    <view class="day-head">
+      <view class="day-title">{{selected}}</view>
+      <view class="day-count muted" wx:if="{{dayCheckins.length}}">{{dayCheckins.length}} 条签到</view>
+    </view>
+    <view class="muted" wx:if="{{!paired}}">绑定后可看到共同的签到与纪念日。</view>
+    <view class="muted" wx:elif="{{!dayCheckins.length && !dayAnnis.length}}">这一天还很安静 🌙</view>
+    <view wx:for="{{dayAnnis}}" wx:key="_id" class="line anni-line">{{item.emoji || '♡'}} {{item.title}}</view>
+    <view wx:for="{{dayCheckins}}" wx:key="_id" class="checkin-item">
+      <view class="checkin-head">
+        <view class="mini-avatar">
+          <image wx:if="{{item.authorAvatarUrl || item.authorAvatar}}" src="{{item.authorAvatarUrl || item.authorAvatar}}" mode="aspectFill" data-id="{{item._id}}" binderror="avatarError" />
+          <text wx:else>{{item.initial}}</text>
+        </view>
+        <view class="checkin-meta">
+          <view class="ci-name">{{item.authorName || 'TA'}}<text wx:if="{{item.isMine}}" class="me-tag">我</text></view>
+          <view class="ci-mood">{{item.moodLabel}}</view>
+        </view>
+      </view>
+      <view class="ci-content" wx:if="{{item.content}}">{{item.content}}</view>
+      <image wx:if="{{item.photoUrl || item.photo}}" class="ci-photo" src="{{item.photoUrl || item.photo}}" mode="aspectFill" data-url="{{item.photoUrl || item.photo}}" data-id="{{item._id}}" bindtap="previewPhoto" binderror="photoError" />
+    </view>
+    <button class="btn-ghost" wx:if="{{!paired}}" style="margin-top: 24rpx;" bindtap="goBind">去绑定</button>
   </view>
 </view>
