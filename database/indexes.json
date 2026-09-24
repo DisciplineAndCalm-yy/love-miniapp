@@ -31,6 +31,6 @@
     { "keys": { "coupleId": 1, "createdAt": -1 } }
   ],
   "nights": [
-    { "keys": { "coupleId": 1, "dateKey": 1 } }
+    { "keys": { "coupleId": 1, "dateKey": 1 }, "unique": true }
   ]
 }

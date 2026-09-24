@@ -779,42 +779,111 @@ exports.main = async (event) => {
     if (action === 'sendGoodnight') {
       const couple = await requireCouple(user, OPENID)
       const today = todayKey()
-      const found = await db.collection('nights').where({ coupleId: couple._id, dateKey: today }).get()
-      const mine = found.data.find((d) => d._openid === OPENID)
-      if (mine) return fail('今晚已经说过晚安啦')
       const word = String(event.word || '').trim().slice(0, 60)
-      await db.collection('nights').add({
-        data: { _openid: OPENID, coupleId: couple._id, dateKey: today, word, createdAt: Date.now() }
+      const found = await db.collection('nights').where({ coupleId: couple._id, dateKey: today }).get()
+      // 归并:兼容新结构(doc.words)与旧结构(一人一条)
+      const words = {}
+      found.data.forEach((d) => {
+        if (d.words && typeof d.words === 'object') {
+          Object.keys(d.words).forEach((k) => { if (d.words[k] !== undefined) words[k] = d.words[k] })
+        } else if (d._openid) {
+          words[d._openid] = d.word || '晚安，好梦 ♡'
+        }
       })
+      if (words[OPENID]) return fail('今晚已经说过晚安啦')
+      words[OPENID] = word
+      const main = found.data.find((d) => d.words && typeof d.words === 'object') || found.data[0]
+      if (main) {
+        // 只用 update 合并 words,不碰 _openid 等系统字段
+        await db.collection('nights').doc(main._id).update({ data: { words, updatedAt: Date.now() } })
+        for (const d of found.data) {
+          if (d._id !== main._id) await db.collection('nights').doc(d._id).remove()
+        }
+      } else {
+        await db.collection('nights').add({
+          data: { _openid: OPENID, coupleId: couple._id, dateKey: today, words, createdAt: Date.now() }
+        })
+      }
       return { ok: true }
     }
 
     if (action === 'listGoodnights') {
       const couple = await requireCouple(user, OPENID)
       const today = todayKey()
-      const found = await db.collection('nights').where({ coupleId: couple._id, dateKey: today }).get()
       const members = await loadMembers(couple.memberOpenids)
       const map = {}
       members.forEach((m) => { map[m.openid] = m })
-      const list = found.data.map((d) => ({ ...d, isMine: d._openid === OPENID, byName: (map[d._openid] || {}).nickName || 'TA' }))
-      // 连续同频晚安天数
-      let streak = 0
-      const all = await db.collection('nights').where({ coupleId: couple._id }).orderBy('dateKey', 'desc').limit(60).get()
+      const all = await db.collection('nights').where({ coupleId: couple._id }).limit(200).get()
+      // 按天归并:兼容新结构(doc.words)与旧结构(一人一条)
       const byDay = {}
       all.data.forEach((d) => {
-        byDay[d.dateKey] = byDay[d.dateKey] || new Set()
-        byDay[d.dateKey].add(d._openid)
+        const day = d.dateKey
+        if (!day) return
+        byDay[day] = byDay[day] || {}
+        if (d.words && typeof d.words === 'object') {
+          Object.keys(d.words).forEach((k) => {
+            if (d.words[k] || d.words[k] === '') byDay[day][k] = d.words[k]
+          })
+        } else if (d._openid) {
+          byDay[day][d._openid] = d.word || '晚安，好梦 ♡'
+        }
       })
+      const todayWords = byDay[today] || {}
+      const list = Object.keys(todayWords).map((openid) => ({
+        _id: openid,
+        _openid: openid,
+        isMine: openid === OPENID,
+        word: todayWords[openid],
+        byName: (map[openid] || {}).nickName || 'TA'
+      }))
+      let streak = 0
       let cursor = today
-      for (let i = 0; i < 60; i += 1) {
-        if (byDay[cursor] && byDay[cursor].size >= 2) {
+      for (let i = 0; i < 200; i += 1) {
+        const dayWords = byDay[cursor]
+        const both = dayWords && Object.keys(dayWords).length >= 2
+        if (both) {
           streak += 1
           cursor = shiftDate(cursor, -1)
         } else {
           break
         }
       }
-      return { ok: true, list, mineDone: list.some((d) => d.isMine), partnerDone: list.some((d) => !d.isMine), streak }
+      return { ok: true, list, mineDone: !!todayWords[OPENID], partnerDone: Object.keys(todayWords).some((k) => k !== OPENID), streak }
+    }
+
+    if (action === 'throwBottle') {
+      const couple = await requireCouple(user, OPENID)
+      const kind = ['wish', 'todo', 'gift'].includes(event.kind) ? event.kind : 'wish'
+      const content = String(event.content || '').trim().slice(0, 120)
+      if (!content) return fail('先写下心愿再丢哦')
+      const icons = { wish: '🌟', todo: '📝', gift: '🎁' }
+      const add = await db.collection('wishes').add({
+        data: { _openid: OPENID, coupleId: couple._id, kind, icon: icons[kind], content, done: false, createdAt: Date.now() }
+      })
+      return { ok: true, id: add._id }
+    }
+
+    if (action === 'listWishes') {
+      const couple = await requireCouple(user, OPENID)
+      const { data } = await db.collection('wishes').where({ coupleId: couple._id }).orderBy('createdAt', 'desc').limit(30).get()
+      const members = await loadMembers(couple.memberOpenids)
+      const map = {}
+      members.forEach((m) => { map[m.openid] = m })
+      const unfinished = data.filter((d) => !d.done).length
+      return {
+        ok: true,
+        unfinished,
+        list: data.map((d) => ({ ...d, isMine: d._openid === OPENID, byName: (map[d._openid] || {}).nickName || 'TA' }))
+      }
+    }
+
+    if (action === 'grantWish') {
+      const couple = await requireCouple(user, OPENID)
+      const { data: doc } = await db.collection('wishes').doc(event.id).get()
+      if (!doc || doc.coupleId !== couple._id) return fail('找不到这个瓶子')
+      if (doc._openid === OPENID) return fail('自己的心愿要等 TA 来实现哦')
+      await db.collection('wishes').doc(event.id).update({ data: { done: true, doneAt: Date.now() } })
+      return { ok: true }
     }
 
     return fail('未知操作')

@@ -7,35 +7,52 @@
   </view>
 
   <view class="bottle-card">
-    <view class="pill">🍾 两人互动 · 心愿漂流瓶</view>
-    <image class="bottle {{drawing ? 'shaking' : ''}}" src="/assets/deco/bottle.svg" mode="aspectFit" />
-    <view class="muted tip">写下小心愿丢进海里，TA 会捞到并帮你实现 ♡</view>
-    <view class="sea"><text class="wave w1">🌊</text><text class="wave w2">🌊</text></view>
-  </view>
-
-  <view class="card">
-    <view class="row-title">✏️ 写一个心愿</view>
-    <view class="type-row">
-      <view class="type {{kind==='wish'?'on':''}}" data-k="wish" bindtap="pickKind"><text class="type-icon">🌟</text><text>许愿</text></view>
-      <view class="type {{kind==='todo'?'on':''}}" data-k="todo" bindtap="pickKind"><text class="type-icon">📝</text><text>待办</text></view>
-      <view class="type {{kind==='gift'?'on':''}}" data-k="gift" bindtap="pickKind"><text class="type-icon">🎁</text><text>索礼</text></view>
+    <view class="sky">
+      <text class="sun">☀️</text>
+      <text class="cloud cl1">☁️</text>
+      <text class="cloud cl2">☁️</text>
+      <text class="bird b1">🐦</text>
     </view>
-    <textarea class="field area" placeholder="比如：想一起去海边看日出 🌅" value="{{content}}" bindinput="onContent" maxlength="120" cursor-spacing="80" />
-    <button class="btn-primary" bindtap="throwBottle" loading="{{throwing}}" disabled="{{throwing}}">🌊 丢进大海</button>
+    <view class="pill">🍾 两人互动 · 心愿漂流瓶</view>
+    <view class="scene">
+      <text class="bubble bu1">🫧</text>
+      <text class="bubble bu2">🫧</text>
+      <text class="bubble bu3">🫧</text>
+      <text class="fish fi1">🐠</text>
+      <text class="fish fi2">🐟</text>
+      <image class="bottle {{drawing ? 'shaking' : ''}}" src="/assets/deco/bottle.svg" mode="aspectFit" />
+    </view>
+    <view class="muted tip">写下小心愿丢进海里，TA 会捞到并帮你实现 ♡</view>
   </view>
 
-  <view class="card">
-    <view class="row-title">🌊 海面上的瓶子（{{unfinished}} 个待实现）</view>
-    <view class="muted" wx:if="{{loading}}">正在打捞…</view>
-    <view class="muted" wx:elif="{{!list.length}}">大海空空如也，快丢第一个瓶子 ✨</view>
+  <view class="card write-card">
+    <view class="row-title write-title"><text class="write-badge">✏️</text> 写一个心愿</view>
+    <view class="type-row">
+      <view class="type {{kind==='wish'?'on':''}}" data-k="wish" bindtap="pickKind"><text class="type-icon">🌟</text><text class="type-label">许愿</text></view>
+      <view class="type {{kind==='todo'?'on':''}}" data-k="todo" bindtap="pickKind"><text class="type-icon">📝</text><text class="type-label">待办</text></view>
+      <view class="type {{kind==='gift'?'on':''}}" data-k="gift" bindtap="pickKind"><text class="type-icon">🎁</text><text class="type-label">索礼</text></view>
+    </view>
+    <view class="write-divider"><text>✦</text></view>
+    <view class="area-wrap">
+      <textarea class="field area" placeholder="写下你的小心愿，TA 会帮你实现…" value="{{content}}" bindinput="onContent" maxlength="120" cursor-spacing="80" />
+      <text class="word-count">{{content.length || 0}}/120</text>
+    </view>
+    <button class="btn-primary throw-btn" bindtap="throwBottle" loading="{{throwing}}" disabled="{{throwing}}">🌊 丢进大海</button>
+    <view class="write-foot">🍾 丢出后 TA 就能在海上捞到</view>
+  </view>
+
+  <view class="card sea-card">
+    <view class="row-title list-title"><text class="list-badge">🌊</text> 海面上的瓶子 <text class="count-pill">{{unfinished}} 待实现</text></view>
+    <view class="muted empty-hint" wx:if="{{loading}}">正在打捞…</view>
+    <view class="muted empty-hint" wx:elif="{{!list.length}}">大海空空如也，快丢第一个瓶子 ✨</view>
     <view class="wish-item {{item.done ? 'done' : ''}}" wx:for="{{list}}" wx:key="_id">
-      <text class="wish-icon">{{item.icon}}</text>
+      <view class="wish-icon">{{item.icon}}</view>
       <view class="wish-body">
         <view class="wish-text">{{item.content}}</view>
-        <view class="muted">{{item.byName}} 丢出 · {{item.time}}{{item.done ? ' · 已实现 ✓' : ''}}</view>
+        <view class="wish-meta">{{item.byName}} 丢出 · {{item.time}}{{item.done ? ' · 已实现' : ''}}</view>
       </view>
-      <button class="btn-ghost done-btn" wx:if="{{!item.done}}" data-id="{{item._id}}" bindtap="grant">💫 帮TA实现</button>
-      <text class="done-stamp" wx:else>🌟</text>
+      <view class="grant-btn" wx:if="{{!item.done}}" data-id="{{item._id}}" bindtap="grant">💫 帮TA实现</view>
+      <view class="done-stamp" wx:else>🌟</view>
     </view>
   </view>
 

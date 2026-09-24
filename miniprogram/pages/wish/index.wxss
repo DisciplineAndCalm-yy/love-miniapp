@@ -1,4 +1,5 @@
-.wish-page{position:relative;}
+.wish-page{position:relative;background:linear-gradient(180deg,#EAF4FC 0%,#FFF6F1 420rpx);}
+/* 页面背景:海雾 + 上浮星星 */
 .wish-bg{position:fixed;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden;}
 .wish-page > .bottle-card, .wish-page > .card{position:relative;z-index:1;}
 .float-heart{position:absolute;bottom:-60rpx;font-size:40rpx;opacity:0;animation:driftUp 13s linear infinite;}
@@ -7,37 +8,78 @@
 .fh3{left:66%;animation-delay:7s;font-size:44rpx;}
 .fh4{left:86%;animation-delay:2s;font-size:38rpx;animation-duration:11s;}
 @keyframes driftUp{0%{transform:translateY(0);opacity:0;}10%{opacity:.8;}85%{opacity:.5;}100%{transform:translateY(-110vh);opacity:0;}}
-.bottle-card{background:linear-gradient(165deg,#DCE9FB 0%,#FFE9EE 55%,#FFF6F1 100%);border-radius:44rpx;padding:36rpx 32rpx 0;margin-bottom:26rpx;text-align:center;border:3rpx solid #fff;outline:2rpx solid var(--line);outline-offset:-2rpx;box-shadow:var(--shadow);position:relative;overflow:hidden;}
-.bottle{width:280rpx;height:238rpx;margin:16rpx auto 0;filter:drop-shadow(0 14rpx 16rpx rgba(122,163,201,.35));animation:bob 3s ease-in-out infinite;}
+/* 海洋场景卡 */
+.bottle-card{background:linear-gradient(180deg,#CDE8FB 0%,#A5D3F0 42%,#8FC4E8 58%,#7AB6E0 100%);border-radius:44rpx;padding:30rpx 32rpx 30rpx;margin-bottom:26rpx;text-align:center;border:3rpx solid #fff;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.sky{position:absolute;left:0;right:0;top:0;height:180rpx;pointer-events:none;z-index:0;}
+.sun{position:absolute;right:30rpx;top:18rpx;font-size:64rpx;animation:sunPulse 3.5s ease-in-out infinite;filter:drop-shadow(0 6rpx 12rpx rgba(255,200,80,.6));}
+@keyframes sunPulse{0%,100%{transform:scale(1) rotate(0);}50%{transform:scale(1.12) rotate(12deg);}}
+.cloud{position:absolute;font-size:56rpx;opacity:.92;animation:cloudDrift 14s ease-in-out infinite;}
+.cl1{left:20rpx;top:34rpx;}
+.cl2{left:150rpx;top:10rpx;font-size:42rpx;animation-delay:-6s;}
+@keyframes cloudDrift{0%,100%{transform:translateX(0);}50%{transform:translateX(40rpx);}}
+.bird{position:absolute;left:60rpx;top:100rpx;font-size:34rpx;animation:birdFly 8s ease-in-out infinite;}
+@keyframes birdFly{0%,100%{transform:translate(0,0);}50%{transform:translate(80rpx,-24rpx);}}
+.scene{position:relative;z-index:1;height:280rpx;margin-top:14rpx;}
+.bottle{width:280rpx;height:238rpx;position:absolute;left:50%;top:0;transform:translateX(-50%);filter:drop-shadow(0 16rpx 18rpx rgba(53,96,142,.35));animation:bob 3s ease-in-out infinite;}
 .bottle.shaking{animation:shake .9s ease;}
-@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-12rpx) rotate(2deg);}}
-@keyframes shake{0%,100%{transform:rotate(0);}20%{transform:rotate(-10deg);}40%{transform:rotate(10deg);}60%{transform:rotate(-6deg);}80%{transform:rotate(6deg);}}
-.tip{margin:6rpx 0 0;position:relative;z-index:1;}
-.sea{position:relative;height:90rpx;margin-top:6rpx;overflow:hidden;}
-.wave{position:absolute;font-size:64rpx;opacity:.9;animation:waveMove 5s linear infinite;}
-.w1{left:-10%;}
-.w2{left:40%;animation-delay:-2.5s;opacity:.6;}
-@keyframes waveMove{0%{transform:translateX(0);}100%{transform:translateX(60rpx);}}
-.type-row{display:flex;gap:14rpx;margin-bottom:18rpx;}
-.type{flex:1;display:flex;align-items:center;justify-content:center;gap:10rpx;background:#FFFAF7;border:2rpx solid var(--line);border-radius:22rpx;padding:18rpx 0;font-size:27rpx;font-weight:800;color:#9a7f82;}
+@keyframes bob{0%,100%{transform:translateX(-50%) translateY(0) rotate(-3deg);}50%{transform:translateX(-50%) translateY(-14rpx) rotate(3deg);}}
+@keyframes shake{0%,100%{transform:translateX(-50%) rotate(0);}20%{transform:translateX(-50%) rotate(-10deg);}40%{transform:translateX(-50%) rotate(10deg);}60%{transform:translateX(-50%) rotate(-6deg);}80%{transform:translateX(-50%) rotate(6deg);}}
+.bubble{position:absolute;bottom:10rpx;font-size:34rpx;opacity:0;animation:bubbleUp 5s ease-in infinite;}
+.bu1{left:22%;animation-delay:0s;}
+.bu2{left:50%;font-size:26rpx;animation-delay:-1.8s;animation-duration:6s;}
+.bu3{left:76%;font-size:30rpx;animation-delay:-3.4s;animation-duration:5.5s;}
+@keyframes bubbleUp{0%{transform:translateY(0) scale(.6);opacity:0;}15%{opacity:.9;}80%{opacity:.7;}100%{transform:translateY(-240rpx) scale(1.15);opacity:0;}}
+.fish{position:absolute;font-size:44rpx;animation:fishSwim 7s ease-in-out infinite;}
+.fi1{left:8%;bottom:96rpx;animation-delay:0s;}
+.fi2{right:10%;bottom:60rpx;font-size:38rpx;animation-delay:-3.5s;}
+@keyframes fishSwim{0%,100%{transform:translateX(0) scaleX(1);}45%{transform:translateX(40rpx) scaleX(1);}50%{transform:translateX(40rpx) scaleX(-1);}95%{transform:translateX(0) scaleX(-1);}}
+.bottle-card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:110rpx;background:#6BAEDC;opacity:.55;border-radius:50% 50% 0 0/28rpx 28rpx 0 0;pointer-events:none;z-index:0;animation:seaGlow 4s ease-in-out infinite;}
+@keyframes seaGlow{0%,100%{opacity:.45;}50%{opacity:.7;}}
+.tip{margin:14rpx 0 0;position:relative;z-index:2;color:#37628A;font-weight:700;}
+.pill{position:relative;z-index:2;background:rgba(255,255,255,.92);}
+/* 写心愿卡:海雾白 */
+.write-card{padding:36rpx 32rpx 30rpx;overflow:hidden;background:linear-gradient(180deg,#FFFFFF 0%,#F2F8FD 100%);}
+.write-title{display:flex;align-items:center;gap:14rpx;margin-bottom:22rpx;font-size:31rpx;font-weight:800;}
+.write-badge{display:inline-flex;align-items:center;justify-content:center;width:56rpx;height:56rpx;border-radius:50%;background:linear-gradient(135deg,#7AA3C9,#4A7FB5);font-size:30rpx;box-shadow:0 8rpx 18rpx rgba(122,163,201,.45);}
+.type-row{display:flex;gap:14rpx;margin-bottom:20rpx;}
+.type{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10rpx;background:#F2F8FD;border:2rpx solid #DCE9FB;border-radius:26rpx;padding:22rpx 0;font-weight:800;color:#7A93A8;transition:transform .15s ease;}
 .type:active{transform:scale(.95);}
-.type.on{background:linear-gradient(135deg,#FF8A9C,#E14E68);color:#fff;border-color:#fff;box-shadow:0 10rpx 22rpx rgba(232,106,122,.35);}
-.type-icon{font-size:34rpx;line-height:1;}
-.area{width:100%;min-height:150rpx;box-sizing:border-box;}
-.wish-item{display:flex;align-items:center;gap:18rpx;padding:20rpx 0;border-top:2rpx dashed var(--line);animation:slideUp .3s ease;}
-.wish-icon{width:76rpx;height:76rpx;border-radius:50%;background:linear-gradient(180deg,#DCE9FB,#FFF6F1);border:2rpx solid var(--line);font-size:40rpx;text-align:center;line-height:76rpx;flex-shrink:0;box-shadow:var(--shadow-sm);}
+.type.on{background:linear-gradient(135deg,#7AA3C9,#4A7FB5);color:#fff;border-color:#fff;box-shadow:0 10rpx 22rpx rgba(122,163,201,.45);}
+.type-icon{font-size:48rpx;line-height:1;}
+.type-label{font-size:27rpx;}
+.write-divider{display:flex;align-items:center;gap:14rpx;color:#BCD2EE;font-size:24rpx;margin:4rpx 0 20rpx;}
+.write-divider::before,.write-divider::after{content:"";flex:1;height:2rpx;background:linear-gradient(90deg,transparent,#BCD2EE,transparent);}
+.area-wrap{position:relative;margin-bottom:24rpx;}
+.area{width:100%;min-height:190rpx;box-sizing:border-box;margin-bottom:0;padding:26rpx 28rpx 56rpx;font-size:29rpx;line-height:1.7;background:#F7FBFE;border-color:#DCE9FB;}
+.area::placeholder{color:#9FB8CC;}
+.word-count{position:absolute;right:22rpx;bottom:18rpx;font-size:22rpx;color:#7A93A8;background:rgba(255,255,255,.9);padding:2rpx 14rpx;border-radius:999rpx;}
+.throw-btn{background:linear-gradient(135deg,#7AA3C9,#4A7FB5 70%,#35608E);box-shadow:0 14rpx 30rpx rgba(122,163,201,.45),inset 0 2rpx 0 rgba(255,255,255,.4);border:2rpx solid rgba(255,255,255,.9);animation:glow 2.4s ease-in-out infinite;}
+@keyframes glow{0%,100%{box-shadow:0 12rpx 26rpx rgba(122,163,201,.4);}50%{box-shadow:0 12rpx 30rpx rgba(122,163,201,.6),0 0 0 12rpx rgba(122,163,201,.15);}}
+.write-foot{text-align:center;font-size:23rpx;color:#7A93A8;margin-top:18rpx;letter-spacing:.06em;}
+/* 海面列表卡 */
+.sea-card{background:linear-gradient(180deg,#FFFFFF 0%,#EFF6FC 100%);}
+.list-title{display:flex;align-items:center;gap:12rpx;margin-bottom:8rpx;font-size:30rpx;font-weight:800;}
+.list-badge{display:inline-flex;align-items:center;justify-content:center;width:56rpx;height:56rpx;border-radius:50%;background:linear-gradient(135deg,#8FC4E8,#4A7FB5);font-size:30rpx;box-shadow:0 8rpx 18rpx rgba(122,163,201,.4);}
+.count-pill{margin-left:auto;font-size:23rpx;font-weight:800;color:#fff;background:linear-gradient(135deg,#7AA3C9,#4A7FB5);border-radius:999rpx;padding:8rpx 22rpx;box-shadow:0 6rpx 14rpx rgba(122,163,201,.35);}
+.empty-hint{text-align:center;padding:24rpx 0;}
+.wish-item{display:flex;align-items:center;gap:18rpx;padding:22rpx 0;border-top:2rpx dashed #DCE9FB;animation:slideUp .3s ease;}
+.wish-item:first-of-type{border-top:none;}
+.wish-icon{width:80rpx;height:80rpx;border-radius:28rpx;background:linear-gradient(180deg,#DCE9FB,#F2F8FD);border:2rpx solid #BCD2EE;font-size:42rpx;text-align:center;line-height:80rpx;flex-shrink:0;box-shadow:var(--shadow-sm);}
 .wish-item.done .wish-icon{filter:grayscale(.4);opacity:.7;}
 .wish-body{flex:1;min-width:0;}
-.wish-text{font-size:28rpx;font-weight:700;line-height:1.5;}
+.wish-text{font-size:29rpx;font-weight:700;line-height:1.5;}
 .wish-item.done .wish-text{text-decoration:line-through;color:var(--muted);}
-.done-btn{font-size:24rpx;padding:0 24rpx;line-height:2.2;flex-shrink:0;}
+.wish-meta{font-size:23rpx;color:#7A93A8;margin-top:6rpx;}
+.grant-btn{font-size:24rpx;font-weight:800;color:#fff;background:linear-gradient(135deg,#FFB25E,#F0913A);border-radius:999rpx;padding:14rpx 26rpx;flex-shrink:0;box-shadow:0 8rpx 18rpx rgba(240,145,58,.4);}
+.grant-btn:active{transform:scale(.94);}
 .done-stamp{font-size:52rpx;flex-shrink:0;animation:popIn .4s ease;}
 @keyframes slideUp{from{opacity:0;transform:translateY(16rpx);}to{opacity:1;transform:none;}}
 @keyframes popIn{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
-.grant-mask{position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(74,50,54,.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:0 60rpx;}
-.grant-card{position:relative;background:linear-gradient(180deg,#fff,#FFF8E9);border-radius:44rpx;padding:60rpx 40rpx 44rpx;text-align:center;border:3rpx solid #fff;box-shadow:0 30rpx 80rpx rgba(0,0,0,.25);animation:popIn .4s cubic-bezier(.2,1.4,.4,1);overflow:hidden;width:100%;}
+/* 实现庆祝弹窗 */
+.grant-mask{position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(53,96,142,.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:0 60rpx;}
+.grant-card{position:relative;background:linear-gradient(180deg,#fff,#FFF6E9);border-radius:44rpx;padding:60rpx 40rpx 44rpx;text-align:center;border:3rpx solid #fff;box-shadow:0 30rpx 80rpx rgba(0,0,0,.25);animation:popIn .4s cubic-bezier(.2,1.4,.4,1);overflow:hidden;width:100%;}
 .burst{position:absolute;top:28%;pointer-events:none;animation:burstUp 1.6s ease-out forwards;}
 @keyframes burstUp{from{transform:translateY(0) scale(.5);opacity:1;}to{transform:translateY(-260rpx) scale(1.2);opacity:0;}}
 .grant-face{font-size:100rpx;line-height:1;animation:float 2.6s ease-in-out infinite;}
 @keyframes float{0%,100%{transform:translateY(0) rotate(-6deg);}50%{transform:translateY(-12rpx) rotate(6deg);}}
-.grant-text{font-size:31rpx;font-weight:800;color:var(--rose-deep);margin:14rpx 0 10rpx;line-height:1.6;}
+.grant-text{font-size:31rpx;font-weight:800;color:#4A7FB5;margin:14rpx 0 10rpx;line-height:1.6;}
