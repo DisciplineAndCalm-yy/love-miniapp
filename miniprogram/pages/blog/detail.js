@@ -17,12 +17,20 @@ Page({
   async load() {
     const app = getApp()
     await app.whenReady()
-    const { data } = await app.db().collection('posts').doc(this._id).get()
+    let detail = null
+    try {
+      const res = await callApi('getPost', { id: this._id })
+      detail = res.detail
+    } catch (err) {
+      console.warn('getPost failed', err)
+    }
+    if (!detail) return
+    const urls = detail.photoUrls || {}
     this.setData({
-      post: data,
-      mine: data._openid === app.globalData.openid,
-      authorName: app.memberName(data._openid),
-      timeText: formatDateTime(data.createdAt)
+      post: { ...detail, photos: (detail.photos || []).map((p) => urls[p] || p) },
+      mine: detail._openid === app.globalData.openid,
+      authorName: detail.authorName || app.memberName(detail._openid),
+      timeText: formatDateTime(detail.createdAt)
     })
   },
 

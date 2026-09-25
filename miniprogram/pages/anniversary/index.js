@@ -1,4 +1,5 @@
-const { todayKey, daysBetween, nextOccurrence, leftText } = require('../../utils/date')
+const { todayKey, daysBetween, nextOccurrence, leftText, normDateKey } = require('../../utils/date')
+const { callApi } = require('../../utils/cloud')
 
 Page({
   data: {
@@ -23,18 +24,28 @@ Page({
       return
     }
     const today = todayKey()
-    const { data } = await app.db().collection('anniversaries').where({ coupleId: couple._id }).get()
+    let data = []
+    try {
+      const res = await callApi('listAnnis', {}, { silent: true })
+      data = res.list || []
+    } catch (err) {
+      console.warn('listAnnis failed', err)
+    }
     const list = data.map((item) => {
-      const next = nextOccurrence(item.date, item.repeatYearly, today)
-      const left = next ? daysBetween(today, next) : -daysBetween(item.date, today)
+      const date = normDateKey(item.date)
+      if (!date) return null
+      const next = nextOccurrence(date, item.repeatYearly, today)
+      const left = next ? daysBetween(today, next) : -daysBetween(date, today)
+      if (!Number.isFinite(left)) return null
       return {
         ...item,
-        next: next || item.date,
+        date,
+        next: next || date,
         left,
         leftLabel: leftText(left),
         past: !next
       }
-    }).sort((a, b) => {
+    }).filter(Boolean).sort((a, b) => {
       if (a.past !== b.past) return a.past ? 1 : -1
       return a.next > b.next ? 1 : -1
     })

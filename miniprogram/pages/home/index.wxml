@@ -22,8 +22,9 @@
       <text class="link" bindtap="goDice">🎲 吃点啥</text>
       <text class="link" bindtap="goCards">🃏 真心话</text>
       <text class="link" bindtap="goNight">🌙 晚安</text>
+      <text class="link" bindtap="goAdventure">🗺️ 冒险</text>
+      <view class="mascot-wrap"><text class="mascot-fallback">🐱</text><image class="mascot" src="/assets/pet/cat.svg" mode="aspectFit" binderror="hideMascot" wx:if="{{showMascot}}" /></view>
     </view>
-    <view class="mascot-wrap"><text class="mascot-fallback">🐱</text><image class="mascot" src="/assets/pet/cat.svg" mode="aspectFit" binderror="hideMascot" wx:if="{{showMascot}}" /></view>
   </view>
 
   <view class="hero cute-hero" wx:else>
@@ -71,7 +72,7 @@
   </view>
 
   <view class="card pet-banner" wx:if="{{paired}}" bindtap="goPet">
-    <view class="mini-wrap"><text>🐾</text><image src="/assets/pet/cat.svg" class="mini-pet" mode="aspectFit" binderror="hideMascot" wx:if="{{showMascot}}" /></view>
+    <view class="mini-wrap"><image wx:if="{{showMascot}}" src="/assets/pet/cat.svg" class="mini-pet" mode="aspectFit" binderror="hideMascot" /><text wx:else>🐾</text></view>
     <view><view class="title" style="font-size:32rpx">云养宠物</view><view class="muted">喂食 + 陪玩，一起升级 ♡</view></view>
     <text class="chev">〉</text>
   </view>

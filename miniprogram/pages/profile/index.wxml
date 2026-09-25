@@ -103,4 +103,7 @@
     <view class="muted" style="margin-bottom:18rpx">{{remindEnabled ? '已授权，当天早上 9 点推送 ♡' : '当天早上 9 点推送，需微信授权一次'}}</view>
     <button class="btn-primary" bindtap="enableRemind">{{remindEnabled ? '再授权一次' : '开启提醒'}}</button>
   </view>
+
+  <view class="version-line muted">当前版本 v{{version}} · 双方版本要一致哦</view>
+  <view class="version-line"><text class="link-inline" bindtap="diagnose">🔍 数据不同步？点我诊断</text></view>
 </view>

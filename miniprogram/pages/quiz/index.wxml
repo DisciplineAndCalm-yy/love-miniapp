@@ -28,7 +28,7 @@
     <view wx:for="{{questions}}" wx:key="text" class="qnav-dot {{picked[index] !== undefined ? 'done' : ''}} {{current === index ? 'cur' : ''}}" data-q="{{index}}" bindtap="goQ">{{index + 1}}</view>
   </view>
 
-  <view class="card q-card" wx:if="{{!result}}">
+  <view class="card q-card" wx:if="{{!mineDone}}">
     <view class="q-icon">{{questions[current].icon}}</view>
     <view class="q-text">{{questions[current].text}}</view>
     <view class="options">
@@ -38,6 +38,12 @@
       </view>
     </view>
     <view class="q-foot muted">第 {{current + 1}} / {{questions.length}} 题 · 答案只有你们的默契知道 ♡</view>
+  </view>
+
+  <view class="card wait-card" wx:elif="{{!result}}">
+    <view class="wait-face">⏳</view>
+    <view class="title">你答完啦，等 TA 中…</view>
+    <view class="muted">TA 答完 8 题，默契值立刻揭晓 ♡</view>
   </view>
 
   <view class="card result-card" wx:else>

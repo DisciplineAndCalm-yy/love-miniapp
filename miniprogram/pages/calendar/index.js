@@ -79,7 +79,14 @@ Page({
       if (daySets[k].size >= 2) monthSummary.together += 1
     })
 
-    const annis = await app.db().collection('anniversaries').where({ coupleId: couple._id }).get()
+    const annis = await (async () => {
+      try {
+        const res = await callApi('listAnnis', {}, { silent: true })
+        return { data: res.list || [] }
+      } catch (err) {
+        return app.db().collection('anniversaries').where({ coupleId: couple._id }).get()
+      }
+    })()
     const anniMap = {}
     const mm = String(month + 1).padStart(2, '0')
     annis.data.forEach((item) => {

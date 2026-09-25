@@ -26,7 +26,8 @@ Page({
     remindEnabled: false,
     partnerName: '',
     partnerAvatar: '',
-    unbinding: false
+    unbinding: false,
+    version: '—'
   },
 
   onShow() {
@@ -41,8 +42,8 @@ Page({
     const app = getApp()
     await app.whenReady()
     await app.refreshCouple()
-    // 刷新成员资料,避免对方新换的头像/昵称因缓存看不到
     await app.refreshMembers()
+    this.setData({ version: app.version || '—' })
     const user = app.globalData.user || {}
     const couple = app.globalData.couple
     const partner = app.globalData.partner
@@ -248,6 +249,43 @@ Page({
 
   copyCode() {
     wx.setClipboardData({ data: this.data.inviteCode })
+  },
+
+  async diagnose() {
+    const app = getApp()
+    const lines = []
+    try {
+      lines.push(`版本 v${app.version || '—'}`)
+      lines.push(`openid尾号 ${String(app.globalData.openid || '').slice(-6) || '无'}`)
+      const couple = app.globalData.couple
+      lines.push(`空间 ${couple ? couple._id.slice(-6) : '无'}`)
+      // 直连读库(手机端) vs 云函数读库,对比条数
+      let directCk = -1
+      let directAn = -1
+      try {
+        const ck = await app.db().collection('checkins').where({ coupleId: couple._id, dateKey: require('../../utils/date').todayKey() }).get()
+        directCk = ck.data.length
+      } catch (e) { lines.push(`直连签到失败:${String((e && e.errMsg) || e).slice(0, 30)}`) }
+      try {
+        const an = await app.db().collection('anniversaries').where({ coupleId: couple._id }).get()
+        directAn = an.data.length
+      } catch (e) { lines.push(`直连纪念日失败:${String((e && e.errMsg) || e).slice(0, 30)}`) }
+      let serverCk = -1
+      let serverAn = -1
+      try {
+        const r1 = await callApi('todayCheckins', { dateKey: require('../../utils/date').todayKey() }, { silent: true })
+        serverCk = (r1.list || []).length
+      } catch (e) {}
+      try {
+        const r2 = await callApi('listAnnis', {}, { silent: true })
+        serverAn = (r2.list || []).length
+      } catch (e) {}
+      lines.push(`今日签到 直连${directCk}/云端${serverCk}`)
+      lines.push(`纪念日 直连${directAn}/云端${serverAn}`)
+    } catch (e) {
+      lines.push('诊断异常:' + String((e && e.message) || e).slice(0, 40))
+    }
+    wx.showModal({ title: '同步诊断(截图发我)', content: lines.join('\n'), showCancel: false })
   },
 
   goAnniversary() {

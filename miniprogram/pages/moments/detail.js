@@ -13,7 +13,10 @@ Page({
       this.setData({ detail: res.detail, icon: doingIcon(res.detail.doing), mine: res.detail._openid === app.globalData.openid, time: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}` })
     } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }) }
   },
-  preview(e) { wx.previewImage({ urls: this.data.detail.photos, current: e.currentTarget.dataset.src }) },
+  preview(e) {
+    const urls = (this.data.detail.photos || []).map((p) => (this.data.detail.photoUrls || {})[p] || p)
+    wx.previewImage({ urls, current: e.currentTarget.dataset.src })
+  },
   async remove() {
     const ok = await wx.showModal({ title: '删除这条动态？', confirmColor: '#c94b5c' })
     if (!ok.confirm) return

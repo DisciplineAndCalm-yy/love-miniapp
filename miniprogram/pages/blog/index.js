@@ -1,4 +1,5 @@
 const { formatDateTime } = require('../../utils/date')
+const { callApi } = require('../../utils/cloud')
 
 Page({
   data: {
@@ -22,19 +23,23 @@ Page({
       this.setData({ posts: [], paired: false })
       return
     }
-    const { data } = await app.db().collection('posts')
-      .where({ coupleId: couple._id })
-      .orderBy('createdAt', 'desc')
-      .limit(50)
-      .get()
+    const { data } = { data: [] }
+    let list = []
+    try {
+      const res = await callApi('listPosts', {}, { silent: true })
+      list = res.list || []
+    } catch (err) {
+      console.warn('listPosts failed', err)
+    }
 const STAMPS = ['💌', '🌷', '🍓', '🌙', '☁️', '🐱']
-    const posts = data.map((item, i) => {
+    const posts = list.map((item, i) => {
       const photos = item.photos || []
+      const urls = (item.photoUrls || {})
       return {
         ...item,
         photos,
-        coverPhotos: photos.slice(0, 3),
-        authorName: app.memberName(item._openid),
+        coverPhotos: photos.slice(0, 3).map((p) => urls[p] || p),
+        authorName: item.authorName || app.memberName(item._openid),
         timeText: formatDateTime(item.createdAt),
         excerpt: (item.content || '').slice(0, 80),
         stamp: STAMPS[i % STAMPS.length]

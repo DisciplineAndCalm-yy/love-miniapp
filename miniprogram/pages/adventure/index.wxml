@@ -1,0 +1,136 @@
+<view class="page adv-page theme-{{themeKey}}">
+  <view class="adv-bg">
+    <text class="float-heart fh1">{{themeBits[0]}}</text>
+    <text class="float-heart fh2">{{themeBits[1]}}</text>
+    <text class="float-heart fh3">{{themeBits[2]}}</text>
+    <text class="float-heart fh4">{{themeBits[3]}}</text>
+  </view>
+
+  <view class="adv-hero">
+    <image class="adv-art" src="/assets/deco/adventure.svg" mode="aspectFit" />
+    <view>
+      <view class="adv-title">双人冒险 🗺️</view>
+      <view class="muted">只管做选择，剩下的交给默契</view>
+    </view>
+    <text class="theme-tag">{{themeLabel}}主题</text>
+  </view>
+
+  <!-- 开局 -->
+  <view class="card start-card" wx:if="{{!adv}}">
+    <view class="row-title"><text class="title-badge">🗺️</text> 选一条故事线</view>
+    <view class="story-row" wx:for="{{stories}}" wx:key="id" data-s="{{item.id}}" bindtap="pickStartStory">
+      <view class="story {{startStory === item.id ? 'on' : ''}}">
+        <text class="story-icon">{{item.icon}}</text>
+        <view class="story-text">
+          <text class="story-t">{{item.title}}</text>
+          <text class="story-d">{{item.desc}}</text>
+        </view>
+        <text class="story-go">›</text>
+      </view>
+    </view>
+    <view class="row-title" style="margin-top:30rpx"><text class="title-badge">🎮</text> 玩法</view>
+    <view class="mode-row">
+      <view class="mode {{startMode==='solo'?'on':''}}" data-m="solo" bindtap="pickStartMode"><text class="mode-icon">🚶</text><text>单人先行</text></view>
+      <view class="mode {{startMode==='duo'?'on':''}}" data-m="duo" bindtap="pickStartMode"><text class="mode-icon">💑</text><text>等TA一起</text></view>
+    </view>
+    <button class="btn-primary start-btn" bindtap="start">🚀 开启冒险</button>
+    <view class="journey">
+      <text class="j-path">﹒﹒﹒﹒﹒﹒﹒﹒﹒﹒﹒﹒﹒﹒﹒</text>
+      <text class="j-walker">🚶</text>
+      <text class="j-flag">🏁</text>
+    </view>
+    <view class="journey-scene"><text class="scene-item" wx:for="{{themeScene}}" wx:key="*this">{{item}}</text></view>
+  </view>
+
+  <!-- 进行中 -->
+  <block wx:if="{{adv}}">
+    <view class="status-bar">
+      <view class="stat"><text class="stat-icon">❤️</text><view class="hp-track"><view class="hp-fill" style="width:{{adv.hp / adv.maxHp * 100}}%"></view></view><text class="stat-num">{{adv.hp}}</text></view>
+      <view class="stat"><text class="stat-icon">⚔️</text><text class="stat-num">{{adv.atk}}</text></view>
+      <view class="stat"><text class="stat-icon">💰</text><text class="stat-num">{{adv.gold}}</text></view>
+    </view>
+
+    <view class="pet-strip" wx:if="{{pet}}">
+      <text class="pet-icon">🐾</text>
+      <text class="pet-text">{{pet.name}} Lv.{{pet.level}} 助战中{{pet.mood >= 60 ? '，士气高涨❤️+2/步' : ''}}</text>
+    </view>
+    <view class="pet-strip empty" wx:else>
+      <text class="pet-text">还没有宠物，去云养一只来助战吧 🐾</text>
+    </view>
+
+    <view class="card story-card">
+      <view class="scene-strip"><text class="scene-item" wx:for="{{themeScene}}" wx:key="*this">{{item}}</text></view>
+      <!-- 旅途中:进度条 + 随机事件 -->
+      <view class="trail-box" wx:if="{{hasTrail}}">
+        <view class="trail-head">
+          <text class="trail-title">{{adv.trail.title}}</text>
+          <text class="trail-count">第 {{trailDepth}} / {{trailTotal}} 难</text>
+        </view>
+        <view class="trail-track"><view class="trail-fill" style="width:{{trailPct}}%"></view></view>
+        <view class="typewriter">{{trailText}}</view>
+        <view class="choices" wx:if="{{trailChoices.length && !inBattle}}">
+          <button class="choice-btn" wx:for="{{trailChoices}}" wx:key="id" data-w="{{item.id}}" bindtap="trailChoose" loading="{{choosing}}" disabled="{{choosing}}">{{item.label}}</button>
+        </view>
+      </view>
+      <view class="typewriter" wx:else>{{nodeText}}</view>
+      <!-- 回合制战斗 -->
+      <view class="battle-box" wx:if="{{inBattle}}">
+        <view class="enemy-card">
+          <text class="enemy-icon {{battling ? 'hit' : ''}}">{{adv.battle.icon}}</text>
+          <view class="enemy-info">
+            <view class="enemy-name">{{adv.battle.name}} <text class="enemy-lv">Lv.{{enemyLv}}</text></view>
+            <view class="hp-track enemy-hp"><view class="hp-fill" style="width:{{adv.battle.hp / adv.battle.max * 100}}%"></view></view>
+            <view class="enemy-hptext">{{adv.battle.hp}} / {{adv.battle.max}}</view>
+          </view>
+        </view>
+        <view class="vs-tag">⚔️ VS</view>
+        <view class="battle-log">
+          <view class="round-line" wx:for="{{battleRounds}}" wx:key="at">{{item.t}}</view>
+          <view class="round-line dim" wx:if="{{!battleRounds.length}}">战斗开始！先下手为强 ⚔️</view>
+        </view>
+        <view class="battle-btns">
+          <button class="b-btn atk" data-m="attack" bindtap="battle" loading="{{battling}}" disabled="{{battling}}">⚔️ 攻击</button>
+          <button class="b-btn def" data-m="defend" bindtap="battle" loading="{{battling}}" disabled="{{battling}}">🛡️ 防御</button>
+          <button class="b-btn flee" data-m="flee" bindtap="battle" loading="{{battling}}" disabled="{{battling}}">🏃 开溜</button>
+        </view>
+        <view class="muted battle-hint">攻击 = 10 + 事件加成 + 装备攻击 · 宠物心情好会助战 +2</view>
+      </view>
+      <view class="choices" wx:if="{{nodeChoices.length && !inBattle && !hasTrail}}">
+        <button class="choice-btn" wx:for="{{nodeChoices}}" wx:key="id" data-id="{{item.id}}" bindtap="choose" loading="{{choosing}}" disabled="{{choosing}}">{{item.label}}</button>
+      </view>
+      <view class="muted center-tip" wx:if="{{!nodeChoices.length && !nodeEnding}}">剧情推进中…下拉刷新 ♡</view>
+    </view>
+
+    <view class="card" wx:if="{{adv.items.length}}">
+      <view class="row-title"><text class="title-badge">🎒</text> 背包（{{adv.items.length}}）<text class="atk-total">⚔️ {{atkTotal}}</text></view>
+      <view class="bag"><text class="bag-item" wx:for="{{adv.items}}" wx:key="*this">{{item.name}}{{item.atk ? ' +' + item.atk : ''}}</text></view>
+    </view>
+
+    <view class="card" wx:if="{{log.length}}">
+      <view class="row-title">👣 冒险足迹</view>
+      <view class="foot-item" wx:for="{{log}}" wx:key="at"><text class="foot-dot">·</text><text>{{item.text || item.choice || item.node}}</text></view>
+    </view>
+
+    <view class="adv-ops">
+      <button class="btn-ghost sm" bindtap="sync" data-f="0">🔄 刷新</button>
+      <button class="btn-ghost sm" bindtap="abandon">🏳️ 结束本局</button>
+    </view>
+    <view class="muted duo-tip" wx:if="{{adv.mode==='duo'}}">{{adv.partnerJoined ? '💑 TA 已加入队伍，一起选吧' : '⏳ 等TA进入本页点“加入队伍”（开局者别点）'}}</view>
+    <view class="center-tip"><button class="btn-ghost sm" wx:if="{{adv.mode==='duo' && !adv.partnerJoined}}" bindtap="join">💑 加入TA的队伍</button></view>
+  </block>
+
+  <!-- 结局弹窗 -->
+  <view class="end-mask" wx:if="{{showEnd}}" bindtap="closeEnd">
+    <view class="end-card" catchtap="closeEnd">
+      <text class="burst" wx:for="{{particles}}" wx:key="id" style="left:{{item.x}}%;font-size:{{item.s}}rpx;animation-duration:{{item.d}}s;animation-delay:{{item.delay}}s;">{{item.t}}</text>
+      <view class="end-face">🏆</view>
+      <view class="title">达成结局</view>
+      <view class="end-name">{{endName}}</view>
+      <view class="muted">HP {{adv.hp}} · 攻击 {{adv.atk}} · 金币 {{adv.gold}} · 装备 {{adv.items.length}} 件</view>
+      <view class="end-btns">
+        <button class="btn-primary" bindtap="closeEnd">回味一下 ♡</button>
+        <button class="btn-ghost" bindtap="abandon" style="margin-top:16rpx">再开一局 →</button>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,4 +1,4 @@
-const { todayKey, daysBetween, nextOccurrence, leftText } = require('../../utils/date')
+const { todayKey, daysBetween, nextOccurrence, leftText, normDateKey } = require('../../utils/date')
 const { callApi, shareCard } = require('../../utils/cloud')
 const { MOOD_MAP } = require('../../utils/mood')
 
@@ -44,15 +44,19 @@ Page({
     }
 
     const today = todayKey()
-    const days = couple.togetherSince ? Math.max(1, daysBetween(couple.togetherSince, today) + 1) : 0
-    const db = app.db()
-    const checkinRes = await db.collection('checkins').where({
-      coupleId: couple._id,
-      dateKey: today
-    }).get()
-
-    const myCheckin = checkinRes.data.find((item) => item._openid === openid) || null
-    const partnerCheckin = checkinRes.data.find((item) => item._openid !== openid) || null
+    const since = normDateKey(couple.togetherSince)
+    const rawDays = since ? daysBetween(since, today) + 1 : 0
+    const days = Number.isFinite(rawDays) ? Math.max(since ? 1 : 0, rawDays) : 0
+    // 签到与纪念日统一走云函数读库,不再直连数据库(部分机型直连读不到对方数据)
+    let checkinList = []
+    try {
+      const res = await callApi('todayCheckins', { dateKey: today }, { silent: true })
+      checkinList = res.list || []
+    } catch (err) {
+      console.warn('todayCheckins failed', err)
+    }
+    const myCheckin = checkinList.find((item) => item.isMine) || null
+    const partnerCheckin = checkinList.find((item) => !item.isMine) || null
 
     let streaks = { mine: 0, partner: 0, together: 0 }
     try {
@@ -62,13 +66,22 @@ Page({
       console.warn(err)
     }
 
-    const anniRes = await db.collection('anniversaries').where({ coupleId: couple._id }).get()
-    const upcoming = anniRes.data
+    let anniList = []
+    try {
+      const anniRes = await callApi('listAnnis', {}, { silent: true })
+      anniList = anniRes.list || []
+    } catch (err) {
+      console.warn('listAnnis failed', err)
+    }
+    const upcoming = anniList
       .map((item) => {
-        const next = nextOccurrence(item.date, item.repeatYearly, today)
+        const date = normDateKey(item.date)
+        if (!date) return null
+        const next = nextOccurrence(date, item.repeatYearly, today)
         if (!next) return null
         const left = daysBetween(today, next)
-        return { ...item, next, left, leftLabel: leftText(left) }
+        if (!Number.isFinite(left)) return null
+        return { ...item, date, next, left, leftLabel: leftText(left) }
       })
       .filter(Boolean)
       .sort((a, b) => a.left - b.left)[0] || null
@@ -77,7 +90,7 @@ Page({
       ready: true,
       paired: true,
       days,
-      togetherSince: couple.togetherSince || '',
+      togetherSince: since,
       myCheckin,
       partnerCheckin,
       myName: user.nickName || '我',
@@ -129,6 +142,10 @@ Page({
 
   goNight() {
     wx.navigateTo({ url: '/pages/night/index' })
+  },
+
+  goAdventure() {
+    wx.navigateTo({ url: '/pages/adventure/index' })
   },
 
   goChat() {

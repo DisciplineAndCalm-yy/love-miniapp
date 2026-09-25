@@ -9,6 +9,24 @@ function randomCode() {
   return code
 }
 
+function todayKey() {
+  const t = Date.now() + 8 * 3600000
+  const d = new Date(t)
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`
+}
+
+// ===== 单人体验码:固定 10 个,可多人重复使用,每人领一个独立沙盒空间 =====
+// 含数字 0/1,而随机码字符集里没有 0 和 1,因此永不与自动生成的邀请码冲突
+const DEMO_CODES = ['DEMO01', 'DEMO02', 'DEMO03', 'DEMO04', 'DEMO05', 'DEMO06', 'DEMO07', 'DEMO08', 'DEMO09', 'DEMO10']
+
+function todayKey() {
+  const t = Date.now() + 8 * 3600000
+  const d = new Date(t)
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`
+}
+
 async function uniqueInviteCode() {
   for (let i = 0; i < 8; i += 1) {
     const inviteCode = randomCode()
@@ -70,6 +88,25 @@ exports.main = async (event) => {
       if (!code) return { ok: false, message: '请输入邀请码' }
       const valid = await getValidCoupleId(user, OPENID)
       if (valid) return { ok: false, message: '已经绑定过了' }
+      // 单人体验码:不加入别人的空间,而是给自己开一个独立沙盒(可多人重复使用)
+      if (DEMO_CODES.includes(code)) {
+        const inviteCode = await uniqueInviteCode()
+        const add = await db.collection('couples').add({
+          data: {
+            inviteCode,
+            memberOpenids: [OPENID],
+            prevMembers: [OPENID],
+            everPaired: false,
+            togetherSince: todayKey(),
+            status: 'paired',
+            isDemo: true,
+            demoTag: code,
+            createdAt: Date.now()
+          }
+        })
+        await db.collection('users').doc(user._id).update({ data: { coupleId: add._id } })
+        return { ok: true, coupleId: add._id, demo: true }
+      }
       const r = await db.collection('couples').where({ inviteCode: code }).limit(1).get()
       const couple = r.data && r.data[0]
       if (!couple) return { ok: false, message: '邀请码不存在' }

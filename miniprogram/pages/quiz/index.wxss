@@ -34,6 +34,9 @@
 .option.on{background:linear-gradient(135deg,#FF8A9C,#E14E68);color:#fff;border-color:#fff;box-shadow:0 12rpx 26rpx rgba(232,106,122,.4);}
 .opt-mark{width:56rpx;height:56rpx;border-radius:50%;background:#fff;color:var(--rose-deep);font-size:26rpx;font-weight:900;text-align:center;line-height:56rpx;flex-shrink:0;box-shadow:var(--shadow-sm);}
 .q-foot{margin-top:22rpx;}
+.wait-card{text-align:center;padding:56rpx 32rpx;animation:popIn .4s ease;}
+.wait-face{font-size:96rpx;animation:float 2.4s ease-in-out infinite;}
+@keyframes popIn{from{transform:scale(.9);opacity:0;}to{transform:scale(1);opacity:1;}}
 .result-card{text-align:center;position:relative;overflow:hidden;animation:popIn .45s cubic-bezier(.2,1.4,.4,1);}
 @keyframes popIn{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
 .burst{position:absolute;top:24%;pointer-events:none;animation:burstUp 1.8s ease-out forwards;z-index:2;}

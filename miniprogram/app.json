@@ -19,7 +19,8 @@
     "pages/wish/index",
     "pages/dice/index",
     "pages/cards/index",
-    "pages/night/index"
+    "pages/night/index",
+    "pages/adventure/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#FFF8F5",

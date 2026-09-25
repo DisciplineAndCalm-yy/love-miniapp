@@ -28,7 +28,7 @@
           <view class="tl-author">{{item.author ? item.author.nickName : ''}}</view>
           <view wx:if="{{item.content}}" class="tl-content">{{item.content}}</view>
           <view wx:if="{{item.photos.length}}" class="pics">
-            <image wx:for="{{item.photos}}" wx:for-item="p" wx:key="*this" src="{{p}}" mode="aspectFill" class="pic" data-src="{{p}}" data-urls="{{item.photos}}" bindtap="preview" catchtap="preview" />
+            <image wx:for="{{item.photos}}" wx:for-item="p" wx:key="*this" src="{{item.photoUrls[p] || p}}" mode="aspectFill" class="pic" data-src="{{item.photoUrls[p] || p}}" data-urls="{{item.photoUrls.__list || item.photos}}" bindtap="preview" catchtap="preview" />
           </view>
         </view>
       </view>

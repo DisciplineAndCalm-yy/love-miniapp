@@ -1,4 +1,6 @@
 App({
+  // 每次发版改这里,双方个人中心底部对比版本号,不一致就是有人没更新
+  version: '1.6.1',
   globalData: {
     envId: 'cloud1-6gmcszx1cf01cffb',
     openid: '',
@@ -23,6 +25,8 @@ App({
       env: this.globalData.envId || wx.cloud.DYNAMIC_CURRENT_ENV,
       traceUser: true
     })
+
+    console.log('[love-miniapp] version', this.version)
 
     this.bootstrap()
   },

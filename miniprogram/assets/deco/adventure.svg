@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 170">
+  <ellipse cx="100" cy="152" rx="58" ry="9" fill="#E4EBF7"/>
+  <path d="M40 140 L60 70 L100 92 L140 70 L160 140 Z" fill="#8FC4E8" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M100 92 L100 140" stroke="#fff" stroke-width="4"/>
+  <rect x="86" y="52" width="28" height="26" rx="8" fill="#FFD66E" stroke="#fff" stroke-width="4"/>
+  <path d="M100 20c-8-6-10-13-7-17 2-3 7-2 8 2 1-4 6-5 8-2 3 4 0 11-9 17z" fill="#F0627E"/>
+  <text x="52" y="48" font-size="24">✨</text>
+  <text x="140" y="40" font-size="24">🗡️</text>
+</svg>

@@ -32,5 +32,8 @@
   ],
   "nights": [
     { "keys": { "coupleId": 1, "dateKey": 1 }, "unique": true }
+  ],
+  "adventures": [
+    { "keys": { "coupleId": 1 } }
   ]
 }
