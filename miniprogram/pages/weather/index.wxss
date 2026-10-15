@@ -1,0 +1,142 @@
+.weather-page { min-height: 100vh; position: relative; transition: background .6s ease; }
+.weather-page.cond-sunny { background: linear-gradient(180deg,#FFEFC8 0%,#FFF7EC 46%,#FFF7F3 100%); }
+.weather-page.cond-cloudy { background: linear-gradient(180deg,#E9EFF7 0%,#F7F4F1 46%,#FFF7F3 100%); }
+.weather-page.cond-rain { background: linear-gradient(180deg,#D9E8F7 0%,#EEF4FB 46%,#FFF7F3 100%); }
+.weather-page.cond-thunder { background: linear-gradient(180deg,#DAD7EF 0%,#EFF0FA 46%,#FFF7F3 100%); }
+.weather-page.cond-snow { background: linear-gradient(180deg,#E6F2FF 0%,#F7FBFF 46%,#FFF7F3 100%); }
+.weather-page.cond-fog { background: linear-gradient(180deg,#EDEBE6 0%,#F7F5F1 46%,#FFF7F3 100%); }
+.weather-page.cond-general { background: linear-gradient(180deg,#E8EFFA 0%,#F7F4F1 46%,#FFF7F3 100%); }
+.fx-layer { position: fixed; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+.fx-p { position: absolute; top: -60rpx; opacity: .7; animation-timing-function: linear; animation-iteration-count: infinite; }
+.fx-fall { animation-name: fxFall; }
+.fx-fall-slow { animation-name: fxFall; }
+.fx-float { animation-name: fxFloat; animation-timing-function: ease-in-out; }
+.fx-drift { animation-name: fxDrift; animation-timing-function: ease-in-out; }
+@keyframes fxFall { from { transform: translateY(0); opacity: 0; } 12% { opacity: .8; } to { transform: translateY(120vh); opacity: 0; } }
+@keyframes fxFloat { 0%,100% { transform: translateY(0) scale(1); opacity: .3; } 50% { transform: translateY(70rpx) scale(1.15); opacity: .85; } }
+@keyframes fxDrift { 0% { transform: translateX(-10vw); opacity: .25; } 50% { transform: translateX(15vw); opacity: .6; } 100% { transform: translateX(-10vw); opacity: .25; } }
+.weather-page .page { position: relative; z-index: 2; }
+
+.row-title { font-size: 30rpx; font-weight: 800; color: var(--rose-deep); margin-bottom: 18rpx; display: flex; align-items: center; gap: 10rpx; }
+.row-title::before { content: ""; width: 10rpx; height: 30rpx; border-radius: 999rpx; background: linear-gradient(180deg,#FF9EB2,#EF5E7C); }
+
+/* 主天气卡 */
+.hero-wx {
+  position: relative; overflow: hidden; text-align: center; padding: 40rpx 22rpx 30rpx; margin-bottom: 28rpx;
+  background: rgba(255,255,255,.72); border: 3rpx solid #fff; border-radius: 48rpx;
+  box-shadow: var(--shadow); backdrop-filter: blur(6rpx);
+}
+.hero-wx::before {
+  content: ""; position: absolute; left: -50rpx; top: -70rpx; width: 240rpx; height: 240rpx; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,214,224,.75), transparent 70%); pointer-events: none;
+}
+.hero-wx::after {
+  content: ""; position: absolute; right: -60rpx; bottom: -80rpx; width: 260rpx; height: 260rpx; border-radius: 50%;
+  background: radial-gradient(circle, rgba(220,233,251,.8), transparent 70%); pointer-events: none;
+}
+.hero-wx-city { position: relative; font-size: 27rpx; font-weight: 800; color: #4A6A9A; }
+.hero-wx-stage { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 6rpx; margin-top: 8rpx; }
+.hero-side { display: flex; flex-direction: column; gap: 16rpx; flex-shrink: 0; }
+.side-bubble {
+  display: flex; align-items: center; gap: 6rpx; padding: 12rpx 18rpx; border-radius: 999rpx;
+  background: rgba(255,255,255,.92); border: 2rpx solid #fff; box-shadow: var(--shadow-sm);
+  font-size: 22rpx; color: #5A6A88; font-weight: 700; white-space: nowrap;
+}
+.side-ic { font-size: 26rpx; }
+.side-hi { color: #E1607A; font-weight: 900; }
+.side-lo { color: #5A8CC4; font-weight: 900; }
+.hero-center { position: relative; flex: 1; }
+.hero-spark { position: absolute; font-size: 30rpx; opacity: .9; animation: float 2.6s ease-in-out infinite; }
+.hero-spark.s1 { left: 10%; top: 18rpx; animation-delay: -.4s; }
+.hero-spark.s2 { right: 12%; top: 66rpx; font-size: 24rpx; animation-delay: -.9s; }
+.hero-wx-emoji { font-size: 130rpx; line-height: 1.1; margin: 4rpx 0; filter: drop-shadow(0 12rpx 20rpx rgba(80,120,180,.3)); animation: float 3.6s ease-in-out infinite; }
+.hero-wx-temp { display: flex; align-items: flex-start; justify-content: center; }
+.hero-wx-temp .t { font-size: 122rpx; font-weight: 900; color: #3A5A8C; line-height: 1; letter-spacing: -2rpx; }
+.hero-wx-temp .u { font-size: 44rpx; font-weight: 800; color: #3A5A8C; margin-top: 12rpx; }
+.hero-wx-text { position: relative; font-size: 31rpx; font-weight: 700; color: #463035; margin-top: 14rpx; }
+.hero-wx-src { position: relative; margin-top: 16rpx; font-size: 22rpx; color: var(--muted); }
+.hero-wx-note { position: relative; margin-top: 6rpx; font-size: 20rpx; color: #C9405A; word-break: break-all; }
+
+/* 未来三天 */
+.forecast { display: flex; gap: 16rpx; }
+.fc-item { flex: 1; background: linear-gradient(180deg,#fff,#FBF6FF); border: 2rpx solid var(--line); border-radius: 28rpx; padding: 22rpx 8rpx; text-align: center; box-shadow: var(--shadow-sm); }
+.fc-label { font-size: 26rpx; font-weight: 800; }
+.fc-md { font-size: 21rpx; color: var(--muted); margin-top: 2rpx; }
+.fc-emoji { font-size: 56rpx; margin: 12rpx 0; animation: float 4s ease-in-out infinite; }
+.fc-text { font-size: 23rpx; color: var(--muted); min-height: 32rpx; }
+.fc-temp { font-size: 25rpx; margin-top: 8rpx; }
+.fc-temp .hi { font-weight: 900; color: #D14E64; }
+.fc-temp .lo { color: #7C8AA0; }
+
+/* 彩虹屁卡 */
+.rainbow-card {
+  position: relative; overflow: hidden;
+  background: linear-gradient(160deg,#FFF6FB 0%,#FFFFFF 55%,#F3FBFF 100%);
+}
+.rainbow-arc {
+  position: absolute; left: -30%; right: -30%; top: -170rpx; height: 340rpx;
+  background: conic-gradient(from 200deg at 50% 100%, #FF9EB2, #FFD37A, #9BDFB2, #93C4F2, #C9A0DC, #FF9EB2);
+  border-radius: 50%; opacity: .24; pointer-events: none;
+}
+.rb-emoji { position: absolute; opacity: .9; animation: float 3.4s ease-in-out infinite; }
+.rb-emoji.l1 { right: 26rpx; top: 16rpx; font-size: 52rpx; }
+.rb-emoji.l2 { right: 96rpx; top: 42rpx; font-size: 30rpx; animation-delay: -.6s; }
+.rb-emoji.l3 { right: 40rpx; top: 84rpx; font-size: 28rpx; animation-delay: -1.2s; }
+.rainbow-main {
+  position: relative; font-size: 38rpx; font-weight: 900; line-height: 1.6; margin: 6rpx 0 16rpx;
+  color: #E1467C;
+  background: linear-gradient(90deg,#FF6E8F,#F0864E,#E1B23A,#4FB57E,#4E93D6,#9B6FD6);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  transition: transform .25s cubic-bezier(.2,1.4,.4,1);
+}
+.rainbow-main.pop { transform: scale(1.05); }
+.rainbow-sub { position: relative; font-size: 27rpx; color: var(--muted); line-height: 1.7; }
+.rainbow-foot { position: relative; margin-top: 22rpx; display: flex; align-items: center; justify-content: space-between; }
+.rb-hearts { display: flex; gap: 12rpx; }
+.ph { font-size: 34rpx; animation: beat 1.8s infinite; }
+.ph.d1 { animation-delay: .3s; }
+.ph.d2 { animation-delay: .6s; }
+.rb-reroll {
+  font-size: 25rpx; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg,#FF8AC0,#9B6FD6);
+  border-radius: 999rpx; padding: 14rpx 30rpx;
+  box-shadow: 0 10rpx 22rpx rgba(155,111,214,.35);
+}
+.rb-reroll:active { transform: scale(.93); }
+
+/* 小工具 + 换城市 */
+.tools-card { background: linear-gradient(180deg,#fff,#F7F9FF); }
+.tool-row { display: flex; gap: 16rpx; }
+.tool {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8rpx;
+  padding: 22rpx 0; border-radius: 26rpx;
+  background: linear-gradient(180deg,#FFF7F8,#FFEFF2);
+  border: 2rpx solid var(--line); box-shadow: var(--shadow-sm);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.tool:active { transform: scale(.94); }
+.tool.on { background: linear-gradient(135deg,#FF8A9C,#E14E68); border-color: #fff; box-shadow: 0 10rpx 22rpx rgba(232,106,122,.35); }
+.tool.on .tool-tx { color: #fff; }
+.tool-ic { font-size: 46rpx; line-height: 1; filter: drop-shadow(0 4rpx 6rpx rgba(209,78,100,.2)); }
+.tool-tx { font-size: 24rpx; font-weight: 800; color: var(--rose-deep); }
+
+.city-switch {
+  display: flex; align-items: center; gap: 12rpx;
+  margin-top: 0; max-height: 0; opacity: 0; overflow: hidden;
+  transition: max-height .28s ease, opacity .28s ease, margin-top .28s ease;
+}
+.city-switch.open { max-height: 140rpx; opacity: 1; margin-top: 22rpx; }
+.city-input {
+  flex: 1; font-size: 27rpx; padding: 18rpx 24rpx;
+  background: #FFFAF7; border: 2rpx solid var(--line); border-radius: 999rpx;
+  box-shadow: inset 0 2rpx 8rpx rgba(209,78,100,.06);
+}
+.city-ok {
+  flex-shrink: 0; font-size: 26rpx; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg,#FF8A9C,#E14E68);
+  border-radius: 999rpx; padding: 18rpx 34rpx;
+  box-shadow: 0 10rpx 22rpx rgba(232,106,122,.35);
+}
+.city-ok:active { transform: scale(.94); }
+.city-card { text-align: center; }
+.city-emoji { font-size: 90rpx; display: block; margin-bottom: 14rpx; }

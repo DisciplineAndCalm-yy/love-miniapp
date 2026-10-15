@@ -1,8 +1,97 @@
 const cloud = require('wx-server-sdk')
+const https = require('https')
+const zlib = require('zlib')
+const { qweatherKey, qweatherHost } = require('./config')
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
+
+// ===== 天气:HTTP 抓取 + 归一化(免 Key 的 wttr.in 默认,有和风 key 优先用和风) =====
+const WEATHER_TTL = 30 * 60 * 1000
+const weatherCache = {}
+
+// 复用 TLS 连接,避免每次请求都重新握手(冷启动后同实例的后续请求会快很多)
+const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 8 })
+
+function httpGet(url, timeout = 8000) {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, { headers: { 'User-Agent': 'curl/8.0', 'Accept': 'application/json', 'Accept-Encoding': 'gzip, deflate, br' }, agent: httpsAgent }, (res) => {
+      const chunks = []
+      res.on('data', (c) => chunks.push(c))
+      res.on('end', () => {
+        const buf = Buffer.concat(chunks)
+        const enc = String(res.headers['content-encoding'] || '').toLowerCase()
+        const isGzip = enc.includes('gzip') || (buf[0] === 0x1f && buf[1] === 0x8b)
+        const done = (e, out) => (e ? reject(e) : resolve(out.toString('utf8')))
+        if (isGzip) return zlib.gunzip(buf, done)
+        if (enc.includes('br')) return zlib.brotliDecompress(buf, done)
+        if (enc.includes('deflate')) return zlib.inflate(buf, done)
+        return resolve(buf.toString('utf8'))
+      })
+    })
+    req.on('error', reject)
+    req.setTimeout(timeout, () => { req.destroy(new Error('weather timeout')) })
+  })
+}
+
+// wttr 兜底返回的拼音/英文城市,映射回中文(和风正常时用不到,纯兜底)
+const ROMAN_ZH_CITY = {
+  beijing: '北京', shanghai: '上海', guangzhou: '广州', shenzhen: '深圳', hangzhou: '杭州',
+  nanjing: '南京', wuhan: '武汉', chengdu: '成都', xian: '西安', chongqing: '重庆',
+  tianjin: '天津', suzhou: '苏州', changsha: '长沙', zhengzhou: '郑州', qingdao: '青岛',
+  ningbo: '宁波', wuxi: '无锡', foshan: '佛山', dongguan: '东莞', hefei: '合肥',
+  fuzhou: '福州', xiamen: '厦门', kunming: '昆明', dalian: '大连', shenyang: '沈阳',
+  jinan: '济南', harbin: '哈尔滨', changchun: '长春', nanchang: '南昌', guiyang: '贵阳',
+  nanning: '南宁', haikou: '海口', sanya: '三亚', lanzhou: '兰州', xining: '西宁',
+  yinchuan: '银川', urumqi: '乌鲁木齐', lhasa: '拉萨', taiyuan: '太原', shijiazhuang: '石家庄',
+  luoyang: '洛阳', nantong: '南通', yangzhou: '扬州', wenzhou: '温州', quanzhou: '泉州',
+  zhuhai: '珠海', huizhou: '惠州', zhongshan: '中山', shantou: '汕头', guilin: '桂林',
+  liuzhou: '柳州', haerbin: '哈尔滨', datong: '大同', baotou: '包头', yantai: '烟台',
+  weifang: '潍坊', zibo: '淄博', luoyang2: '洛阳', xuzhou: '徐州', changzhou: '常州',
+  jiaxing: '嘉兴', huzhou: '湖州', jinhua: '金华', taizhou: '台州', wuhu: '芜湖',
+  ganzhou: '赣州', jiujiang: '九江', yichang: '宜昌', xiangyang: '襄阳', hengyang: '衡阳',
+  zhuzhou: '株洲', xiangtan: '湘潭', kaifeng: '开封', xinxiang: '新乡', anyang: '安阳',
+  tangshan: '唐山', qinhuangdao: '秦皇岛', zhangjiakou: '张家口', chengde: '承德', cangzhou: '沧州',
+  yinchuan2: '银川', dunhuang: '敦煌', jiayuguan: '嘉峪关', karamay: '克拉玛依', turpan: '吐鲁番',
+  kashgar: '喀什', hotan: '和田', yining: '伊宁', altay: '阿勒泰', tacheng: '塔城',
+  changji: '昌吉', shihezi: '石河子', aksu: '阿克苏', korla: '库尔勒', hami: '哈密',
+  hainan: '海南', hongkong: '香港', macau: '澳门', taipei: '台北', taibei: '台北'
+}
+
+function romanToZh(name) {
+  if (!name) return ''
+  const parts = String(name).trim().toLowerCase().split(/[\s·,\/]+/)
+  for (let i = parts.length - 1; i >= 0; i -= 1) {
+    if (ROMAN_ZH_CITY[parts[i]]) return ROMAN_ZH_CITY[parts[i]]
+  }
+  return ''
+}
+
+// wttr 的英文天气描述转中文(先按天气码,再按英文关键字)
+function enToZh(en) {
+  const t = String(en || '').toLowerCase()
+  if (!t) return ''
+  if (/thunder|storm/.test(t)) return '雷阵雨'
+  if (/blizzard/.test(t)) return '暴雪'
+  if (/snow|sleet|ice|freez|frost/.test(t)) return /heavy|moderate/.test(t) ? '中雪' : '小雪'
+  if (/rain|drizzle|shower|precip/.test(t)) return /heavy|torrential/.test(t) ? '大雨' : (/moderate/.test(t) ? '中雨' : '小雨')
+  if (/fog|mist|haze|smok|dust|sand/.test(t)) return '雾'
+  if (/overcast/.test(t)) return '阴天'
+  if (/cloud/.test(t)) return /partly|patchy|few|scattered/.test(t) ? '多云' : '阴'
+  if (/sun|clear|fine/.test(t)) return '晴'
+  return ''
+}
+function condFromText(text) {
+  const t = String(text || '')
+  if (/雷/.test(t)) return 'thunder'
+  if (/雪|冰|冻/.test(t)) return 'snow'
+  if (/雨|阵雨|雷阵雨|毛毛/.test(t)) return 'rain'
+  if (/雾|霾|浮尘|沙/.test(t)) return 'fog'
+  if (/云|阴|多云/.test(t)) return 'cloudy'
+  if (/晴|阳光|sunny|clear/i.test(t)) return 'sunny'
+  return 'cloudy'
+}
 
 const MOODS = ['love', 'miss', 'calm', 'busy', 'sad']
 
@@ -20,6 +109,20 @@ function shiftDate(key, delta) {
   const d = new Date(`${key}T00:00:00+08:00`)
   d.setDate(d.getDate() + delta)
   return d.toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).slice(0, 10)
+}
+
+function normDateKey(k) {
+  if (typeof k === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(k)) return k
+  return ''
+}
+
+function daysBetween(fromKey, toKey) {
+  const f = String(fromKey || '').split('-').map(Number)
+  const t = String(toKey || '').split('-').map(Number)
+  if (f.length < 3 || t.length < 3 || f.some(Number.isNaN) || t.some(Number.isNaN)) return NaN
+  const a = Date.UTC(f[0], f[1] - 1, f[2])
+  const b = Date.UTC(t[0], t[1] - 1, t[2])
+  return Math.round((b - a) / 86400000)
 }
 
 function keyFromTs(ts) {
@@ -72,6 +175,169 @@ async function requireCouple(user, openid) {
   }
   if (data.status === 'dissolved') throw new Error('空间已解散，重新绑定可恢复')
   return data
+}
+
+// ===== 天气 =====
+// wttr.in 天气码(WW) 转中文
+const WW_ZH = {
+  113: '晴', 116: '多云', 119: '阴', 122: '阴天', 143: '薄雾', 248: '雾', 260: '冻雾',
+  176: '阵雨', 263: '小毛毛雨', 266: '毛毛雨', 293: '零星小雨', 296: '小雨', 299: '阵雨',
+  302: '中雨', 305: '大雨', 308: '大雨', 353: '小雨', 356: '中到大雨', 359: '暴雨',
+  200: '雷阵雨', 386: '雷阵雨', 389: '雷雨', 392: '雷雪', 395: '雷雪',
+  179: '阵雪', 227: '吹雪', 230: '暴雪', 323: '小雪', 326: '小雪', 329: '中雪', 332: '中雪',
+  335: '大雪', 338: '大雪', 368: '阵雪', 371: '大雪', 350: '冰粒', 362: '雨夹雪', 365: '雨夹雪',
+  317: '雨夹雪', 320: '雨夹雪', 311: '冻雨', 314: '冻雨', 281: '冻毛毛雨', 284: '冻雨'
+}
+
+async function fetchWeatherWttr(lat, lon, city) {
+  const loc = (lat != null && lon != null) ? `${lat},${lon}` : encodeURIComponent(city || 'Beijing')
+  const body = await httpGet(`https://wttr.in/${loc}?format=j1&lang=zh`)
+  const j = JSON.parse(body)
+  if (!j || !j.current_condition) throw new Error('wttr 无数据')
+  const cur = j.current_condition[0] || {}
+  const area = (j.nearest_area && j.nearest_area[0]) || {}
+  const cityName = (((area.areaName || [])[0] || {}).value) || city || ''
+  const region = (((area.region || [])[0] || {}).value) || ''
+  // 先按天气码,再按英文关键字转中文,最后才用原文
+  const codeToText = (code, fallbackEn) => WW_ZH[code] || enToZh(fallbackEn) || fallbackEn || '多云'
+  const nowText = codeToText(Number(cur.weatherCode), ((cur.weatherDesc || [])[0] || {}).value)
+  const pickHour = (d) => ((d.hourly || [])[4] || (d.hourly || [])[0] || {})
+  const days = (j.weather || []).slice(0, 3).map((d) => {
+    const h = pickHour(d)
+    const t = codeToText(Number(h.weatherCode), ((h.weatherDesc || [])[0] || {}).value)
+    return { date: d.date, max: Number(d.maxtempC), min: Number(d.mintempC), text: t, cond: condFromText(t) }
+  })
+  return {
+    city: city || romanToZh(cityName) || romanToZh(region) || cityName || region || '',
+    now: { temp: Number(cur.temp_C), feels: Number(cur.FeelsLikeC), text: nowText, cond: condFromText(nowText), humidity: Number(cur.humidity), wind: Number(cur.windspeedKmph) },
+    days,
+    source: 'wttr'
+  }
+}
+
+const geoCache = {}
+// 按坐标或城市名反查,返回 {id, name}(中文优先地级市)。城市名必须先转 LocationID,和风天气接口不接受中文名。
+async function qweatherGeoResolve(query) {
+  if (geoCache[query]) return geoCache[query]
+  const geoBase = qweatherHost ? `https://${qweatherHost}/geo` : 'https://geoapi.qweather.com'
+  const j = JSON.parse(await httpGet(`${geoBase}/v2/city/lookup?location=${encodeURIComponent(query)}&key=${qweatherKey}`, 4000))
+  const g = j && j.location && j.location[0]
+  if (!g || !g.id) throw new Error('城市反查失败')
+  const out = { id: g.id, name: (g.adm2 && g.adm2 !== g.name) ? g.adm2 : g.name }
+  geoCache[query] = out
+  return out
+}
+
+async function fetchWeatherQWeather(lat, lon, city) {
+  // 新版和风走专属 Host(路径 /v7 与 /geo/v2);老版走 devapi + geoapi
+  const base = qweatherHost ? `https://${qweatherHost}` : 'https://devapi.qweather.com'
+  let qloc
+  let name = city || ''
+  let nameP = null
+  if (lat != null && lon != null && !city) {
+    // 坐标:直接查天气,中文名并发反查
+    qloc = `${lon},${lat}`
+    nameP = qweatherGeoResolve(qloc).catch(() => null)
+  } else {
+    // 城市名:必须先反查出 LocationID,再用 ID 查天气
+    const g = await qweatherGeoResolve(city || '北京')
+    qloc = g.id
+    name = city || g.name
+  }
+  // 实时/三天 并发,避免串行拖到 3 秒超时
+  const [nowTxt, dayTxt, nm] = await Promise.all([
+    httpGet(`${base}/v7/weather/now?location=${encodeURIComponent(qloc)}&key=${qweatherKey}`, 5000),
+    httpGet(`${base}/v7/weather/3d?location=${encodeURIComponent(qloc)}&key=${qweatherKey}`, 5000),
+    nameP || Promise.resolve(null)
+  ])
+  if (nm && !name) name = nm.name
+  const nowJ = JSON.parse(nowTxt)
+  const dayJ = JSON.parse(dayTxt)
+  const n = (nowJ && nowJ.now) || {}
+  if (!n.temp && !n.text) throw new Error('和风无数据')
+  const days = ((dayJ && dayJ.daily) || []).slice(0, 3).map((d) => ({ date: d.fxDate, max: Number(d.tempMax), min: Number(d.tempMin), text: d.textDay, cond: condFromText(d.textDay), icon: d.iconDay }))
+  return {
+    city: name,
+    now: { temp: Number(n.temp), feels: Number(n.feelsLike), text: n.text, cond: condFromText(n.text), humidity: Number(n.humidity), wind: Number(n.windSpeed), icon: n.icon },
+    days,
+    source: 'qweather'
+  }
+}
+
+async function getWeather(lat, lon, city) {
+  const key = `${lat || ''},${lon || ''}|${city || ''}|${todayKey()}`
+  const hit = weatherCache[key]
+  if (hit && Date.now() - hit.at < WEATHER_TTL) return hit.data
+  let data = null
+  let firstErr = ''
+  const canQWeather = qweatherKey && qweatherHost
+  console.log('getWeather', JSON.stringify({ lat, lon, city, canQWeather, key }))
+  const attempts = canQWeather ? [
+    ['qweather', () => fetchWeatherQWeather(lat, lon, city)],
+    ['wttr', () => fetchWeatherWttr(lat, lon, city)]
+  ] : [
+    ['wttr', () => fetchWeatherWttr(lat, lon, city)]
+  ]
+  for (const [src, run] of attempts) {
+    try { data = await run(); console.log('weather ok via', src); break } catch (e) {
+      if (!firstErr) firstErr = `${src}: ${(e && e.message) || e}`
+      console.error('weather source failed', src, e && e.message)
+    }
+  }
+  if (!data) throw new Error('天气获取失败，稍后再试')
+  if (canQWeather && data.source !== 'qweather') data.note = `和风未生效(${firstErr})`
+  weatherCache[key] = { at: Date.now(), data }
+  return data
+}
+
+// ===== 生理期 =====
+function computePeriod(s, today) {
+  const cycle = Math.min(45, Math.max(20, Number(s && s.cycle) || 28))
+  const length = Math.min(10, Math.max(2, Number(s && s.period) || 5))
+  const last = normDateKey(s && s.lastStart)
+  if (!last) return { set: false }
+  const since = daysBetween(last, today)
+  if (!Number.isFinite(since) || since < 0) return { set: false, bad: true }
+  const cyclesPassed = Math.floor(since / cycle)
+  const pos = since % cycle
+  const inPeriod = pos < length
+  const thisStart = shiftDate(last, cyclesPassed * cycle)
+  const nextStart = shiftDate(last, (cyclesPassed + 1) * cycle)
+  const daysToNext = daysBetween(today, nextStart)
+  const ovulation = shiftDate(nextStart, -14)
+  const daysToOvulation = daysBetween(today, ovulation)
+  const fertileStart = shiftDate(ovulation, -4)
+  const fertileEnd = shiftDate(ovulation, 1)
+  const fertile = today >= fertileStart && today <= fertileEnd
+  let phase = 'normal'
+  if (inPeriod) phase = 'period'
+  else if (today === ovulation) phase = 'ovulation'
+  else if (fertile) phase = 'fertile'
+  return {
+    set: true,
+    cycle,
+    length,
+    lastStart: last,
+    today,
+    dayOfCycle: pos + 1,
+    inPeriod,
+    periodDay: inPeriod ? pos + 1 : 0,
+    thisStart,
+    nextStart,
+    daysToNext,
+    ovulation,
+    daysToOvulation,
+    fertile,
+    fertileStart,
+    fertileEnd,
+    phase
+  }
+}
+
+function publicPeriod(ownerName, settings, today, own) {
+  const share = !settings || settings.share !== false
+  if (!own && !share) return { shared: false, ownerName }
+  return { shared: share, ownerName, own, ...computePeriod(settings || {}, today) }
 }
 
 async function fetchAllCheckins(where, fields) {
@@ -1077,6 +1343,69 @@ exports.main = async (event) => {
         }
       })
       return { ok: true, remindEnabled: !!event.enabled }
+    }
+
+    if (action === 'saveLocation') {
+      const patch = { locUpdatedAt: Date.now() }
+      const hasCoords = event.lat != null && event.lon != null && Number.isFinite(Number(event.lat)) && Number.isFinite(Number(event.lon))
+      const hasCity = typeof event.city === 'string' && event.city.trim()
+      if (hasCoords) {
+        patch.locLat = Number(event.lat)
+        patch.locLon = Number(event.lon)
+      } else if (hasCity) {
+        // 手填城市:清空旧坐标,避免 getWeather 继续用老坐标查老城市(切城市无效的根因)
+        patch.locLat = _.remove()
+        patch.locLon = _.remove()
+      }
+      if (hasCity) {
+        patch.locCity = event.city.trim().slice(0, 40)
+      }
+      await db.collection('users').doc(user._id).update({ data: patch })
+      return { ok: true, locCity: (hasCity ? event.city.trim().slice(0, 40) : (user.locCity || '')), locCleared: !hasCoords && !!hasCity }
+    }
+
+    if (action === 'getWeather') {
+      const lat = event.lat != null ? Number(event.lat) : (user.locLat != null ? user.locLat : null)
+      const lon = event.lon != null ? Number(event.lon) : (user.locLon != null ? user.locLon : null)
+      const city = (typeof event.city === 'string' && event.city.trim()) ? event.city.trim() : (user.locCity || '')
+      if ((lat == null || lon == null) && !city) return fail('先设置一下城市吧')
+      // 前端带了定位就顺手记下,省得反复授权
+      if (event.lat != null && event.lon != null) {
+        try {
+          await db.collection('users').doc(user._id).update({ data: { locLat: lat, locLon: lon, locCity: city, locUpdatedAt: Date.now() } })
+        } catch (e) {}
+      }
+      let weather
+      try {
+        weather = await getWeather(lat, lon, city)
+      } catch (err) {
+        return fail('天气获取失败，稍后再试')
+      }
+      return { ok: true, weather }
+    }
+
+    if (action === 'getPeriod') {
+      const couple = await requireCouple(user, OPENID)
+      const today = todayKey()
+      const partnerOpenid = (couple.memberOpenids || []).find((o) => o !== OPENID)
+      const partnerUser = partnerOpenid ? await getUser(partnerOpenid) : null
+      const myName = user.nickName || '我'
+      const partnerName = (partnerUser && partnerUser.nickName) || 'TA'
+      return {
+        ok: true,
+        today,
+        mine: { ownerName: myName, own: true, ...publicPeriod(myName, user.period, today, true) },
+        partner: partnerUser ? { ownerName: partnerName, own: false, ...publicPeriod(partnerName, partnerUser.period, today, false) } : null
+      }
+    }
+
+    if (action === 'savePeriod') {
+      const lastStart = normDateKey(event.lastStart)
+      const cycle = Math.min(45, Math.max(20, Math.round(Number(event.cycle) || 28)))
+      const length = Math.min(10, Math.max(2, Math.round(Number(event.period) || 5)))
+      const period = { lastStart: lastStart || '', cycle, period: length, share: event.share !== false, updatedAt: Date.now() }
+      await db.collection('users').doc(user._id).update({ data: { period } })
+      return { ok: true, period }
     }
 
     if (action === 'getMembers') {

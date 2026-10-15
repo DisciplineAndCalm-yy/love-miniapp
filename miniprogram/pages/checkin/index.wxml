@@ -6,6 +6,26 @@
   </view>
 
   <block wx:else>
+    <!-- 今日天气 + 夸夸(与签到融合) -->
+    <view class="wx-banner cond-{{(weather && weather.now.cond) || 'general'}}">
+      <view class="wx-deco">🌤️</view>
+      <view class="wx-banner-top">
+        <view class="wx-left">
+          <text class="wx-big-emoji">{{weatherEmoji}}</text>
+          <view>
+            <view class="wx-city">{{weather ? ('📍 ' + (weather.city || '当前城市')) : '📍 今日天气'}}</view>
+            <view class="wx-temp" wx:if="{{weather}}">{{weather.now.temp}}°<text class="wx-txt">{{weather.now.text}}</text></view>
+            <view class="wx-temp muted" wx:else>点右侧设置城市 ›</view>
+          </view>
+        </view>
+        <view class="wx-go" bindtap="goWeather">看看天 ›</view>
+      </view>
+      <view class="wx-praise" wx:if="{{praise}}">
+        <text class="praise-text">💌 {{praise}}</text>
+        <view class="praise-use" bindtap="usePraise">用这句 →</view>
+      </view>
+    </view>
+
     <view class="streaks">
       <view class="streak">
         <view class="num">{{streaks.mine}}</view>
@@ -49,6 +69,7 @@
     </view>
 
     <view class="card done-card" wx:else>
+      <text class="sticker" style="right:24rpx;top:14rpx">🎀</text>
       <view class="done-badge">✓ 今天已签到</view>
       <view class="muted" style="margin: 8rpx 0 20rpx;">明天记得再来盖一次章哦 ♡</view>
       <view class="done-mood">{{mine.mood ? moodMap[mine.mood] : ''}}</view>
@@ -70,4 +91,9 @@
       <image wx:if="{{partnerPhotoUrl || partner.photo}}" src="{{partnerPhotoUrl || partner.photo}}" mode="aspectFill" class="photo" data-url="{{partnerPhotoUrl || partner.photo}}" bindtap="previewPhoto" binderror="partnerPhotoError" />
     </view>
   </block>
+
+  <!-- 签到成功撒花 -->
+  <view class="burst-layer" wx:if="{{burst.length}}">
+    <text class="burst-p" wx:for="{{burst}}" wx:key="id" style="left:{{item.x}}%;font-size:{{item.s}}rpx;animation-duration:{{item.d}}s;animation-delay:{{item.delay}}s">{{item.t}}</text>
+  </view>
 </view>

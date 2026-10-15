@@ -23,7 +23,9 @@
       <text class="link" bindtap="goCards">🃏 真心话</text>
       <text class="link" bindtap="goNight">🌙 晚安</text>
       <text class="link" bindtap="goAdventure">🗺️ 冒险</text>
-      <view class="mascot-wrap"><text class="mascot-fallback">🐱</text><image class="mascot" src="/assets/pet/cat.svg" mode="aspectFit" binderror="hideMascot" wx:if="{{showMascot}}" /></view>
+      <text class="link" bindtap="goPeriod">🩸 生理期</text>
+      <text class="link" bindtap="goWeather">🌤️ 天气</text>
+      <view class="mascot-wrap"><text class="mascot-fallback">🐱</text><image class="mascot" src="/assets/pet/mascot.svg" mode="aspectFit" binderror="hideMascot" wx:if="{{showMascot}}" /></view>
     </view>
   </view>
 
@@ -71,8 +73,21 @@
     <view class="muted" wx:else>还没有纪念日，点这里许个愿吧 ✨</view>
   </view>
 
+  <view class="card weather-card" wx:if="{{paired}}" bindtap="goWeather">
+    <view class="wx-top">
+      <text class="wx-emoji">{{weatherEmoji}}</text>
+      <view class="wx-info">
+        <view class="wx-city">📍 {{weather ? (weather.city || '当前城市') : '今日天气'}}</view>
+        <view class="wx-temp" wx:if="{{weather}}">{{weather.now.temp}}° <text class="wx-desc">{{weather.now.text}}</text></view>
+        <view class="muted" wx:else>点我设置城市，看天气和夸夸 ♡</view>
+      </view>
+      <text class="chev">〉</text>
+    </view>
+    <view class="wx-praise" wx:if="{{praise}}">💌 {{praise}}</view>
+  </view>
+
   <view class="card pet-banner" wx:if="{{paired}}" bindtap="goPet">
-    <view class="mini-wrap"><image wx:if="{{showMascot}}" src="/assets/pet/cat.svg" class="mini-pet" mode="aspectFit" binderror="hideMascot" /><text wx:else>🐾</text></view>
+    <view class="mini-wrap"><image wx:if="{{showMascot}}" src="/assets/pet/mascot.svg" class="mini-pet" mode="aspectFit" binderror="hideMascot" /><text wx:else>🐾</text></view>
     <view><view class="title" style="font-size:32rpx">云养宠物</view><view class="muted">喂食 + 陪玩，一起升级 ♡</view></view>
     <text class="chev">〉</text>
   </view>

@@ -20,13 +20,6 @@ function todayKey() {
 // 含数字 0/1,而随机码字符集里没有 0 和 1,因此永不与自动生成的邀请码冲突
 const DEMO_CODES = ['DEMO01', 'DEMO02', 'DEMO03', 'DEMO04', 'DEMO05', 'DEMO06', 'DEMO07', 'DEMO08', 'DEMO09', 'DEMO10']
 
-function todayKey() {
-  const t = Date.now() + 8 * 3600000
-  const d = new Date(t)
-  const p = (n) => String(n).padStart(2, '0')
-  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`
-}
-
 async function uniqueInviteCode() {
   for (let i = 0; i < 8; i += 1) {
     const inviteCode = randomCode()
@@ -41,18 +34,23 @@ async function getUser(openid) {
   return (r.data && r.data[0]) || null
 }
 
-async function getValidCoupleId(user, OPENID) {
+async function getValidCouple(user, OPENID) {
   if (!user.coupleId) return null
   try {
     const r = await db.collection('couples').doc(user.coupleId).get()
     const c = r.data
     if (c && c.status !== 'dissolved' && Array.isArray(c.memberOpenids) && c.memberOpenids.includes(OPENID)) {
-      return c._id || user.coupleId
+      return c
     }
   } catch (e) {}
   try { await db.collection('users').doc(user._id).update({ data: { coupleId: '' } }) } catch (e) {}
   user.coupleId = ''
   return null
+}
+
+async function getValidCoupleId(user, OPENID) {
+  const c = await getValidCouple(user, OPENID)
+  return c ? (c._id || user.coupleId) : null
 }
 
 exports.main = async (event) => {
@@ -86,10 +84,15 @@ exports.main = async (event) => {
     if (action === 'join') {
       const code = String((event && event.code) || '').trim().toUpperCase()
       if (!code) return { ok: false, message: '请输入邀请码' }
-      const valid = await getValidCoupleId(user, OPENID)
-      if (valid) return { ok: false, message: '已经绑定过了' }
+      const existing = await getValidCouple(user, OPENID)
+      // 只有已绑定「真实空间」的人才拒绝，保护真实数据；单人沙盒不拦（可重复体验/或改绑真实空间）
+      if (existing && !existing.isDemo) return { ok: false, message: '已经绑定过了' }
       // 单人体验码:不加入别人的空间,而是给自己开一个独立沙盒(可多人重复使用)
       if (DEMO_CODES.includes(code)) {
+        // 已在单人沙盒里:复用原有沙盒,保留进度,不再重复开一间
+        if (existing && existing.isDemo) {
+          return { ok: true, coupleId: existing._id, demo: true, reused: true }
+        }
         const inviteCode = await uniqueInviteCode()
         const add = await db.collection('couples').add({
           data: {

@@ -159,3 +159,51 @@
   margin: 16rpx 0;
   color: #4A3236;
 }
+
+/* 今日天气 + 夸夸融合卡 */
+.wx-banner {
+  position: relative; overflow: hidden; margin-bottom: 26rpx;
+  border-radius: 40rpx; padding: 30rpx 30rpx 26rpx;
+  border: 3rpx solid #fff; box-shadow: var(--shadow);
+  background: linear-gradient(135deg, #FFE9EE 0%, #FFF6F1 60%, #FFF0C4 100%);
+}
+.wx-banner.cond-sunny { background: linear-gradient(135deg,#FFF4D9 0%,#FFE9C2 55%,#FFD9A0 100%); }
+.wx-banner.cond-cloudy { background: linear-gradient(135deg,#EEF2F8 0%,#FFF6F1 60%,#E7EEF9 100%); }
+.wx-banner.cond-rain { background: linear-gradient(135deg,#E2EFF9 0%,#EEF4FB 55%,#DCE9FB 100%); }
+.wx-banner.cond-thunder { background: linear-gradient(135deg,#E4E3F3 0%,#EFEDFA 60%,#DCD8F0 100%); }
+.wx-banner.cond-snow { background: linear-gradient(135deg,#EAF4FF 0%,#F7FBFF 60%,#E3F0FA 100%); }
+.wx-banner.cond-fog { background: linear-gradient(135deg,#EEEDEA 0%,#F7F5F1 60%,#E6E4DE 100%); }
+.wx-deco {
+  position: absolute; right: -20rpx; bottom: -30rpx; font-size: 190rpx; opacity: .18;
+  transform: rotate(-8deg); pointer-events: none;
+}
+.wx-banner-top { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 2; }
+.wx-left { display: flex; align-items: center; gap: 20rpx; }
+.wx-big-emoji { font-size: 86rpx; filter: drop-shadow(0 8rpx 14rpx rgba(80,110,150,.25)); animation: float 3.4s ease-in-out infinite; }
+.wx-city { font-size: 25rpx; font-weight: 800; color: #5A6A88; }
+.wx-temp { font-size: 46rpx; font-weight: 900; color: #3A5A8C; margin-top: 2rpx; }
+.wx-txt { font-size: 26rpx; font-weight: 800; color: #463035; margin-left: 12rpx; }
+.wx-go {
+  flex-shrink: 0; font-size: 23rpx; font-weight: 800; color: var(--rose-deep);
+  background: rgba(255,255,255,.85); border: 2rpx solid var(--line);
+  border-radius: 999rpx; padding: 10rpx 22rpx; box-shadow: var(--shadow-sm);
+}
+.wx-go:active { transform: scale(.95); }
+.wx-praise {
+  position: relative; z-index: 2; margin-top: 22rpx;
+  background: rgba(255,255,255,.82); border-radius: 26rpx; padding: 20rpx 22rpx;
+  display: flex; align-items: center; gap: 16rpx; border: 2rpx solid #fff;
+}
+.praise-text { flex: 1; font-size: 27rpx; font-weight: 700; line-height: 1.6; color: #C9405A; }
+.praise-use {
+  flex-shrink: 0; font-size: 23rpx; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg,#FF8A9C,#E14E68); border-radius: 999rpx; padding: 10rpx 22rpx;
+  box-shadow: 0 8rpx 18rpx rgba(232,106,122,.35);
+}
+.praise-use:active { transform: scale(.94); }
+
+/* 撒花 */
+.burst-layer { position: fixed; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 90; overflow: hidden; }
+.burst-p { position: absolute; top: 34%; animation-name: burstUp; animation-timing-function: ease-out; animation-fill-mode: forwards; }
+@keyframes burstUp { from { transform: translateY(0) scale(.5) rotate(0); opacity: 1; } to { transform: translateY(420rpx) scale(1.2) rotate(40deg); opacity: 0; } }
+

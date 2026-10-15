@@ -1,6 +1,9 @@
 const { todayKey } = require('../../utils/date')
 const { requireCouple, uploadImage, fileIDToURL, fileIDsToURLs, callApi } = require('../../utils/cloud')
 const { MOOD_LIST, moodLabel, MOOD_MAP, QUICK_CHECKINS } = require('../../utils/mood')
+const { dailyPraise } = require('../../utils/praise')
+
+const COND_EMOJI = { sunny: '☀️', cloudy: '☁️', rain: '🌧️', snow: '❄️', thunder: '⛈️', fog: '🌫️', general: '🌤️' }
 
 Page({
   data: {
@@ -16,7 +19,12 @@ Page({
     partnerMoodLabel: '',
     streaks: { mine: 0, partner: 0, together: 0 },
     saving: false,
-    paired: false
+    paired: false,
+    weather: null,
+    weatherEmoji: '🌤️',
+    praise: '',
+    // 签到成功撒花
+    burst: []
   },
 
   onShow() {
@@ -72,6 +80,37 @@ Page({
       photo: (mine && mine.photo) || '',
       streaks
     })
+    this.loadWeather(today)
+  },
+
+  // 今日天气 + 夸夸:与签到融合在同一页;没设城市时静默降级,只留夸夸
+  async loadWeather(today) {
+    let weather = null
+    let weatherEmoji = '🌤️'
+    let praise = ''
+    try {
+      const w = await callApi('getWeather', {}, { silent: true })
+      if (w && w.weather && w.weather.now) {
+        weather = w.weather
+        const cond = weather.now.cond || 'general'
+        weatherEmoji = COND_EMOJI[cond] || '🌤️'
+        praise = dailyPraise(today, cond)
+      }
+    } catch (err) {
+      praise = dailyPraise(today, 'general')
+    }
+    this.setData({ weather, weatherEmoji, praise })
+  },
+
+  usePraise() {
+    const p = this.data.praise
+    if (!p) return
+    this.setData({ content: p })
+    wx.showToast({ title: '已填进寄语 ♡', icon: 'none' })
+  },
+
+  goWeather() {
+    wx.navigateTo({ url: '/pages/weather/index' })
   },
 
   onMood(e) {
@@ -152,11 +191,27 @@ Page({
       })
       this.setData({ streaks: res.streaks })
       wx.showToast({ title: '已盖章 ♡' })
+      this.celebrate()
       this.load()
     } catch (err) {
       console.error(err)
     } finally {
       this.setData({ saving: false })
     }
+  },
+
+  celebrate() {
+    const icons = ['🌸', '♡', '✨', '💗', '🎀', '⭐']
+    this.setData({
+      burst: Array.from({ length: 18 }, (_, i) => ({
+        id: i,
+        t: icons[i % icons.length],
+        x: 4 + Math.random() * 92,
+        s: 30 + Math.random() * 34,
+        d: (1.2 + Math.random() * 1.3).toFixed(2),
+        delay: (Math.random() * 0.6).toFixed(2)
+      }))
+    })
+    setTimeout(() => this.setData({ burst: [] }), 2600)
   }
 })

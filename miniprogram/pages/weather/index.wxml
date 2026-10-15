@@ -1,0 +1,113 @@
+<view class="weather-page {{condClass}}">
+  <!-- 氛围粒子层 -->
+  <view class="fx-layer" wx:if="{{particles.length}}">
+    <text class="fx-p {{fxClass}}" wx:for="{{particles}}" wx:key="id" style="left:{{item.x}}%;font-size:{{item.s}}rpx;animation-duration:{{item.d}}s;animation-delay:{{item.delay}}s">{{item.t}}</text>
+  </view>
+
+  <view class="page">
+    <block wx:if="{{loading}}">
+      <view class="card"><view class="muted" style="text-align:center;padding:40rpx 0">正在看天… ☁️</view></view>
+    </block>
+
+    <block wx:elif="{{needCity}}">
+      <view class="card city-card">
+        <text class="city-emoji">📍</text>
+        <view class="title" style="text-align:center">先告诉我你在哪座城</view>
+        <view class="muted" style="text-align:center;margin:14rpx 0 24rpx">定位一下，或直接填城市名，就能看今天的天气啦</view>
+        <button class="btn-primary" bindtap="locate">📍 自动定位</button>
+        <view class="city-switch open" style="margin-top:26rpx">
+          <input class="city-input" placeholder="比如：杭州" value="{{cityInput}}" bindinput="onCityInput" confirm-type="search" bindconfirm="saveCity" />
+          <view class="city-ok" bindtap="saveCity">确定 ♡</view>
+        </view>
+      </view>
+    </block>
+
+    <block wx:elif="{{weather}}">
+      <view class="hero-wx">
+        <view class="hero-wx-city">📍 {{weather.city || '当前位置'}}</view>
+        <view class="hero-wx-stage">
+          <view class="hero-side">
+            <view class="side-bubble">
+              <text class="side-ic">🌡️</text>
+              <text class="side-tx">最高 <text class="side-hi">{{weather.todayMax}}°</text></text>
+            </view>
+            <view class="side-bubble">
+              <text class="side-ic">💧</text>
+              <text class="side-tx">{{weather.now.humidity}}%</text>
+            </view>
+          </view>
+          <view class="hero-center">
+            <text class="hero-spark s1">✨</text>
+            <text class="hero-spark s2">✦</text>
+            <view class="hero-wx-emoji">{{weather.emoji}}</view>
+            <view class="hero-wx-temp"><text class="t">{{weather.now.temp}}</text><text class="u">°</text></view>
+          </view>
+          <view class="hero-side">
+            <view class="side-bubble">
+              <text class="side-ic">🧊</text>
+              <text class="side-tx">最低 <text class="side-lo">{{weather.todayMin}}°</text></text>
+            </view>
+            <view class="side-bubble">
+              <text class="side-ic">🍃</text>
+              <text class="side-tx">{{weather.now.wind}}km/h</text>
+            </view>
+          </view>
+        </view>
+        <view class="hero-wx-text">{{weather.now.text}} · 体感 {{weather.now.feels}}°</view>
+        <view class="hero-wx-src">数据来源 {{weather.source === 'qweather' ? '和风天气' : 'wttr.in'}}</view>
+        <view class="hero-wx-note" wx:if="{{weather.note}}">{{weather.note}}</view>
+      </view>
+
+      <view class="card">
+        <view class="row-title">📅 未来三天</view>
+        <view class="forecast">
+          <view class="fc-item" wx:for="{{weather.days}}" wx:key="date">
+            <view class="fc-label">{{item.label}}</view>
+            <view class="fc-md">{{item.md}}</view>
+            <view class="fc-emoji">{{item.emoji}}</view>
+            <view class="fc-text">{{item.text}}</view>
+            <view class="fc-temp"><text class="hi">{{item.max}}°</text><text class="lo">/ {{item.min}}°</text></view>
+          </view>
+        </view>
+      </view>
+
+      <view class="card rainbow-card">
+        <view class="rainbow-arc"></view>
+        <text class="rb-emoji l1">🌈</text>
+        <text class="rb-emoji l2">💖</text>
+        <text class="rb-emoji l3">✨</text>
+        <view class="row-title">🌈 今日彩虹屁</view>
+        <view class="rainbow-main {{praisePop ? 'pop' : ''}}">{{praiseMain}}</view>
+        <view class="rainbow-sub">{{praiseSub}}</view>
+        <view class="rainbow-foot">
+          <view class="rb-hearts">
+            <text class="ph">💗</text><text class="ph d1">💞</text><text class="ph d2">💗</text>
+          </view>
+          <view class="rb-reroll" bindtap="rerollPraise">🎲 换一条</view>
+        </view>
+      </view>
+
+      <view class="card tools-card">
+        <view class="row-title">🧭 小工具</view>
+        <view class="tool-row">
+          <view class="tool" bindtap="retry">
+            <view class="tool-ic">🔄</view>
+            <view class="tool-tx">刷新</view>
+          </view>
+          <view class="tool" bindtap="locate">
+            <view class="tool-ic">📍</view>
+            <view class="tool-tx">重新定位</view>
+          </view>
+          <view class="tool {{showCityInput ? 'on' : ''}}" bindtap="toggleCity">
+            <view class="tool-ic">🏙️</view>
+            <view class="tool-tx">换城市</view>
+          </view>
+        </view>
+        <view class="city-switch {{showCityInput ? 'open' : ''}}">
+          <input class="city-input" placeholder="输入城市名，如 苏州" value="{{cityInput}}" bindinput="onCityInput" confirm-type="search" bindconfirm="saveCity" />
+          <view class="city-ok" bindtap="saveCity">切换 ♡</view>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>

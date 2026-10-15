@@ -1,0 +1,119 @@
+<view class="period-page">
+  <view class="fx-layer" wx:if="{{particles.length}}">
+    <text class="fx-blossom" wx:for="{{particles}}" wx:key="id" style="left:{{item.x}}%;font-size:{{item.s}}rpx;animation-duration:{{item.d}}s;animation-delay:{{item.delay}}s">{{item.t}}</text>
+  </view>
+
+  <view class="page">
+    <!-- 我的周期主卡 -->
+    <view class="card ring-card" wx:if="{{mine && mine.view === 'ok'}}">
+      <text class="sticker" style="right:24rpx;top:16rpx">🌸</text>
+      <view class="row-title">🌸 我的周期</view>
+      <view class="ring-wrap">
+        <view class="ring" style="--p:{{mine.ringPct}}">
+          <view class="ring-inner">
+            <text class="ring-face">{{mine.face}}</text>
+            <text class="ring-day">{{mine.dayLabel}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="big-num">{{mine.big}}</view>
+      <view class="muted big-sub">{{mine.bigSub}}</view>
+      <view class="phase-pill">{{mine.phaseLabel}}</view>
+
+      <view class="info-grid">
+        <view class="info-cell"><text class="cell-ic">🗓️</text><view><view class="cell-k">上次开始</view><view class="cell-v">{{mine.lastLabel}}</view></view></view>
+        <view class="info-cell"><text class="cell-ic">⏳</text><view><view class="cell-k">下次预计</view><view class="cell-v">{{mine.nextLabel}}</view></view></view>
+        <view class="info-cell"><text class="cell-ic">💛</text><view><view class="cell-k">排卵日</view><view class="cell-v">{{mine.ovuLabel}}</view></view></view>
+        <view class="info-cell"><text class="cell-ic">🌷</text><view><view class="cell-k">易孕期</view><view class="cell-v small">{{mine.fertileLabel}}</view></view></view>
+      </view>
+
+      <view class="upcoming">
+        <text class="up-k">未来三次预计</text>
+        <view class="up-chips">
+          <text class="up-chip" wx:for="{{mine.upcoming}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+
+      <button class="btn-ghost" bindtap="openEdit">✏️ 更新周期设置</button>
+    </view>
+
+    <view class="card" wx:elif="{{mine && mine.view === 'unset'}}">
+      <view class="empty-hint">
+        <text class="empty-emoji">🌷</text>
+        <view class="title" style="text-align:center">还没设置周期</view>
+        <view class="muted" style="text-align:center;margin:14rpx 0 26rpx">填一次上次开始的日子，就能预测下次啦 ♡</view>
+        <button class="btn-primary" bindtap="openEdit">开始记录 ♡</button>
+      </view>
+    </view>
+
+    <view class="card" wx:elif="{{mine && mine.view === 'bad'}}">
+      <view class="empty-hint">
+        <text class="empty-emoji">🤔</text>
+        <view class="muted" style="text-align:center;margin-bottom:24rpx">日期好像填到未来啦，点下面重新设一个吧</view>
+        <button class="btn-primary" bindtap="openEdit">重新设置 ♡</button>
+      </view>
+    </view>
+
+    <view class="card" wx:if="{{partner}}">
+      <view class="row-title">💗 {{partner.ownerName}}的周期</view>
+      <block wx:if="{{partner.view === 'ok'}}">
+        <view class="partner-big">{{partner.face}} {{partner.big}}</view>
+        <view class="muted">{{partner.bigSub}}</view>
+        <view class="phase-pill soft">{{partner.phaseLabel}}</view>
+        <view class="partner-meta">下次预计 {{partner.nextLabel}} · 排卵日 {{partner.ovuLabel}}</view>
+      </block>
+      <view class="muted" wx:elif="{{partner.view === 'hidden'}}">TA 把周期设成了仅自己可见 ♡</view>
+      <view class="muted" wx:elif="{{partner.view === 'bad'}}">TA 的日期有点问题，提醒 TA 改一下～</view>
+      <view class="muted" wx:else>TA 还没设置周期，可以提醒一下哦 ♡</view>
+    </view>
+
+    <view class="card">
+      <view class="row-title">🌼 小贴士</view>
+      <view class="tip-line">· 预测只是参考，身体有不适请以医生建议为准。</view>
+      <view class="tip-line">· 经期注意保暖、多喝温水、别熬夜 ♡</view>
+      <view class="tip-line">· 想藏起来？关掉「对方可见」即可。</view>
+    </view>
+  </view>
+</view>
+
+<!-- 编辑弹层 -->
+<view class="edit-mask" wx:if="{{editing}}" bindtap="closeEdit">
+  <view class="edit-panel" catchtap="noop">
+    <view class="edit-title">🌸 周期设置</view>
+
+    <view class="edit-row">
+      <text class="edit-k">上次开始日</text>
+      <picker mode="date" value="{{fLast}}" bindchange="onDate">
+        <view class="edit-val">{{fLast}} ▾</view>
+      </picker>
+    </view>
+
+    <view class="edit-row">
+      <text class="edit-k">周期天数</text>
+      <view class="stepper">
+        <view class="step-btn" data-d="-1" bindtap="stepCycle">－</view>
+        <text class="step-num">{{fCycle}}</text>
+        <view class="step-btn" data-d="1" bindtap="stepCycle">＋</view>
+      </view>
+    </view>
+
+    <view class="edit-row">
+      <text class="edit-k">经期天数</text>
+      <view class="stepper">
+        <view class="step-btn" data-d="-1" bindtap="stepPeriod">－</view>
+        <text class="step-num">{{fPeriod}}</text>
+        <view class="step-btn" data-d="1" bindtap="stepPeriod">＋</view>
+      </view>
+    </view>
+
+    <view class="edit-row">
+      <text class="edit-k">对方可见</text>
+      <switch checked="{{fShare}}" bindchange="onShare" color="#F0627E" />
+    </view>
+
+    <view class="edit-actions">
+      <button class="btn-ghost" bindtap="closeEdit">取消</button>
+      <button class="btn-primary" bindtap="save">{{saving ? '保存中…' : '保存 ♡'}}</button>
+    </view>
+  </view>
+</view>

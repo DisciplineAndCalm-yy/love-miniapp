@@ -1,6 +1,9 @@
 const { todayKey, daysBetween, nextOccurrence, leftText, normDateKey } = require('../../utils/date')
 const { callApi, shareCard } = require('../../utils/cloud')
 const { MOOD_MAP } = require('../../utils/mood')
+const { dailyPraise } = require('../../utils/praise')
+
+const COND_EMOJI = { sunny: '☀️', cloudy: '☁️', rain: '🌧️', snow: '❄️', thunder: '⛈️', fog: '🌫️', general: '🌤️' }
 
 Page({
   data: {
@@ -17,6 +20,9 @@ Page({
     moodMap: MOOD_MAP,
     showDeco: true,
     showMascot: true,
+    weather: null,
+    weatherEmoji: '🌤️',
+    praise: ''
   },
   hideDeco() { this.setData({ showDeco: false }) },
   hideMascot() { this.setData({ showMascot: false }) },
@@ -66,6 +72,23 @@ Page({
       console.warn(err)
     }
 
+    // 今日天气 + 夸夸(没设城市/取不到就静默降级,不影响首页其它内容)
+    let weather = null
+    let weatherEmoji = '🌤️'
+    let praise = ''
+    try {
+      const w = await callApi('getWeather', {}, { silent: true })
+      if (w && w.weather && w.weather.now) {
+        weather = w.weather
+        const cond = weather.now.cond || 'general'
+        weatherEmoji = COND_EMOJI[cond] || '🌤️'
+        praise = dailyPraise(today, cond)
+      }
+    } catch (err) {
+      // 没有城市:仍然给一句夸夸,天气卡显示引导
+      praise = dailyPraise(today, 'general')
+    }
+
     let anniList = []
     try {
       const anniRes = await callApi('listAnnis', {}, { silent: true })
@@ -96,7 +119,10 @@ Page({
       myName: user.nickName || '我',
       partnerName: (partner && partner.nickName) || 'TA',
       nextDay: upcoming,
-      streaks
+      streaks,
+      weather,
+      weatherEmoji,
+      praise
     })
   },
 
@@ -146,6 +172,14 @@ Page({
 
   goAdventure() {
     wx.navigateTo({ url: '/pages/adventure/index' })
+  },
+
+  goPeriod() {
+    wx.navigateTo({ url: '/pages/period/index' })
+  },
+
+  goWeather() {
+    wx.navigateTo({ url: '/pages/weather/index' })
   },
 
   goChat() {

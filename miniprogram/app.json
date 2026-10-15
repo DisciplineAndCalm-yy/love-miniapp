@@ -20,8 +20,16 @@
     "pages/dice/index",
     "pages/cards/index",
     "pages/night/index",
-    "pages/adventure/index"
+    "pages/adventure/index",
+    "pages/period/index",
+    "pages/weather/index"
   ],
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于获取你所在城市的实时天气"
+    }
+  },
+  "requiredPrivateInfos": ["getLocation"],
   "window": {
     "navigationBarBackgroundColor": "#FFF8F5",
     "navigationBarTitleText": "我们",

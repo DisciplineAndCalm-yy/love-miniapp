@@ -37,5 +37,17 @@
 .mini-wrap { width: 128rpx; height: 128rpx; line-height: 128rpx; }
 .mini-wrap image, .mini-pet { width: 128rpx; height: 128rpx; }
 .chev { margin-left: auto; color: var(--rose); font-weight: 900; background: var(--blush); width: 60rpx; height: 60rpx; border-radius: 50%; text-align: center; line-height: 60rpx; }
+.weather-card { background: linear-gradient(120deg,#fff 45%,#DCE9FB 120%); }
+.weather-card:active { transform: scale(.99); }
+.wx-top { display: flex; align-items: center; gap: 22rpx; }
+.wx-emoji { font-size: 74rpx; filter: drop-shadow(0 8rpx 12rpx rgba(80,120,180,.25)); flex-shrink: 0; }
+.wx-info { flex: 1; min-width: 0; }
+.wx-city { font-size: 27rpx; font-weight: 800; color: #4A6A9A; }
+.wx-temp { font-size: 40rpx; font-weight: 900; color: #3A5A8C; margin-top: 4rpx; }
+.wx-desc { font-size: 26rpx; font-weight: 700; color: #463035; margin-left: 8rpx; }
+.wx-praise {
+  margin-top: 20rpx; font-size: 27rpx; font-weight: 700; line-height: 1.6; color: #C9405A;
+  background: #FFF0F4; border-radius: 24rpx; padding: 18rpx 22rpx; border: 2rpx solid #F9DCDD;
+}
 @keyframes beat { 0%,100% { transform: scale(1); } 30% { transform: scale(1.16); } 60% { transform: scale(1); } }
 @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12rpx); } }
