@@ -2320,16 +2320,17 @@ exports.main = async (event) => {
         byName: (map[openid] || {}).nickName || 'TA'
       }))
       let streak = 0
+      // 从今天往前数「两人都说了晚安」的连续天数。
+      // 今天还没说(或只说了一个人)时不算断,应从昨天开始数,避免未打卡就显示 0。
+      const bothDay = (key) => {
+        const d = byDay[key]
+        return !!(d && Object.keys(d).length >= 2)
+      }
       let cursor = today
-      for (let i = 0; i < 200; i += 1) {
-        const dayWords = byDay[cursor]
-        const both = dayWords && Object.keys(dayWords).length >= 2
-        if (both) {
-          streak += 1
-          cursor = shiftDate(cursor, -1)
-        } else {
-          break
-        }
+      if (!bothDay(cursor)) cursor = shiftDate(today, -1)
+      for (let i = 0; i < 200 && bothDay(cursor); i += 1) {
+        streak += 1
+        cursor = shiftDate(cursor, -1)
       }
       return { ok: true, list, mineDone: !!todayWords[OPENID], partnerDone: Object.keys(todayWords).some((k) => k !== OPENID), streak }
     }

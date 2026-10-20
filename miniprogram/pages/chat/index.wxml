@@ -1,4 +1,4 @@
-<view class="chat-page">
+<view class="chat-page" style="padding-bottom:calc(190rpx + {{keyboardHeight}}px);">
   <view class="chat-bg">
     <image src="/assets/deco/hearts.svg" mode="aspectFit" />
     <text class="float-heart fh1">💗</text>
@@ -34,14 +34,14 @@
   </scroll-view>
   <view class="read-mark" wx:if="{{peerRead}}">✓✓ 对方已读 ♡</view>
 </view>
-<view class="composer">
+<view class="composer" style="bottom:{{keyboardHeight}}px;">
   <view class="emoji-panel" wx:if="{{emojiPanel}}">
     <text class="emoji" wx:for="{{emojis}}" wx:key="*this" bindtap="addEmoji" data-ch="{{item}}">{{item}}</text>
   </view>
   <view class="composer-row">
     <text class="icon-btn" bindtap="toggleQuick" title="快捷短语">{{showQuick ? '▼' : '⚡'}}</text>
     <text class="icon-btn" bindtap="toggleEmoji">😊</text>
-    <input class="chat-input" value="{{input}}" bindinput="onInput" confirm-type="send" bindconfirm="send" placeholder="说什么悄悄话…" maxlength="500" cursor-spacing="12" adjust-position="{{false}}" />
+    <input class="chat-input" value="{{input}}" bindinput="onInput" confirm-type="send" bindconfirm="send" placeholder="说什么悄悄话…" maxlength="500" cursor-spacing="12" adjust-position="{{false}}" bindkeyboardheightchange="onKeyboardHeight" />
     <text class="icon-btn" bindtap="sendImage">📷</text>
     <button class="btn-primary send-btn" bindtap="send" loading="{{sending}}" disabled="{{sending}}">发送</button>
   </view>

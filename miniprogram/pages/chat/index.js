@@ -11,7 +11,8 @@ Page({
     partnerTyping: false,
     partnerReadAt: 0,
     lastOwnTs: 0,
-    peerRead: false
+    peerRead: false,
+    keyboardHeight: 0
   },
   pollTimer: null,
   lastTs: 0,
@@ -24,7 +25,7 @@ Page({
     this.load(false).then(() => this.markRead())
     wx.setNavigationBarTitle({ title: '悄悄话 ♡' })
   },
-  onHide() { this.stopPoll() },
+  onHide() { this.stopPoll(); if (this.data.keyboardHeight) this.setData({ keyboardHeight: 0 }) },
   onUnload() { this.stopPoll() },
   onPullDownRefresh() { this.loadMore().finally(() => wx.stopPullDownRefresh()) },
   onPageScroll() {},
@@ -105,6 +106,13 @@ Page({
   },
 
   onInput(e) { this.setData({ input: e.detail.value }) },
+  onKeyboardHeight(e) {
+    // 自定义底栏是 fixed 定位,系统不会自动上推,这里按键盘高度把输入区顶起来,避免遮挡
+    const h = (e && e.detail && e.detail.height) || 0
+    if (h === this.data.keyboardHeight) return
+    this.setData({ keyboardHeight: h })
+    if (h) this.scrollBottom()
+  },
   toggleEmoji() { this.setData({ emojiPanel: !this.data.emojiPanel }) },
   addEmoji(e) {
     const ch = e.currentTarget.dataset.ch
