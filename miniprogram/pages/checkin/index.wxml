@@ -74,7 +74,7 @@
       <view class="muted" style="margin: 8rpx 0 20rpx;">明天记得再来盖一次章哦 ♡</view>
       <view class="done-mood">{{mine.mood ? moodMap[mine.mood] : ''}}</view>
       <view class="done-content" wx:if="{{mine.content}}">{{mine.content}}</view>
-      <image wx:if="{{mine.photo}}" src="{{mine.photo}}" mode="aspectFill" class="photo" data-url="{{mine.photo}}" bindtap="previewPhoto" />
+      <image wx:if="{{mine.photoUrl || mine.photo}}" src="{{mine.photoUrl || mine.photo}}" mode="aspectFill" class="photo" data-url="{{mine.photoUrl || mine.photo}}" bindtap="previewPhoto" />
       <button class="btn-ghost" bindtap="goCalendar" style="margin-top:24rpx">去日历看两人签到 →</button>
       <button class="btn-ghost" bindtap="goMoments" style="margin-top:16rpx">去记录日常动态 →</button>
     </view>

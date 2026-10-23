@@ -66,7 +66,7 @@ Page({
     } catch (err) {
       console.warn(err)
     }
-    this.setData({
+    const patch = {
       paired: true,
       mine,
       partner,
@@ -75,11 +75,18 @@ Page({
       partnerMoodLabel: (partner && partner.moodLabel) || '',
       partnerAvatarUrl: (partner && (partner.authorAvatarUrl || partner.authorAvatar)) || '',
       partnerPhotoUrl: (partner && (partner.photoUrl || partner.photo)) || '',
-      mood: (mine && mine.mood) || 'love',
-      content: (mine && mine.content) || '',
-      photo: (mine && mine.photo) || '',
       streaks
-    })
+    }
+    // 只有「今天已有签到记录」时才回填编辑区。
+    // 未签到时若也把 mood/content/photo 重置,从相册/相机返回触发的 onShow→load 会晚于
+    // 选图后的 setData 完成,把刚选好的图冲成 '',于是「提示已添加却看不到图」。
+    if (mine) {
+      patch.mood = mine.mood || 'love'
+      patch.content = mine.content || ''
+      patch.photo = mine.photo || ''
+      patch.photoUrl = mine.photoUrl || ''
+    }
+    this.setData(patch)
     this.loadWeather(today)
   },
 
@@ -126,20 +133,24 @@ Page({
 
   async onPickPhoto() {
     try {
-      wx.showLoading({ title: '上传中…' })
+      wx.showLoading({ title: '上传中…', mask: true })
       const photo = await uploadImage()
-      // fileID 在部分机型直接渲染会空白,换成 https 临时链接反显
+      // fileID 在部分机型(尤其 iOS)直接渲染会空白,统一换成 https 临时链接反显
       const photoUrl = await fileIDToURL(photo)
       wx.hideLoading()
       this.setData({ photo, photoUrl })
       wx.showToast({ title: '已添加 ♡', icon: 'none' })
     } catch (err) {
+      // 关键:iOS 上 showLoading 未 hide 会把后续 showToast 一起吞掉,表现为“无反应”
+      wx.hideLoading()
       const msg = String((err && (err.errMsg || err.message)) || '')
       if (msg.includes('cancel')) return
       if (msg.startsWith('upload:')) {
         wx.showToast({ title: '上传失败,检查网络或云存储权限', icon: 'none', duration: 2500 })
+      } else if (/privacy|scope|auth|permission|deny/i.test(msg)) {
+        wx.showToast({ title: '请在微信设置里允许相册/相机权限', icon: 'none', duration: 2600 })
       } else {
-        wx.showToast({ title: '没能打开相册,再试一次', icon: 'none' })
+        wx.showToast({ title: String((err && err.message) || '没能打开相册,再试一次').slice(0, 26), icon: 'none' })
       }
     }
   },

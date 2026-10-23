@@ -7,27 +7,41 @@ function requireCouple() {
   return couple
 }
 
-async function chooseLocalImages(count = 1) {
-  // chooseMedia 在部分旧基础库不存在,降级到 chooseImage
-  if (wx.chooseMedia) {
-    const pick = await wx.chooseMedia({
+// 用回调式调用包一层 Promise:部分 iOS 微信版本 wx.chooseMedia 的 Promise 风格不稳定,
+// 只用 success/fail 才能保证全端一致拿到结果。
+function chooseLocalImages(count = 1) {
+  return new Promise((resolve, reject) => {
+    const useChooseImage = () => {
+      wx.chooseImage({
+        count,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: (res) => resolve((res && res.tempFilePaths) || []),
+        fail: reject
+      })
+    }
+    if (!wx.chooseMedia) return useChooseImage()
+    wx.chooseMedia({
       count,
       mediaType: ['image'],
       sourceType: ['album', 'camera'],
-      sizeType: ['compressed']
-    })
-    return (pick.tempFiles || []).slice(0, count).map((f) => f.tempFilePath).filter(Boolean)
-  }
-  const pick = await new Promise((resolve, reject) => {
-    wx.chooseImage({
-      count,
       sizeType: ['compressed'],
-      sourceType: ['album', 'camera'],
-      success: resolve,
-      fail: reject
+      success: (res) => resolve(((res && res.tempFiles) || []).map((f) => f && f.tempFilePath).filter(Boolean)),
+      fail: (err) => {
+        // 已知问题:部分 iOS 机型(如 iOS 17)wx.chooseMedia 会直接 fail,
+        // 这里降级到旧版 wx.chooseImage 再试一次;用户主动取消则不重试。
+        if (String((err && err.errMsg) || '').includes('cancel')) return reject(err)
+        useChooseImage()
+      }
     })
   })
-  return (pick.tempFilePaths || []).slice(0, count)
+}
+
+// 从本地临时路径安全取扩展名:iOS 拍摄返回的路径可能没有 .xxx 或带查询串,
+// 旧逻辑会把整段路径当扩展名拼进 cloudPath,导致云端拒绝该文件名(表现为上传失败)
+function fileExt(p) {
+  const m = String(p || '').toLowerCase().match(/\.([a-z0-9]{2,5})(?:[?#]|$)/)
+  return m ? m[1] : 'jpg'
 }
 
 function isCancel(err) {
@@ -66,8 +80,8 @@ async function fileIDsToURLs(ids) {
 }
 function askOpenSetting() {
   wx.showModal({
-    title: '需要相册权限',
-    content: '请在设置中打开“相册”权限，否则无法添加图片',
+    title: '需要相册/相机权限',
+    content: '请在设置中打开“相册”和“相机”权限，否则无法添加图片',
     confirmText: '去设置',
     success(r) {
       if (r.confirm && wx.openSetting) wx.openSetting({})
@@ -78,22 +92,24 @@ function askOpenSetting() {
 async function uploadImage(count = 1) {
   let paths = []
   try {
-    paths = await chooseLocalImages(count)
+    paths = (await chooseLocalImages(count)).slice(0, count)
   } catch (err) {
     if (isCancel(err)) throw err
     if (isAuthDeny(err)) askOpenSetting()
     throw err
   }
-  if (!paths.length) throw new Error('cancel')
+  // 用户取消会走 fail(cancel);这里能拿到“成功但空结果”说明选图异常,给出提示而不是静默
+  if (!paths.length) throw new Error('没选到图片,再试一次')
   const ids = []
   for (const tempFilePath of paths) {
-    const ext = ((tempFilePath || '').split('.').pop() || 'jpg').toLowerCase().slice(0, 5)
+    const ext = fileExt(tempFilePath)
     const cloudPath = `love/${Date.now()}-${Math.random().toString(16).slice(2)}.${ext}`
     try {
       const up = await wx.cloud.uploadFile({ cloudPath, filePath: tempFilePath })
+      if (!up || !up.fileID) throw new Error('no fileID')
       ids.push(up.fileID)
     } catch (err) {
-      console.warn('uploadFile failed', err)
+      console.warn('uploadFile failed', err, 'path=', cloudPath)
       throw new Error('upload:' + String((err && (err.errMsg || err.message)) || '上传失败'))
     }
   }
