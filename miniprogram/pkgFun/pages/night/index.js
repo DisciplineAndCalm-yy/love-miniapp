@@ -21,7 +21,7 @@ Page({
 
   async send() {
     if (this.data.sending || this.data.mineDone) return
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     this.setData({ sending: true })
     try {
       const word = (this.data.word || '').trim().slice(0, 60) || '晚安，好梦 ♡'
@@ -49,7 +49,7 @@ Page({
   },
 
   async load() {
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     try {
       this.setData({ loading: true })
       const res = await callApi('listGoodnights', {}, { silent: true })

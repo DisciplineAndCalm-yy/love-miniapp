@@ -11,18 +11,33 @@
     "pages/moments/index",
     "pages/moments/edit",
     "pages/moments/detail",
+    "pages/notify/index",
+    "pages/album/index",
+    "pages/intimacy/index",
+    "pages/life/index",
+    "pages/report/index",
+    "pages/memories/index",
+    "pages/capsule/index",
     "pages/anniversary/index",
     "pages/anniversary/edit",
     "pages/chat/index",
-    "pages/game/index",
-    "pages/quiz/index",
-    "pages/wish/index",
-    "pages/dice/index",
-    "pages/cards/index",
-    "pages/night/index",
-    "pages/adventure/index",
     "pages/period/index",
     "pages/weather/index"
+  ],
+  "subPackages": [
+    {
+      "root": "pkgFun",
+      "pages": [
+        "pages/game/index",
+        "pages/quiz/index",
+        "pages/wish/index",
+        "pages/dice/index",
+        "pages/cards/index",
+        "pages/night/index",
+        "pages/adventure/index",
+        "pages/monopoly/index"
+      ]
+    }
   ],
   "permission": {
     "scope.userLocation": {

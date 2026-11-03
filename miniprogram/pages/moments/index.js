@@ -1,4 +1,5 @@
 const { callApi, shareCard } = require('../../utils/cloud')
+const interact = require('../../utils/interact')
 const { doingIcon } = require('../../utils/mood')
 const DOINGS = [{ id: '', label: '全部' }, { id: '吃饭', label: '🍱 吃饭' }, { id: '午睡', label: '😴 午睡' }, { id: '上厕所', label: '🚻 上厕所' }, { id: '上班', label: '💼 上班' }, { id: '通勤', label: '🚇 通勤' }, { id: '运动', label: '🏃 运动' }, { id: '追剧', label: '📺 追剧' }, { id: '出门', label: '🌳 出门' }, { id: '日常', label: '✨ 日常' }]
 function fmt(ts) { const d = new Date(ts); const p = (n) => String(n).padStart(2, '0'); return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}` }
@@ -12,11 +13,28 @@ function withList(photoUrls) {
   return out
 }
 Page({
-  data: { list: [], filter: '', doings: DOINGS, loading: true, moreLoading: false, hasMore: true, authorOpenid: '' },
-  onShow() { this.reload() },
+  data: { list: [], filter: '', doings: DOINGS, loading: true, moreLoading: false, hasMore: true, authorOpenid: '', unreadTotal: 0, unreadName: '', unreadTarget: '' },
+  onShow() { this.reload(); this.loadUnread() },
   onLoad() { try { this.setData({ authorOpenid: getApp().globalData.openid }) } catch (e) {} },
   onPullDownRefresh() { this.reload().finally(() => wx.stopPullDownRefresh()) },
   onFilter(e) { this.setData({ filter: e.currentTarget.dataset.id }); this.reload() },
+  async loadUnread() {
+    try {
+      const res = await interact.summary()
+      const moments = (res.recent || []).filter((r) => r.targetType === 'moment')
+      const total = (res.byType && res.byType.moment) || 0
+      this.setData({
+        unreadTotal: total,
+        unreadName: moments[0] ? moments[0].byName : 'TA',
+        unreadTarget: moments[0] ? moments[0].targetId : ''
+      })
+    } catch (e) {}
+  },
+  openUnread() {
+    const id = this.data.unreadTarget
+    if (id) wx.navigateTo({ url: '/pages/moments/detail?id=' + id })
+    else this.load()
+  },
   async reload() {
     this.setData({ loading: true })
     try {

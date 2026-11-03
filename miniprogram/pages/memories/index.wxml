@@ -1,0 +1,37 @@
+<view class="page mem-page">
+  <view class="mem-bg">
+    <image class="mem-bg-img" src="/assets/deco/hearts.svg" mode="aspectFit" />
+  </view>
+  <view class="mem-particles">
+    <text
+      class="mem-particle"
+      wx:for="{{particles}}"
+      wx:key="id"
+      style="left:{{item.left}}%;font-size:{{item.size}}rpx;animation-delay:{{item.delay}}s;animation-duration:{{item.dur}}s;"
+    >{{item.emoji}}</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="muted center mem-loading">正在翻开回忆册… ♡</view>
+
+  <block wx:elif="{{paired}}">
+    <view class="mem-title-wrap">
+      <text class="mem-spark l">✦</text>
+      <text class="mem-title">我们的回忆册</text>
+      <text class="mem-spark r">✦</text>
+    </view>
+
+    <view class="mem-wrap">
+      <view class="mem-glow"></view>
+      <canvas type="2d" id="memCanvas" class="mem-canvas" style="width:{{cw}}px;height:{{ch}}px;"></canvas>
+    </view>
+
+    <button class="btn-primary mem-save" bindtap="save">保存到相册 ♡</button>
+    <view class="mem-hint">点右上角「···」分享给 TA · 长按图片也能保存</view>
+  </block>
+
+  <view wx:else class="card empty-card center">
+    <text class="empty-icon">📖</text>
+    <view class="title">先绑定两个人吧</view>
+    <view class="muted">有了 TA，才有属于你们的回忆册 ♡</view>
+  </view>
+</view>

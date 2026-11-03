@@ -10,6 +10,7 @@
   </view>
   <view class="chat-head">
     <view class="chat-tip">🔒 只属于两个人的悄悄话 · 长按自己消息可撤回</view>
+    <view class="chat-notify" wx:if="{{!chatNotifyOn}}" bindtap="enableChatNotify">🔔 开启微信消息提醒（消息来了不会错过）</view>
     <view class="quick-bar" wx:if="{{showQuick}}">
       <scroll-view scroll-x class="quick-scroll" enhanced="{{true}}" show-scrollbar="{{false}}">
         <text class="quick" wx:for="{{quicks}}" wx:key="*this" bindtap="sendQuick" data-text="{{item}}">{{item}}</text>
@@ -25,8 +26,12 @@
         <view class="msg-avatar avatar-fallback" wx:else>{{item.isMine ? '我' : 'TA'}}</view>
         <view class="msg-body">
           <view class="msg-meta">{{item.isMine ? '' : (item.authorName + ' · ')}}{{item.time}}</view>
-          <view class="bubble" wx:if="{{item.kind !== 'image'}}" bindlongpress="recall" data-id="{{item._id}}">{{item.content}}</view>
-          <image class="bubble-img" wx:else src="{{item.url || item.content}}" mode="widthFix" bindtap="preview" data-url="{{item.url || item.content}}" bindlongpress="recall" data-id="{{item._id}}" binderror="imgError" />
+          <view class="bubble voice-bubble {{playingId === item._id ? 'playing' : ''}}" wx:if="{{item.kind === 'voice'}}" data-src="{{item.url || item.content}}" data-id="{{item._id}}" bindtap="playVoice" bindlongpress="recall">
+            <text class="voice-icon">{{playingId === item._id ? '🔊' : '🎤'}}</text>
+            <text class="voice-dur">{{item.duration || 1}}″</text>
+          </view>
+          <image class="bubble-img" wx:elif="{{item.kind === 'image'}}" src="{{item.url || item.content}}" mode="widthFix" bindtap="preview" data-url="{{item.url || item.content}}" bindlongpress="recall" data-id="{{item._id}}" binderror="imgError" />
+          <view class="bubble" wx:else bindlongpress="recall" data-id="{{item._id}}">{{item.content}}</view>
         </view>
       </view>
     </block>
@@ -40,9 +45,15 @@
   </view>
   <view class="composer-row">
     <text class="icon-btn" bindtap="toggleQuick" title="快捷短语">{{showQuick ? '▼' : '⚡'}}</text>
-    <text class="icon-btn" bindtap="toggleEmoji">😊</text>
-    <input class="chat-input" value="{{input}}" bindinput="onInput" confirm-type="send" bindconfirm="send" placeholder="说什么悄悄话…" maxlength="500" cursor-spacing="12" adjust-position="{{false}}" bindkeyboardheightchange="onKeyboardHeight" />
-    <text class="icon-btn" bindtap="sendImage">📷</text>
-    <button class="btn-primary send-btn" bindtap="send" loading="{{sending}}" disabled="{{sending}}">发送</button>
+    <text class="icon-btn" bindtap="toggleVoice">{{voiceMode ? '⌨️' : '🎤'}}</text>
+    <block wx:if="{{voiceMode}}">
+      <view class="voice-hold {{recording ? 'on' : ''}}" bindtouchstart="startRecord" bindtouchend="stopRecord" bindtouchcancel="stopRecord">{{recording ? '松开 发送' : '按住 说话'}}</view>
+    </block>
+    <block wx:else>
+      <text class="icon-btn" bindtap="toggleEmoji">😊</text>
+      <input class="chat-input" value="{{input}}" bindinput="onInput" confirm-type="send" bindconfirm="send" placeholder="说什么悄悄话…" maxlength="500" cursor-spacing="12" adjust-position="{{false}}" bindkeyboardheightchange="onKeyboardHeight" />
+      <text class="icon-btn" bindtap="sendImage">📷</text>
+      <button class="btn-primary send-btn" bindtap="send" loading="{{sending}}" disabled="{{sending}}">发送</button>
+    </block>
   </view>
 </view>

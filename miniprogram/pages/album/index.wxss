@@ -1,0 +1,87 @@
+.album-page { padding-bottom: 60rpx; }
+
+/* ===== 顶部 ===== */
+.album-hero {
+  position: relative; overflow: hidden; text-align: center;
+  background: radial-gradient(120% 120% at 50% -10%, #FFF7FA 0%, #FFE9EE 45%, #FFF3E4 100%);
+  border-radius: 40rpx; padding: 34rpx 30rpx; margin-bottom: 24rpx;
+  border: 2rpx solid #fff; box-shadow: 0 18rpx 40rpx rgba(232,128,148,.22);
+}
+.album-hero::after {
+  content: ''; position: absolute; top: 0; left: -60%; width: 60%; height: 100%;
+  background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.5) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-18deg); animation: shineSweep 6s ease-in-out infinite;
+}
+.ah-sticker { font-size: 60rpx; display: inline-block; animation: pop 2.6s ease-in-out infinite; filter: drop-shadow(0 6rpx 12rpx rgba(232,128,148,.3)); }
+.ah-title { font-size: 40rpx; font-weight: 900; margin-top: 4rpx; letter-spacing: .06em; color: #5a3d43; }
+.ah-sub { font-size: 25rpx; color: #C08B90; margin-top: 8rpx; }
+
+/* ===== 粒子 ===== */
+.deco-layer { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; overflow: hidden; }
+.pt { position: absolute; font-size: 26rpx; opacity: 0; animation: floatUp 7.5s linear infinite; }
+.pt1 { left: 8%;  bottom: -12%; animation-delay: 0s;   font-size: 30rpx; }
+.pt2 { left: 30%; bottom: -18%; animation-delay: 1.6s; }
+.pt3 { left: 52%; bottom: -10%; animation-delay: 3.1s; font-size: 24rpx; }
+.pt4 { left: 72%; bottom: -16%; animation-delay: 0.8s; font-size: 32rpx; }
+.pt5 { left: 90%; bottom: -14%; animation-delay: 2.4s; }
+
+/* ===== 往年今日 ===== */
+.memory-block { margin-bottom: 28rpx; }
+.memory-head {
+  font-size: 29rpx; font-weight: 900; color: #C9405A; margin: 0 6rpx 16rpx;
+  display: flex; align-items: center; gap: 8rpx;
+}
+.memory-scroll { white-space: nowrap; }
+.memory-card {
+  display: inline-block; vertical-align: top; width: 300rpx; height: 366rpx;
+  border-radius: 28rpx; overflow: hidden; margin-right: 16rpx; position: relative;
+  background: #FFF3F4; border: 3rpx solid #fff;
+  box-shadow: 0 14rpx 30rpx rgba(232,128,148,.22);
+  transition: transform .2s ease;
+}
+.memory-card:active { transform: scale(.97) rotate(-1.5deg); }
+.memory-img { width: 100%; height: 100%; }
+.memory-noimg {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 96rpx;
+  background: radial-gradient(circle at 30% 20%, #FFF0F4, #FFE1E8);
+}
+.memory-mask { position: absolute; left: 0; right: 0; bottom: 0; padding: 16rpx 18rpx; background: linear-gradient(180deg, rgba(70,48,53,0), rgba(70,48,53,.74)); color: #fff; white-space: normal; }
+.memory-year { font-size: 22rpx; font-weight: 800; opacity: .95; }
+.memory-text { font-size: 24rpx; line-height: 1.4; margin-top: 4rpx; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+
+/* ===== 时间轴相册 ===== */
+.album-group { margin-bottom: 30rpx; }
+.group-date { font-size: 27rpx; font-weight: 800; color: var(--ink); margin: 0 6rpx 16rpx; display: flex; align-items: center; gap: 12rpx; position: relative; padding-left: 26rpx; }
+.group-date::before { content: ''; position: absolute; left: 0; top: 50%; width: 14rpx; height: 14rpx; margin-top: -7rpx; border-radius: 50%; background: linear-gradient(135deg,#FF8A9C,#E14E68); box-shadow: 0 0 0 6rpx rgba(255,138,156,.18); }
+.group-count { font-size: 22rpx; font-weight: 600; color: #C49AA0; }
+.photo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22rpx 18rpx; }
+.polaroid {
+  background: #fff; padding: 14rpx 14rpx 0; border-radius: 10rpx;
+  box-shadow: 0 10rpx 22rpx rgba(150,120,110,.16);
+  transform: rotate(-1.6deg); transition: transform .2s ease, box-shadow .2s ease;
+  position: relative;
+}
+.polaroid:nth-child(even) { transform: rotate(1.8deg); }
+.polaroid::before {
+  content: ''; position: absolute; top: -12rpx; left: 50%; transform: translateX(-50%) rotate(-4deg);
+  width: 96rpx; height: 26rpx; background: rgba(255,255,255,.7);
+  border-radius: 3rpx; box-shadow: 0 2rpx 6rpx rgba(0,0,0,.08); z-index: 2;
+}
+.polaroid:active { transform: scale(.96) rotate(0deg); box-shadow: 0 6rpx 14rpx rgba(150,120,110,.22); }
+.polaroid-img { width: 100%; height: 300rpx; border-radius: 6rpx; background: #FFF3F4; display: block; }
+.polaroid-cap { display: flex; align-items: center; justify-content: space-between; padding: 12rpx 6rpx 14rpx; }
+.cap-time { font-size: 22rpx; color: #B79A9E; font-weight: 600; }
+.cap-heart { font-size: 22rpx; color: #F4A7B7; }
+.more-hint { text-align: center; font-size: 24rpx; color: #C49AA0; padding: 22rpx 0; }
+.empty-card { text-align: center; padding: 54rpx 30rpx; }
+.empty-icon { font-size: 74rpx; display: block; margin-bottom: 10rpx; animation: swim 3s ease-in-out infinite; }
+
+@keyframes shineSweep { 0% { left: -60%; } 55%, 100% { left: 130%; } }
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(.7) rotate(-6deg); opacity: 0; }
+  18% { opacity: .85; }
+  80% { opacity: .5; }
+  100% { transform: translateY(-240rpx) scale(1.05) rotate(10deg); opacity: 0; }
+}
+@keyframes pop { 0%,100% { transform: scale(1) rotate(-3deg); } 50% { transform: scale(1.1) rotate(3deg); } }
+@keyframes swim { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10rpx); } }

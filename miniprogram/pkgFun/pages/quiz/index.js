@@ -70,7 +70,7 @@ Page({
   onPullDownRefresh() { this.sync(false).finally(() => wx.stopPullDownRefresh()) },
 
   async sync(first) {
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     try {
       if (first) this.setData({ loading: true })
       const total = 8
@@ -129,7 +129,7 @@ Page({
     const qid = this.data.current
     const total = 8
     if (this.data.answering) return
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     this.setData({ answering: true })
     try {
       // 第一题答案顺带把本轮 8 道题锁定进云端,之后题面不再变化
@@ -160,7 +160,7 @@ Page({
   },
 
   async again() {
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     const ok = await wx.showModal({ title: '再来一轮？', content: '会清空本轮双方答案并重新随机 8 题', confirmText: '再来' })
     if (!ok.confirm) return
     try {

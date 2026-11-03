@@ -1,0 +1,61 @@
+.capsule-page { padding-bottom: 60rpx; }
+
+.cap-hero {
+  position: relative; overflow: hidden; text-align: center;
+  background: radial-gradient(130% 120% at 50% -10%, #F7F3FF 0%, #EFE6FF 42%, #FFF0E8 100%);
+  border-radius: 40rpx; padding: 34rpx 30rpx; margin-bottom: 22rpx;
+  border: 2rpx solid #fff; box-shadow: 0 18rpx 40rpx rgba(150,120,200,.2);
+}
+.cap-hero::after {
+  content: ''; position: absolute; top: 0; left: -60%; width: 60%; height: 100%;
+  background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.5) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-18deg); animation: shineSweep 6s ease-in-out infinite;
+}
+.cap-deco { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; overflow: hidden; }
+.cd { position: absolute; font-size: 26rpx; opacity: 0; animation: floatUp 8s linear infinite; }
+.cd1 { left: 10%; bottom: -12%; animation-delay: 0s;   font-size: 30rpx; }
+.cd2 { left: 34%; bottom: -18%; animation-delay: 1.5s; }
+.cd3 { left: 60%; bottom: -10%; animation-delay: 2.9s; font-size: 24rpx; }
+.cd4 { left: 84%; bottom: -16%; animation-delay: 0.9s; font-size: 30rpx; }
+.cap-title { font-size: 40rpx; font-weight: 900; letter-spacing: .04em; color: #4a4458; }
+.cap-sub { font-size: 25rpx; color: #9A8FB0; margin-top: 8rpx; }
+
+.cap-form { padding: 26rpx; margin-bottom: 22rpx; }
+.cap-ready { margin: 0 0 20rpx; padding: 20rpx 26rpx; border-radius: 20rpx; font-size: 25rpx; font-weight: 700; color: #fff; background: linear-gradient(135deg,#FFB27A,#E14E68); box-shadow: 0 10rpx 22rpx rgba(225,78,104,.28); }
+.cap-input {
+  width: 100%; box-sizing: border-box; min-height: 180rpx; background: #F8F5FF;
+  border: 2rpx solid #E7DEF8; border-radius: 18rpx; padding: 20rpx 22rpx; font-size: 28rpx; line-height: 1.6;
+}
+.cap-form-row { display: flex; align-items: center; gap: 16rpx; margin-top: 18rpx; }
+.cap-date { flex: 1; background: #F8F5FF; border: 2rpx dashed #D7CAF0; border-radius: 18rpx; padding: 16rpx 22rpx; font-size: 25rpx; color: #9A8FB0; }
+.cap-date.active { color: #7A5BB5; border-style: solid; font-weight: 700; }
+.cap-add { width: auto; padding: 0 40rpx; font-size: 27rpx; }
+
+.cap-list { display: flex; flex-direction: column; gap: 18rpx; }
+.cap-card {
+  border-radius: 26rpx; padding: 24rpx 26rpx; position: relative; overflow: hidden;
+  border: 2rpx solid var(--line); background: #fff;
+  box-shadow: 0 10rpx 22rpx rgba(150,120,180,.12);
+}
+.cap-card.unlocked { background: linear-gradient(160deg,#FFF8F4,#FFEEDD); border-color: #F6D9BE; }
+.cap-card.locked { background: linear-gradient(160deg,#F6F3FE,#E9E1FB); border-color: #DED2F6; }
+.cap-card-head { display: flex; align-items: center; justify-content: space-between; }
+.cap-author { font-size: 27rpx; font-weight: 800; color: #5a4d70; }
+.cap-badge { font-size: 22rpx; font-weight: 800; color: #fff; background: linear-gradient(135deg,#B79CF0,#7A5BB5); border-radius: 999rpx; padding: 5rpx 20rpx; }
+.cap-card.unlocked .cap-badge { background: linear-gradient(135deg,#FFB27A,#E14E68); }
+.cap-content { margin-top: 16rpx; font-size: 28rpx; line-height: 1.7; color: #5B4A4A; white-space: pre-wrap; word-break: break-all; }
+.cap-sealed { margin-top: 16rpx; font-size: 26rpx; color: #8A7DA8; font-weight: 700; letter-spacing: .05em; }
+.cap-card-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 18rpx; }
+.cap-date-label { font-size: 21rpx; color: #A99EBC; }
+.cap-del { font-size: 22rpx; color: #C08BA0; }
+.empty-card { text-align: center; padding: 54rpx 30rpx; }
+.empty-icon { font-size: 74rpx; display: block; margin-bottom: 10rpx; animation: floatUpSoft 3s ease-in-out infinite; }
+
+@keyframes shineSweep { 0% { left: -60%; } 55%, 100% { left: 130%; } }
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(.7) rotate(-6deg); opacity: 0; }
+  18% { opacity: .85; }
+  80% { opacity: .5; }
+  100% { transform: translateY(-250rpx) scale(1.05) rotate(10deg); opacity: 0; }
+}
+@keyframes floatUpSoft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10rpx); } }

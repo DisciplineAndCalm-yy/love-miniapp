@@ -1,0 +1,46 @@
+<view class="page report-page">
+  <view wx:if="{{loading}}" class="muted center">正在生成你们的恋爱报告… ♡</view>
+
+  <block wx:elif="{{paired}}">
+    <view class="poster">
+      <view class="poster-deco" aria-hidden="true">
+        <text class="pd pd1">❤️</text>
+        <text class="pd pd2">✨</text>
+        <text class="pd pd3">💕</text>
+        <text class="pd pd4">🌸</text>
+        <text class="pd pd5">💫</text>
+      </view>
+      <view class="p-top">♡ 我们的恋爱报告 ♡</view>
+      <view class="p-couple">{{myName}}<text class="p-plus">＋</text>{{partnerName}}</view>
+      <view class="p-days"><text class="p-days-num">{{days}}</text><text class="p-days-unit">天</text></view>
+      <view class="p-since" wx:if="{{togetherSince}}">从 {{togetherSince}} 一起走到现在</view>
+      <view class="p-level" wx:if="{{level}}">{{level.title}} · Lv.{{level.lv}}</view>
+
+      <view class="p-stats">
+        <view class="p-stat" wx:for="{{chips}}" wx:key="label">
+          <text class="ps-icon">{{item.icon}}</text>
+          <text class="ps-val">{{item.value}}</text>
+          <text class="ps-label">{{item.label}}</text>
+        </view>
+      </view>
+
+      <view class="p-moods" wx:if="{{moodDots.length}}">
+        <view class="p-moods-title">最近的 {{moodDays}} 次心情</view>
+        <view class="mood-dots">
+          <text class="mood-dot {{item.mine ? 'mine' : 'partner'}}" wx:for="{{moodDots}}" wx:key="k">{{item.emoji}}</text>
+        </view>
+      </view>
+
+      <view class="p-foot">在一起的第 {{days}} 天，也想一直和你走下去 ♡</view>
+    </view>
+
+    <button class="btn-primary report-save" bindtap="savePoster">保存 / 截屏收藏</button>
+    <view class="report-hint">点右上角「···」可分享给 TA ♡</view>
+  </block>
+
+  <view wx:else class="card empty-card center">
+    <text class="empty-icon">📖</text>
+    <view class="title">先绑定两个人吧</view>
+    <view class="muted">有了 TA，才有属于你们的报告 ♡</view>
+  </view>
+</view>

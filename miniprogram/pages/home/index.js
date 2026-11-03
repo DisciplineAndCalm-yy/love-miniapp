@@ -1,5 +1,6 @@
 const { todayKey, daysBetween, nextOccurrence, leftText, normDateKey } = require('../../utils/date')
 const { callApi, shareCard } = require('../../utils/cloud')
+const interact = require('../../utils/interact')
 const { MOOD_MAP } = require('../../utils/mood')
 const { dailyPraise } = require('../../utils/praise')
 
@@ -22,7 +23,11 @@ Page({
     showMascot: true,
     weather: null,
     weatherEmoji: '🌤️',
-    praise: ''
+    praise: '',
+    unreadNotice: 0,
+    intimacyLevel: null,
+    reminders: { dueTodos: 0, capsuleReady: 0 },
+    showMore: false
   },
   hideDeco() { this.setData({ showDeco: false }) },
   hideMascot() { this.setData({ showMascot: false }) },
@@ -109,6 +114,24 @@ Page({
       .filter(Boolean)
       .sort((a, b) => a.left - b.left)[0] || null
 
+    let unreadNotice = this.data.unreadNotice || 0
+    try {
+      const s = await interact.summary()
+      unreadNotice = s.total || 0
+    } catch (err) {}
+
+    let reminders = this.data.reminders || { dueTodos: 0, capsuleReady: 0 }
+    try {
+      const rm = await callApi('reminderSummary', {}, { silent: true })
+      reminders = { dueTodos: rm.dueTodos || 0, capsuleReady: rm.capsuleReady || 0 }
+    } catch (err) {}
+
+    let intimacyLevel = this.data.intimacyLevel
+    try {
+      const iv = await callApi('intimacyOverview', {}, { silent: true })
+      intimacyLevel = iv.level || null
+    } catch (err) {}
+
     this.setData({
       ready: true,
       paired: true,
@@ -122,8 +145,36 @@ Page({
       streaks,
       weather,
       weatherEmoji,
-      praise
+      praise,
+      unreadNotice,
+      reminders,
+      intimacyLevel
     })
+  },
+
+  goNotify() {
+    wx.navigateTo({ url: '/pages/notify/index' })
+  },
+  goIntimacy() {
+    wx.navigateTo({ url: '/pages/intimacy/index' })
+  },
+  goLife() {
+    wx.navigateTo({ url: '/pages/life/index' })
+  },
+  toggleMore() {
+    this.setData({ showMore: !this.data.showMore })
+  },
+  goReport() {
+    wx.navigateTo({ url: '/pages/report/index' })
+  },
+  goCapsule() {
+    wx.navigateTo({ url: '/pages/capsule/index' })
+  },
+  goMemories() {
+    wx.navigateTo({ url: '/pages/memories/index' })
+  },
+  goMonopoly() {
+    wx.navigateTo({ url: '/pkgFun/pages/monopoly/index' })
   },
 
   goCheckin() {
@@ -139,7 +190,7 @@ Page({
   },
 
   goQuiz() {
-    wx.navigateTo({ url: '/pages/quiz/index' })
+    wx.navigateTo({ url: '/pkgFun/pages/quiz/index' })
   },
 
   goBlog() {
@@ -151,27 +202,27 @@ Page({
   },
 
   goGame() {
-    wx.navigateTo({ url: '/pages/game/index' })
+    wx.navigateTo({ url: '/pkgFun/pages/game/index' })
   },
 
   goWish() {
-    wx.navigateTo({ url: '/pages/wish/index' })
+    wx.navigateTo({ url: '/pkgFun/pages/wish/index' })
   },
 
   goDice() {
-    wx.navigateTo({ url: '/pages/dice/index' })
+    wx.navigateTo({ url: '/pkgFun/pages/dice/index' })
   },
 
   goCards() {
-    wx.navigateTo({ url: '/pages/cards/index' })
+    wx.navigateTo({ url: '/pkgFun/pages/cards/index' })
   },
 
   goNight() {
-    wx.navigateTo({ url: '/pages/night/index' })
+    wx.navigateTo({ url: '/pkgFun/pages/night/index' })
   },
 
   goAdventure() {
-    wx.navigateTo({ url: '/pages/adventure/index' })
+    wx.navigateTo({ url: '/pkgFun/pages/adventure/index' })
   },
 
   goPeriod() {
@@ -190,5 +241,9 @@ Page({
 
   goMoments() {
     wx.navigateTo({ url: '/pages/moments/index' })
+  },
+
+  goAlbum() {
+    wx.navigateTo({ url: '/pages/album/index' })
   }
 })

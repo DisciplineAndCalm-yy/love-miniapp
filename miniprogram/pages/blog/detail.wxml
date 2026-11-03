@@ -16,6 +16,50 @@
     />
     <view class="detail-foot">— 写给最爱的你 ♡ —</view>
   </view>
+
+  <view class="card interact-card">
+    <view class="interact-bar">
+      <view class="i-btn {{likedByMe ? 'on' : ''}}" bindtap="toggleLike">
+        <text class="i-icon">{{likedByMe ? '❤️' : '🤍'}}</text><text class="i-txt">{{likeCount}}</text>
+      </view>
+      <view class="i-btn"><text class="i-icon">💬</text><text class="i-txt">{{comments.length}}</text></view>
+    </view>
+
+    <view class="reaction-bar">
+      <view wx:for="{{quickEmojis}}" wx:key="*this" class="reaction-btn" data-emoji="{{item}}" bindtap="toggleReaction">
+        <text class="reaction-emoji">{{item}}</text>
+      </view>
+    </view>
+    <view class="reaction-summary" wx:if="{{reactions.length}}">
+      <view class="rs-chip {{item.mine ? 'on' : ''}}" wx:for="{{reactions}}" wx:key="emoji" data-emoji="{{item.emoji}}" bindtap="toggleReaction">
+        {{item.emoji}} {{item.count}}
+      </view>
+    </view>
+
+    <view class="cmt-list">
+      <view class="cmt" wx:for="{{comments}}" wx:key="_id" data-id="{{item._id}}" data-name="{{item.byName}}" bindtap="onReply">
+        <view class="cmt-head">
+          <text class="cmt-name">{{item.byName}}</text>
+          <text wx:if="{{item.replyToName}}" class="cmt-reply">回复 @{{item.replyToName}}</text>
+          <text class="cmt-time">{{item.timeText}}</text>
+          <text wx:if="{{item.isMine}}" class="cmt-del" data-id="{{item._id}}" catchtap="removeComment">删除</text>
+        </view>
+        <view class="cmt-text">{{item.content}}</view>
+      </view>
+      <view class="cmt-empty muted" wx:if="{{!comments.length}}">还没有评论，说点什么吧 ♡</view>
+    </view>
+
+    <view class="reply-bar" wx:if="{{replyTo.id}}">
+      <text class="reply-txt">回复 @{{replyTo.name}}</text>
+      <text class="reply-cancel" bindtap="cancelReply">取消</text>
+    </view>
+    <view class="cmt-input-row">
+      <text class="at-btn" bindtap="onAt">@TA</text>
+      <input class="cmt-input" value="{{commentInput}}" bindinput="onCommentInput" placeholder="{{replyTo.id ? ('回复 @' + replyTo.name) : '写下你的评论…'}}" maxlength="200" confirm-type="send" bindconfirm="sendComment" cursor-spacing="24" />
+      <button class="btn-primary cmt-send" bindtap="sendComment" loading="{{sending}}" disabled="{{sending}}">发送</button>
+    </view>
+  </view>
+
   <view class="actions" wx:if="{{mine}}">
     <button class="btn-ghost act-btn" bindtap="edit">✏️ 编辑</button>
     <button class="btn-danger act-btn" bindtap="remove">🗑 删除</button>

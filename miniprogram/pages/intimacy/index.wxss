@@ -1,0 +1,101 @@
+.intimacy-page { padding-bottom: 60rpx; }
+
+/* ===== 等级心脏 ===== */
+.level-hero {
+  text-align: center; position: relative; overflow: hidden;
+  background: radial-gradient(120% 120% at 50% -8%, #FFF7FA 0%, #FFE9EE 44%, #FFF1DF 100%);
+  border-radius: 44rpx; padding: 40rpx 30rpx 34rpx; margin-bottom: 26rpx;
+  border: 3rpx solid #fff; box-shadow: 0 20rpx 44rpx rgba(232,128,148,.26);
+}
+.level-hero::after {
+  content: ''; position: absolute; top: 0; left: -60%; width: 60%; height: 100%;
+  background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.5) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-18deg); animation: shineSweep 6s ease-in-out infinite;
+}
+.deco-layer { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; overflow: hidden; }
+.pt { position: absolute; font-size: 26rpx; opacity: 0; animation: floatUp 8s linear infinite; }
+.pt1 { left: 8%;  bottom: -12%; animation-delay: 0s;   font-size: 30rpx; }
+.pt2 { left: 24%; bottom: -18%; animation-delay: 1.3s; }
+.pt3 { left: 40%; bottom: -10%; animation-delay: 2.7s; font-size: 24rpx; }
+.pt4 { left: 58%; bottom: -16%; animation-delay: 0.9s; font-size: 30rpx; }
+.pt5 { left: 74%; bottom: -12%; animation-delay: 3.4s; }
+.pt6 { left: 90%; bottom: -20%; animation-delay: 2.1s; font-size: 26rpx; }
+
+.heart-ring {
+  width: 212rpx; height: 212rpx; margin: 0 auto; border-radius: 50%;
+  background: conic-gradient(#FF8A9C, #FFD1DA, #FFB3C0, #FF8A9C);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 16rpx 36rpx rgba(232,106,122,.4), inset 0 0 0 6rpx rgba(255,255,255,.6);
+  animation: heartPulse 2.4s ease-in-out infinite;
+}
+.heart-inner {
+  width: 176rpx; height: 176rpx; border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, #FFFCFB, #FFF0F3);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 4rpx solid #fff; box-shadow: inset 0 -6rpx 14rpx rgba(241,166,182,.3);
+}
+.heart-emoji { font-size: 64rpx; line-height: 1; animation: heartbeat 1.9s ease-in-out infinite; }
+.heart-lv { font-size: 30rpx; font-weight: 900; color: #D14E64; margin-top: 4rpx; }
+.level-title { font-size: 42rpx; font-weight: 900; color: var(--ink); margin-top: 20rpx; letter-spacing: .06em; }
+.exp-line { font-size: 27rpx; color: #C08B90; margin-top: 8rpx; }
+.exp-num { font-weight: 900; color: #D14E64; font-size: 34rpx; }
+.progress-wrap { height: 22rpx; border-radius: 999rpx; background: rgba(255,255,255,.75); border: 2rpx solid #fff; margin: 22rpx 24rpx 0; overflow: hidden; box-shadow: inset 0 2rpx 6rpx rgba(232,128,148,.18); }
+.progress-bar { height: 100%; border-radius: 999rpx; background: linear-gradient(90deg, #FFC2CE, #FF8A9C 55%, #E14E68); transition: width .6s cubic-bezier(.22,1,.36,1); box-shadow: 0 0 12rpx rgba(255,138,156,.6); }
+.progress-hint { font-size: 23rpx; color: #B79A9E; margin-top: 14rpx; }
+
+/* ===== 统计 ===== */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14rpx; margin-bottom: 32rpx; }
+.stat-chip {
+  background: linear-gradient(160deg,#FFFFFF,#FFF6F6);
+  border-radius: 24rpx; padding: 22rpx 8rpx; text-align: center;
+  border: 2rpx solid #FBE0E4; box-shadow: 0 8rpx 18rpx rgba(232,128,148,.12);
+  display: flex; flex-direction: column; align-items: center; gap: 4rpx;
+  transition: transform .18s ease;
+}
+.stat-chip:active { transform: translateY(-4rpx) scale(1.03); }
+.sc-icon { font-size: 40rpx; }
+.sc-value { font-size: 34rpx; font-weight: 900; color: #C9405A; }
+.sc-label { font-size: 20rpx; color: #B79A9E; }
+
+/* ===== 徽章 ===== */
+.badge-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 6rpx 16rpx; }
+.badge-title { font-size: 31rpx; font-weight: 900; }
+.badge-count { font-size: 24rpx; font-weight: 800; color: #fff; background: linear-gradient(135deg,#FF8A9C,#E14E68); padding: 4rpx 18rpx; border-radius: 999rpx; box-shadow: 0 6rpx 14rpx rgba(225,78,104,.3); }
+.badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16rpx; }
+.badge {
+  border-radius: 26rpx; padding: 24rpx 12rpx; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 6rpx;
+  border: 2rpx solid var(--line); background: #fff; position: relative; overflow: hidden;
+  transition: transform .18s ease;
+}
+.badge:active { transform: scale(.97); }
+.badge.got {
+  background: linear-gradient(160deg,#FFF4F6,#FFE7EC);
+  border-color: #F6BCC5; box-shadow: 0 10rpx 22rpx rgba(255,138,156,.2);
+  animation: badgeGlow 3s ease-in-out infinite;
+}
+.badge.got::after {
+  content: ''; position: absolute; top: -40%; left: -70%;
+  width: 60%; height: 180%;
+  background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.7) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-20deg); animation: badgeShine 4.5s ease-in-out infinite;
+}
+.badge.locked { opacity: .6; filter: grayscale(.6); }
+.badge-icon { font-size: 54rpx; line-height: 1; }
+.badge.got .badge-icon { filter: drop-shadow(0 4rpx 8rpx rgba(232,128,148,.4)); }
+.badge-name { font-size: 25rpx; font-weight: 800; color: var(--ink); }
+.badge-desc { font-size: 20rpx; color: #B79A9E; line-height: 1.4; }
+.empty-card { text-align: center; padding: 60rpx 30rpx; }
+.empty-icon { font-size: 82rpx; display: block; margin-bottom: 12rpx; animation: heartbeat 2.4s ease-in-out infinite; }
+
+@keyframes shineSweep { 0% { left: -60%; } 55%, 100% { left: 130%; } }
+@keyframes heartPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes heartbeat { 0%,100% { transform: scale(1); } 30% { transform: scale(1.12); } 60% { transform: scale(1); } }
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(.7) rotate(-6deg); opacity: 0; }
+  18% { opacity: .85; }
+  80% { opacity: .5; }
+  100% { transform: translateY(-250rpx) scale(1.05) rotate(10deg); opacity: 0; }
+}
+@keyframes badgeGlow { 0%,100% { box-shadow: 0 10rpx 22rpx rgba(255,138,156,.2); } 50% { box-shadow: 0 14rpx 28rpx rgba(255,138,156,.42); } }
+@keyframes badgeShine { 0% { left: -70%; } 60%, 100% { left: 130%; } }

@@ -28,7 +28,7 @@ Page({
 
   flip() {
     if (this.data.flipping) return
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     const kind = this.data.mode
     const pool = kind === 'truth' ? this.data.truths : this.data.dares
     const text = pool[Math.floor(Math.random() * pool.length)]
@@ -60,7 +60,7 @@ Page({
   },
 
   async loadHistory() {
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     try {
       this.setData({ loading: true })
       const res = await callApi('listCards', {}, { silent: true })

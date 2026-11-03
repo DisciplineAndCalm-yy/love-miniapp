@@ -7,6 +7,17 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
 
+// 生活模块白名单集合
+const LIFE_COLL = { todo: 'todos', note: 'notes', ledger: 'ledgers' }
+
+// 自动确保集合存在(首次使用时自动建表,已存在则忽略)
+const _ensuredColl = new Set()
+async function ensureLifeColl(name) {
+  if (!name || _ensuredColl.has(name)) return
+  try { await db.createCollection(name) } catch (e) { /* 已存在 */ }
+  _ensuredColl.add(name)
+}
+
 // ===== 天气:HTTP 抓取 + 归一化(免 Key 的 wttr.in 默认,有和风 key 优先用和风) =====
 const WEATHER_TTL = 30 * 60 * 1000
 const weatherCache = {}
@@ -375,6 +386,127 @@ async function bothDateKeys(coupleId) {
     byDay[item.dateKey].add(item._openid)
   })
   return Object.keys(byDay).filter((key) => byDay[key].size >= 2)
+}
+
+// 找到互动目标的作者 openid(checkin/moment/post)
+async function targetOwner(targetType, targetId) {
+  const coll = { checkin: 'checkins', moment: 'moments', post: 'posts' }[targetType]
+  if (!coll || !targetId) return null
+  try {
+    const r = await db.collection(coll).doc(targetId).get()
+    return r.data ? r.data._openid : null
+  } catch (e) { return null }
+}
+
+// 取互动目标的作者 + 标题(用于「文章标题」字段)
+async function targetInfo(targetType, targetId) {
+  const coll = { checkin: 'checkins', moment: 'moments', post: 'posts' }[targetType]
+  if (!coll || !targetId) return { owner: null, title: '我们的空间' }
+  try {
+    const r = await db.collection(coll).doc(targetId).get()
+    const d = r.data || {}
+    let title = '我们的空间'
+    if (targetType === 'post') title = d.title || '一篇文章'
+    else if (targetType === 'moment') title = d.doing || (d.content ? String(d.content).slice(0, 16) : '日常动态')
+    else title = '今日签到'
+    return { owner: d._openid || null, title }
+  } catch (e) { return { owner: null, title: '我们的空间' } }
+}
+
+// 订阅消息推送(体验版):仅在配置了模板 ID 时发送,失败静默
+async function pushSubscribe(ownerOpenid, opts) {
+  if (!ownerOpenid) return
+  try {
+    const cfg = require('./config')
+    const tmplId = cfg.noticeTmplId
+    if (!tmplId) return
+    const f = cfg.noticeFields || { title: 'thing1', user: 'thing2', content: 'thing3', date: 'date4', time: 'time6' }
+    const now = new Date()
+    const p = (n) => String(n).padStart(2, '0')
+    const dateStr = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`
+    const clockStr = `${p(now.getHours())}:${p(now.getMinutes())}`
+    const data = {}
+    if (f.title) data[f.title] = { value: String(opts.subject || '我们的空间').slice(0, 20) }
+    if (f.user) data[f.user] = { value: String(opts.who || 'TA').slice(0, 20) }
+    if (f.content) data[f.content] = { value: String(opts.content || '').slice(0, 20) }
+    if (f.date) data[f.date] = { value: dateStr }
+    if (f.time) data[f.time] = { value: clockStr }
+    await cloud.openapi.subscribeMessage.send({
+      touser: ownerOpenid,
+      templateId: tmplId,
+      page: opts.page || 'pages/notify/index',
+      miniprogramState: 'trial',
+      lang: 'zh_CN',
+      data
+    })
+    await bumpNoticeQuota(ownerOpenid, -1)
+  } catch (e) {
+    console.warn('pushSubscribe failed', e && (e.errCode || e.errMsg || e.message))
+  }
+}
+
+// 聊天消息订阅消息推送(体验版):仅在配置了模板 ID 时发送,失败静默
+async function pushChat(recipientOpenid, opts) {
+  if (!recipientOpenid) return
+  try {
+    const cfg = require('./config')
+    const tmplId = cfg.chatTmplId
+    if (!tmplId) return
+    const f = cfg.chatFields || { title: 'thing1', count: 'thing2', from: 'thing3', note: 'thing5', time: 'time6' }
+    const now = new Date()
+    const p = (n) => String(n).padStart(2, '0')
+    const clock = `${p(now.getHours())}:${p(now.getMinutes())}`
+    const preview = opts.kind === 'image' ? '[图片]' : (opts.kind === 'voice' ? '[语音]' : String(opts.content || '').slice(0, 20))
+    const data = {}
+    if (f.title) data[f.title] = { value: '新的悄悄话' }
+    if (f.count) data[f.count] = { value: String(opts.count || 1) }
+    if (f.from) data[f.from] = { value: String(opts.fromName || 'TA').slice(0, 20) }
+    if (f.note) data[f.note] = { value: preview || '快来看看吧' }
+    if (f.time) data[f.time] = { value: clock }
+    await cloud.openapi.subscribeMessage.send({
+      touser: recipientOpenid,
+      templateId: tmplId,
+      page: 'pages/chat/index',
+      miniprogramState: 'trial',
+      lang: 'zh_CN',
+      data
+    })
+  } catch (e) {
+    console.warn('pushChat failed', e && (e.errCode || e.errMsg || e.message))
+  }
+}
+
+// 各事件是否推送的默认开关(可被 config.noticeEvents 覆盖)
+const DEFAULT_NOTICE_EVENTS = { comment: true, night: true, reaction: false, like: false, checkin: true }
+
+function targetPage(targetType, targetId) {
+  if (targetType === 'moment') return `pages/moments/detail?id=${targetId}`
+  if (targetType === 'post') return `pages/blog/detail?id=${targetId}`
+  return 'pages/checkin/index'
+}
+
+// 按事件开关决定是否推送
+async function notifyMember(ownerOpenid, key, opts) {
+  if (!ownerOpenid) return
+  try {
+    const cfg = require('./config')
+    const ev = Object.assign({}, DEFAULT_NOTICE_EVENTS, cfg.noticeEvents || {})
+    if (!ev[key]) return
+    await pushSubscribe(ownerOpenid, opts)
+  } catch (e) {}
+}
+
+// 估算订阅额度:订阅一次+1,成功推送一次-1(微信无额度查询接口,只能软估算)
+async function bumpNoticeQuota(openid, delta) {
+  if (!openid) return null
+  try {
+    const r = await db.collection('users').where({ _openid: openid }).limit(1).get()
+    const u = r.data && r.data[0]
+    if (!u) return null
+    const q = Math.max(0, (Number(u.noticeQuota) || 0) + delta)
+    await db.collection('users').doc(u._id).update({ data: { noticeQuota: q, noticePush: q > 0 } })
+    return q
+  } catch (e) { return null }
 }
 
 async function streaksFor(user, couple) {
@@ -1318,6 +1450,68 @@ async function attachPhotoUrls(list, pickers) {
   }
 }
 
+// ===== 点赞 / 评论 / 未读(interactions 集合) =====
+// 一条互动:{ _openid, coupleId, targetType:'moment'|'post'|'checkin', targetId, type:'like'|'comment', content, createdAt }
+// 未读:以「我的已读时间游标」为基准(存在 users.itinRead[`type_id`]),别人创建时间晚于游标即未读
+const TARGET_TYPES = ['moment', 'post', 'checkin']
+function normTarget(t) { return TARGET_TYPES.indexOf(t) >= 0 ? t : null }
+function targetKey(type, id) { return `${type}_${id}` }
+function readTsFor(itinRead, type, id) {
+  const m = itinRead || {}
+  return Number(m[targetKey(type, id)] || 0)
+}
+
+// 首次写入前确保 interactions 集合存在(同一实例只尝试一次;已存在时 createCollection 会报错,忽略即可)
+let _itinReady = false
+async function ensureInteractions() {
+  if (_itinReady) return
+  try { await db.createCollection('interactions') } catch (e) {}
+  _itinReady = true
+}
+
+// 给一批内容装配 likeCount / commentCount / likedByMe / unread
+async function attachInteractions(list, targetType, openid, itinRead) {
+  if (!list || !list.length) return
+  const ids = list.map((d) => String(d._id))
+  let docs = []
+  try {
+    const { data } = await db.collection('interactions')
+      .where({ targetType, targetId: _.in(ids) })
+      .limit(1000).get()
+    docs = data || []
+  } catch (e) { docs = [] }
+  const agg = {}
+  ids.forEach((id) => { agg[id] = { likeCount: 0, commentCount: 0, likedByMe: false, unread: 0 } })
+  docs.forEach((d) => {
+    const a = agg[String(d.targetId)]
+    if (!a) return
+    if (d.type === 'like') {
+      a.likeCount += 1
+      if (d._openid === openid) a.likedByMe = true
+    } else if (d.type === 'comment') {
+      a.commentCount += 1
+    }
+    if (d._openid !== openid && Number(d.createdAt) > readTsFor(itinRead, targetType, d.targetId)) a.unread += 1
+  })
+  list.forEach((d) => {
+    const a = agg[String(d._id)] || {}
+    d.likeCount = a.likeCount || 0
+    d.commentCount = a.commentCount || 0
+    d.likedByMe = !!a.likedByMe
+    d.unread = a.unread || 0
+  })
+}
+
+// 保存已读游标(裁剪到最近 80 个,避免 user 文档无限膨胀)
+async function saveItinRead(user, itinRead) {
+  const keys = Object.keys(itinRead)
+  if (keys.length > 80) {
+    keys.sort((a, b) => Number(itinRead[a]) - Number(itinRead[b]))
+    keys.slice(0, keys.length - 80).forEach((k) => { delete itinRead[k] })
+  }
+  try { await db.collection('users').doc(user._id).update({ data: { itinRead } }) } catch (e) {}
+}
+
 exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext()
   const action = event.action
@@ -1490,7 +1684,18 @@ exports.main = async (event) => {
           createdAt: Date.now()
         }
       })
-      return { ok: true, streaks: await streaksFor(user, couple) }
+      const streaks = await streaksFor(user, couple)
+      try {
+        const partnerId = (couple.memberOpenids || []).find((o) => o !== OPENID)
+        if (partnerId) {
+          const myStreak = streaks.mine || 1
+          const subject = myStreak > 1 ? `连续签到 ${myStreak} 天` : '今日签到'
+          const moodText = moodLabelOf(mood)
+          const contentText = content ? `${moodText} · ${content}` : `${moodText} 今天也来报到啦 ♡`
+          await notifyMember(partnerId, 'checkin', { subject, who: user.nickName || 'TA', content: contentText, page: 'pages/checkin/index' })
+        }
+      } catch (e) {}
+      return { ok: true, streaks }
     }
 
     if (action === 'listMonthCheckins') {
@@ -1593,6 +1798,7 @@ exports.main = async (event) => {
       if (!post || post._openid !== OPENID) return fail('只能删自己的文章')
       await db.collection('posts').doc(event.id).remove()
       await removeFiles(post.photos || [])
+      try { await db.collection('interactions').where({ targetType: 'post', targetId: String(event.id) }).remove() } catch (e) {}
       return { ok: true }
     }
 
@@ -1646,6 +1852,7 @@ exports.main = async (event) => {
       members.forEach((m) => { map[m.openid] = m })
       const list = data.map((d) => ({ ...d, author: map[d._openid] || null }))
       await attachPhotoUrls(list, [(d) => d.photos, (d) => d.author && d.author.avatarUrl])
+      await attachInteractions(list, 'moment', OPENID, user.itinRead)
       return { ok: true, list, hasMore: data.length >= limit }
     }
 
@@ -1674,6 +1881,7 @@ exports.main = async (event) => {
       const members = await loadMembers([doc._openid])
       const detail = { ...doc, author: members[0] || null }
       await attachPhotoUrls([detail], [(d) => d.photos, (d) => d.author && d.author.avatarUrl])
+      await attachInteractions([detail], 'moment', OPENID, user.itinRead)
       return { ok: true, detail }
     }
 
@@ -1682,6 +1890,547 @@ exports.main = async (event) => {
       if (!doc || doc._openid !== OPENID) return fail('只能删自己的动态')
       await db.collection('moments').doc(event.id).remove()
       await removeFiles(doc.photos || [])
+      // 同步清理这条内容上的互动
+      try { await db.collection('interactions').where({ targetType: 'moment', targetId: String(event.id) }).remove() } catch (e) {}
+      return { ok: true }
+    }
+
+    // ===== 点赞 =====
+    if (action === 'toggleLike') {
+      const couple = await requireCouple(user, OPENID)
+      const targetType = normTarget(event.targetType)
+      const targetId = String(event.targetId || '')
+      if (!targetType || !targetId) return fail('参数错误')
+      await ensureInteractions()
+      const found = await db.collection('interactions')
+        .where({ coupleId: couple._id, targetType, targetId, type: 'like', _openid: OPENID }).limit(1).get()
+      const existed = found.data && found.data.length
+      if (existed) {
+        await db.collection('interactions').doc(found.data[0]._id).remove()
+      } else {
+        await db.collection('interactions').add({ data: { _openid: OPENID, coupleId: couple._id, targetType, targetId, type: 'like', createdAt: Date.now() } })
+        try {
+          const info = await targetInfo(targetType, targetId)
+          if (info.owner && info.owner !== OPENID) await notifyMember(info.owner, 'like', { subject: info.title, who: user.nickName || 'TA', content: '赞了你的内容', page: targetPage(targetType, targetId) })
+        } catch (e) {}
+      }
+      const { data: likes } = await db.collection('interactions').where({ coupleId: couple._id, targetType, targetId, type: 'like' }).limit(1000).get()
+      return { ok: true, liked: !existed, likeCount: (likes || []).length }
+    }
+
+    // ===== 评论 =====
+    if (action === 'addComment') {
+      const couple = await requireCouple(user, OPENID)
+      const targetType = normTarget(event.targetType)
+      const targetId = String(event.targetId || '')
+      const content = String(event.content || '').trim().slice(0, 200)
+      const replyTo = event.replyTo ? String(event.replyTo) : ''
+      const replyToName = event.replyToName ? String(event.replyToName).slice(0, 20) : ''
+      if (!targetType || !targetId) return fail('参数错误')
+      if (!content) return fail('说点什么再发吧')
+      await ensureInteractions()
+      const now = Date.now()
+      const doc = { _openid: OPENID, coupleId: couple._id, targetType, targetId, type: 'comment', content, createdAt: now }
+      if (replyTo) { doc.replyTo = replyTo; doc.replyToName = replyToName }
+      const add = await db.collection('interactions').add({ data: doc })
+      // 给内容作者推送订阅消息(体验版,受开关控制)
+      try {
+        const info = await targetInfo(targetType, targetId)
+        if (info.owner && info.owner !== OPENID) {
+          await notifyMember(info.owner, 'comment', { subject: info.title, who: user.nickName || 'TA', content: content, page: targetPage(targetType, targetId) })
+        }
+      } catch (e) {}
+      return { ok: true, comment: { _id: add._id, _openid: OPENID, content, createdAt: now, isMine: true, byName: user.nickName || '我', replyTo, replyToName } }
+    }
+
+    // ===== 表情回应 =====
+    if (action === 'toggleReaction') {
+      const couple = await requireCouple(user, OPENID)
+      const targetType = normTarget(event.targetType)
+      const targetId = String(event.targetId || '')
+      const emoji = String(event.emoji || '').slice(0, 8)
+      if (!targetType || !targetId || !emoji) return fail('参数错误')
+      await ensureInteractions()
+      const found = await db.collection('interactions')
+        .where({ coupleId: couple._id, targetType, targetId, type: 'reaction', content: emoji, _openid: OPENID }).limit(1).get()
+      const existed = found.data && found.data.length
+      if (existed) await db.collection('interactions').doc(found.data[0]._id).remove()
+      else {
+        await db.collection('interactions').add({ data: { _openid: OPENID, coupleId: couple._id, targetType, targetId, type: 'reaction', content: emoji, createdAt: Date.now() } })
+        try {
+          const info = await targetInfo(targetType, targetId)
+          if (info.owner && info.owner !== OPENID) await notifyMember(info.owner, 'reaction', { subject: info.title, who: user.nickName || 'TA', content: `用了 ${emoji}`, page: targetPage(targetType, targetId) })
+        } catch (e) {}
+      }
+      let all = []
+      try {
+        const r = await db.collection('interactions').where({ coupleId: couple._id, targetType, targetId, type: 'reaction' }).limit(500).get()
+        all = r.data || []
+      } catch (e) { all = [] }
+      const rx = {}
+      all.forEach((d) => {
+        const e = d.content
+        if (!e) return
+        if (!rx[e]) rx[e] = { emoji: e, count: 0, mine: false }
+        rx[e].count += 1
+        if (d._openid === OPENID) rx[e].mine = true
+      })
+      return { ok: true, reactions: Object.keys(rx).map((e) => rx[e]) }
+    }
+
+    if (action === 'removeComment') {
+      let doc = null
+      try { const r = await db.collection('interactions').doc(event.id).get(); doc = r.data } catch (e) { doc = null }
+      if (!doc || doc._openid !== OPENID || doc.type !== 'comment') return fail('只能删自己的评论')
+      await db.collection('interactions').doc(event.id).remove()
+      return { ok: true }
+    }
+
+    if (action === 'listInteractions') {
+      const couple = await requireCouple(user, OPENID)
+      const targetType = normTarget(event.targetType)
+      const targetId = String(event.targetId || '')
+      if (!targetType || !targetId) return fail('参数错误')
+      let data = []
+      try {
+        const r = await db.collection('interactions')
+          .where({ coupleId: couple._id, targetType, targetId })
+          .orderBy('createdAt', 'asc').limit(200).get()
+        data = r.data || []
+      } catch (e) { data = [] }
+      const members = await loadMembers(couple.memberOpenids)
+      const map = {}
+      members.forEach((m) => { map[m.openid] = m })
+      let likeCount = 0
+      let likedByMe = false
+      const comments = []
+      const rx = {}
+      ;(data || []).forEach((d) => {
+        if (d.type === 'like') {
+          likeCount += 1
+          if (d._openid === OPENID) likedByMe = true
+        } else if (d.type === 'comment') {
+          comments.push({ _id: d._id, _openid: d._openid, content: d.content, createdAt: d.createdAt, isMine: d._openid === OPENID, byName: (map[d._openid] || {}).nickName || 'TA', replyTo: d.replyTo || '', replyToName: d.replyToName || '' })
+        } else if (d.type === 'reaction' && d.content) {
+          const e = d.content
+          if (!rx[e]) rx[e] = { emoji: e, count: 0, mine: false }
+          rx[e].count += 1
+          if (d._openid === OPENID) rx[e].mine = true
+        }
+      })
+      // 打开即已读:更新该目标的已读游标
+      const itinRead = Object.assign({}, user.itinRead || {})
+      itinRead[targetKey(targetType, targetId)] = Date.now()
+      await saveItinRead(user, itinRead)
+      return { ok: true, likeCount, likedByMe, comments, reactions: Object.keys(rx).map((e) => rx[e]) }
+    }
+
+    // 未读汇总:返回总数、按类型计数、最近几条(用于顶部提示条)
+    if (action === 'interactionSummary') {
+      const couple = await requireCouple(user, OPENID)
+      let data = []
+      try {
+        const r = await db.collection('interactions')
+          .where({ coupleId: couple._id }).orderBy('createdAt', 'desc').limit(150).get()
+        data = r.data || []
+      } catch (e) { data = [] }
+      const itinRead = user.itinRead || {}
+      const members = await loadMembers(couple.memberOpenids)
+      const map = {}
+      members.forEach((m) => { map[m.openid] = m })
+      const byType = {}
+      let total = 0
+      const recent = []
+      ;(data || []).forEach((d) => {
+        if (d._openid === OPENID) return
+        if (Number(d.createdAt) <= readTsFor(itinRead, d.targetType, d.targetId)) return
+        total += 1
+        byType[d.targetType] = (byType[d.targetType] || 0) + 1
+        if (recent.length < 6) recent.push({ targetType: d.targetType, targetId: String(d.targetId), type: d.type, content: d.content || '', byName: (map[d._openid] || {}).nickName || 'TA', createdAt: d.createdAt })
+      })
+      return { ok: true, total, byType, recent }
+    }
+
+    if (action === 'markInteractionRead') {
+      const couple = await requireCouple(user, OPENID)
+      const itinRead = Object.assign({}, user.itinRead || {})
+      const t = normTarget(event.targetType)
+      if (t && event.targetId) {
+        itinRead[targetKey(t, String(event.targetId))] = Date.now()
+      } else {
+        let data = []
+        try {
+          const r = await db.collection('interactions').where({ coupleId: couple._id }).orderBy('createdAt', 'desc').limit(150).get()
+          data = r.data || []
+        } catch (e) { data = [] }
+        ;(data || []).forEach((d) => { if (d._openid !== OPENID) itinRead[targetKey(d.targetType, d.targetId)] = Date.now() })
+      }
+      await saveItinRead(user, itinRead)
+      return { ok: true }
+    }
+
+    // 消息中心:聚合对象对我的互动 + 今日签到/晚安事件
+    if (action === 'notificationList') {
+      const couple = await requireCouple(user, OPENID)
+      const partnerId = (couple.memberOpenids || []).find((o) => o !== OPENID)
+      const members = await loadMembers(couple.memberOpenids)
+      const map = {}
+      members.forEach((m) => { map[m.openid] = m })
+      const partnerName = (map[partnerId] || {}).nickName || 'TA'
+      const itinRead = user.itinRead || {}
+      const today = todayKey()
+      const feed = []
+      let ints = []
+      try {
+        const r = await db.collection('interactions').where({ coupleId: couple._id }).orderBy('createdAt', 'desc').limit(80).get()
+        ints = r.data || []
+      } catch (e) { ints = [] }
+      ints.forEach((d) => {
+        if (d._openid === OPENID) return
+        const read = Number(d.createdAt) <= readTsFor(itinRead, d.targetType, d.targetId)
+        feed.push({ kind: 'interaction', type: d.type, targetType: d.targetType, targetId: String(d.targetId), content: d.content || '', byName: (map[d._openid] || {}).nickName || 'TA', createdAt: d.createdAt || 0, unread: !read })
+      })
+      try {
+        const r = await db.collection('checkins').where({ coupleId: couple._id, dateKey: today }).get()
+        const pc = (r.data || []).find((x) => x._openid === partnerId)
+        if (pc) feed.push({ kind: 'checkin', targetType: 'checkin', targetId: pc._id, content: pc.content || '', byName: partnerName, createdAt: pc.createdAt || 0, unread: false })
+      } catch (e) {}
+      try {
+        const r = await db.collection('nights').where({ coupleId: couple._id, dateKey: today }).get()
+        let word = null
+        ;(r.data || []).forEach((d) => {
+          if (d.words && typeof d.words === 'object') { if (d.words[partnerId] !== undefined) word = d.words[partnerId] }
+          else if (d._openid === partnerId && word === null) word = d.word || ''
+        })
+        if (word !== null) feed.push({ kind: 'night', targetType: 'night', targetId: '', content: word || '晚安，好梦 ♡', byName: partnerName, createdAt: 0, unread: false })
+      } catch (e) {}
+      feed.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+      const unread = feed.filter((f) => f.unread).length
+      const noticeQuota = (typeof user.noticeQuota === 'number') ? user.noticeQuota : null
+      return { ok: true, feed: feed.slice(0, 60), unread, noticeQuota }
+    }
+
+    // 订阅消息开关(实际推送需在控制台配置模板后由服务端发送,这里先记录意向)
+    if (action === 'enableNoticePush') {
+      const enabled = !!event.enabled
+      if (enabled) {
+        await bumpNoticeQuota(OPENID, 1)
+      } else {
+        try { await db.collection('users').doc(user._id).update({ data: { noticePush: false } }) } catch (e) {}
+      }
+      let quota = null
+      try {
+        const r = await db.collection('users').doc(user._id).get()
+        quota = (r.data && typeof r.data.noticeQuota === 'number') ? r.data.noticeQuota : null
+      } catch (e) {}
+      return { ok: true, noticePush: enabled, noticeQuota: quota }
+    }
+
+    // ===== 相册:聚合签到/动态/文章里的照片,按时间倒序分页 =====
+    if (action === 'albumList') {
+      const couple = await requireCouple(user, OPENID)
+      const limit = Math.min(120, Math.max(20, Number(event.limit) || 60))
+      const before = Number(event.before) || 0
+      const members = await loadMembers(couple.memberOpenids)
+      const map = {}
+      members.forEach((m) => { map[m.openid] = m })
+      const nameOf = (o) => (map[o] || {}).nickName || 'TA'
+      const entries = []
+      const pull = async (name, picker) => {
+        const q = { coupleId: couple._id }
+        if (before) q.createdAt = _.lt(before)
+        try {
+          const { data } = await db.collection(name).where(q).orderBy('createdAt', 'desc').limit(limit).get()
+          ;(data || []).forEach(picker)
+        } catch (e) {}
+      }
+      await pull('checkins', (d) => {
+        if (d.photo) entries.push({ source: 'checkin', sourceId: d._id, fileID: d.photo, createdAt: d.createdAt || 0, by: d._openid, caption: d.content || '' })
+      })
+      await pull('moments', (d) => {
+        ;(d.photos || []).forEach((p) => entries.push({ source: 'moment', sourceId: d._id, fileID: p, createdAt: d.createdAt || 0, by: d._openid, caption: d.content || d.doing || '' }))
+      })
+      await pull('posts', (d) => {
+        ;(d.photos || []).forEach((p) => entries.push({ source: 'post', sourceId: d._id, fileID: p, createdAt: d.createdAt || 0, by: d._openid, caption: d.title || '' }))
+      })
+      entries.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+      const page = entries.slice(0, limit)
+      const hasMore = entries.length > limit
+      const nextBefore = page.length ? page[page.length - 1].createdAt : 0
+      const files = [...new Set(page.map((e) => e.fileID).filter((f) => f && String(f).startsWith('cloud://')))]
+      const urlMap = {}
+      if (files.length) {
+        try {
+          const { fileList } = await cloud.getTempFileURL({ fileList: files })
+          ;(fileList || []).forEach((f) => { if (f.fileID && f.tempFileURL) urlMap[f.fileID] = f.tempFileURL })
+        } catch (e) {}
+      }
+      const list = page.map((e) => ({ ...e, url: urlMap[e.fileID] || e.fileID, byName: nameOf(e.by), key: `${e.source}_${e.sourceId}_${e.fileID}` }))
+      return { ok: true, list, hasMore, nextBefore }
+    }
+
+    // ===== 往年今日:同月同日、往年的签到/动态/文章 =====
+    if (action === 'onThisDay') {
+      const couple = await requireCouple(user, OPENID)
+      const members = await loadMembers(couple.memberOpenids)
+      const map = {}
+      members.forEach((m) => { map[m.openid] = m })
+      const today = todayKey()
+      const mmdd = today.slice(5)
+      const year = Number(today.slice(0, 4))
+      const items = []
+      const pull = async (name, picker) => {
+        try {
+          const { data } = await db.collection(name).where({ coupleId: couple._id }).orderBy('createdAt', 'desc').limit(200).get()
+          ;(data || []).forEach(picker)
+        } catch (e) {}
+      }
+      const match = (ts) => {
+        const k = keyFromTs(ts)
+        if (!k || k.slice(5) !== mmdd) return 0
+        const y = Number(k.slice(0, 4))
+        return y < year ? y : 0
+      }
+      await pull('checkins', (d) => { const y = match(d.createdAt); if (y) items.push({ type: 'checkin', id: d._id, createdAt: d.createdAt, y, content: d.content || '', photo: d.photo || '', by: d._openid }) })
+      await pull('moments', (d) => { const y = match(d.createdAt); if (y) items.push({ type: 'moment', id: d._id, createdAt: d.createdAt, y, content: d.content || d.doing || '', photo: (d.photos || [])[0] || '', by: d._openid }) })
+      await pull('posts', (d) => { const y = match(d.createdAt); if (y) items.push({ type: 'post', id: d._id, createdAt: d.createdAt, y, content: d.title || '', photo: (d.photos || [])[0] || '', by: d._openid }) })
+      items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+      const files = [...new Set(items.map((i) => i.photo).filter((f) => f && String(f).startsWith('cloud://')))]
+      const urlMap = {}
+      if (files.length) {
+        try {
+          const { fileList } = await cloud.getTempFileURL({ fileList: files })
+          ;(fileList || []).forEach((f) => { if (f.fileID && f.tempFileURL) urlMap[f.fileID] = f.tempFileURL })
+        } catch (e) {}
+      }
+      const out = items.map((i) => ({ ...i, photoUrl: urlMap[i.photo] || i.photo, byName: (map[i.by] || {}).nickName || 'TA' }))
+      return { ok: true, items: out }
+    }
+
+    // ===== 亲密度 / 成就 =====
+    if (action === 'recentMoods') {
+      const couple = await requireCouple(user, OPENID)
+      let list = []
+      try {
+        const r = await db.collection('checkins').where({ coupleId: couple._id }).orderBy('dateKey', 'desc').limit(30).get()
+        list = (r.data || []).map((d) => ({ dateKey: d.dateKey, mood: d.mood, mine: d._openid === OPENID }))
+      } catch (e) { list = [] }
+      return { ok: true, list }
+    }
+
+    if (action === 'intimacyOverview') {
+      const couple = await requireCouple(user, OPENID)
+      const CID = couple._id
+      const countOf = async (name, extra) => {
+        try {
+          const r = await db.collection(name).where(Object.assign({ coupleId: CID }, extra || {})).count()
+          return r.total || 0
+        } catch (e) { return 0 }
+      }
+      const [checkinTotal, momentCount, postCount, msgCount, nightCount, likeCount, commentCount] = await Promise.all([
+        countOf('checkins'),
+        countOf('moments'),
+        countOf('posts'),
+        countOf('chats'),
+        countOf('nights'),
+        countOf('interactions', { type: 'like' }),
+        countOf('interactions', { type: 'comment' })
+      ])
+      let streaks = { mine: 0, partner: 0, together: 0 }
+      try { streaks = await streaksFor(user, couple) } catch (e) {}
+      const since = normDateKey(couple.togetherSince)
+      const today = todayKey()
+      const togetherDays = since ? Math.max(1, daysBetween(since, today) + 1) : 0
+      const interactCount = likeCount + commentCount
+      const exp = checkinTotal * 10 + momentCount * 6 + postCount * 15 + msgCount * 1 + nightCount * 3 + interactCount * 3 + togetherDays * 5
+      const LEVELS = [
+        { lv: 1, min: 0, title: '初见心动' },
+        { lv: 2, min: 200, title: '情窦初开' },
+        { lv: 3, min: 500, title: '如胶似漆' },
+        { lv: 4, min: 1000, title: '心有灵犀' },
+        { lv: 5, min: 2000, title: '难舍难分' },
+        { lv: 6, min: 3500, title: '白首之约' },
+        { lv: 7, min: 6000, title: '一生一世' }
+      ]
+      let idx = 0
+      for (let i = 0; i < LEVELS.length; i += 1) { if (exp >= LEVELS[i].min) idx = i }
+      const cur = LEVELS[idx]
+      const next = LEVELS[idx + 1] || null
+      const progress = next ? Math.min(100, Math.round(((exp - cur.min) / (next.min - cur.min)) * 100)) : 100
+      const level = { lv: cur.lv, title: cur.title, curMin: cur.min, nextMin: next ? next.min : null, nextLv: next ? next.lv : null, progress }
+      const sm = Math.max(streaks.mine || 0, streaks.partner || 0)
+      const st = streaks.together || 0
+      const badges = [
+        // —— 签到 ——
+        { id: 'ck1', icon: '🌱', name: '初次盖章', desc: '完成第一次签到', got: checkinTotal >= 1 },
+        { id: 'ck10', icon: '🌼', name: '习惯萌芽', desc: '累计签到 10 次', got: checkinTotal >= 10 },
+        { id: 'ck50', icon: '🌸', name: '渐入佳境', desc: '累计签到 50 次', got: checkinTotal >= 50 },
+        { id: 'ck100', icon: '🏵️', name: '百日打卡', desc: '累计签到 100 次', got: checkinTotal >= 100 },
+        { id: 'ck365', icon: '🎖️', name: '年度全勤', desc: '累计签到 365 次', got: checkinTotal >= 365 },
+        // —— 连续签到 ——
+        { id: 'sm3', icon: '🍀', name: '小有坚持', desc: '连续签到 3 天', got: sm >= 3 },
+        { id: 'sm7', icon: '🔥', name: '七日不断', desc: '连续签到 7 天', got: sm >= 7 },
+        { id: 'sm14', icon: '🌟', name: '双周坚持', desc: '连续签到 14 天', got: sm >= 14 },
+        { id: 'sm30', icon: '📅', name: '月度坚持', desc: '连续签到 30 天', got: sm >= 30 },
+        { id: 'sm60', icon: '💎', name: '两月不辍', desc: '连续签到 60 天', got: sm >= 60 },
+        { id: 'sm100', icon: '👑', name: '百炼成钢', desc: '连续签到 100 天', got: sm >= 100 },
+        // —— 两人同频 ——
+        { id: 'st3', icon: '🤝', name: '三日同频', desc: '两人同日签到 3 天', got: st >= 3 },
+        { id: 'st7', icon: '👫', name: '七日同频', desc: '两人同日签到 7 天', got: st >= 7 },
+        { id: 'st14', icon: '💞', name: '双周同心', desc: '两人同日签到 14 天', got: st >= 14 },
+        { id: 'st30', icon: '🌈', name: '月度同频', desc: '两人同日签到 30 天', got: st >= 30 },
+        { id: 'st60', icon: '🕊️', name: '两月同频', desc: '两人同日签到 60 天', got: st >= 60 },
+        // —— 日常动态 ——
+        { id: 'mt1', icon: '📸', name: '生活开始', desc: '发布第一条动态', got: momentCount >= 1 },
+        { id: 'mt10', icon: '📷', name: '记录者', desc: '累计 10 条动态', got: momentCount >= 10 },
+        { id: 'mt30', icon: '📚', name: '生活记录家', desc: '累计 30 条动态', got: momentCount >= 30 },
+        { id: 'mt60', icon: '🌠', name: '时光收藏', desc: '累计 60 条动态', got: momentCount >= 60 },
+        { id: 'mt100', icon: '🏆', name: '回忆大师', desc: '累计 100 条动态', got: momentCount >= 100 },
+        { id: 'mt200', icon: '🗂️', name: '岁月全书', desc: '累计 200 条动态', got: momentCount >= 200 },
+        // —— 空间文章 ——
+        { id: 'pt1', icon: '💌', name: '第一封信', desc: '写下第一篇文章', got: postCount >= 1 },
+        { id: 'pt5', icon: '✉️', name: '书信常客', desc: '累计 5 篇文章', got: postCount >= 5 },
+        { id: 'pt10', icon: '✍️', name: '情书写手', desc: '累计 10 篇文章', got: postCount >= 10 },
+        { id: 'pt20', icon: '📖', name: '长篇情话', desc: '累计 20 篇文章', got: postCount >= 20 },
+        { id: 'pt50', icon: '🖋️', name: '著作等身', desc: '累计 50 篇文章', got: postCount >= 50 },
+        // —— 悄悄话 ——
+        { id: 'ms1', icon: '💬', name: '开口说话', desc: '发出第一条悄悄话', got: msgCount >= 1 },
+        { id: 'ms50', icon: '📨', name: '话痨情侣', desc: '累计 50 条消息', got: msgCount >= 50 },
+        { id: 'ms200', icon: '💞', name: '说不完的话', desc: '累计 200 条消息', got: msgCount >= 200 },
+        { id: 'ms500', icon: '📲', name: '聊到深夜', desc: '累计 500 条消息', got: msgCount >= 500 },
+        { id: 'ms1000', icon: '🗣️', name: '千言万语', desc: '累计 1000 条消息', got: msgCount >= 1000 },
+        // —— 晚安 ——
+        { id: 'nt1', icon: '🌙', name: '晚安仪式', desc: '第一次说晚安', got: nightCount >= 1 },
+        { id: 'nt7', icon: '😴', name: '一周好梦', desc: '累计 7 次晚安', got: nightCount >= 7 },
+        { id: 'nt30', icon: '🌜', name: '整月晚安', desc: '累计 30 次晚安', got: nightCount >= 30 },
+        { id: 'nt100', icon: '🛌', name: '百日好眠', desc: '累计 100 次晚安', got: nightCount >= 100 },
+        { id: 'nt365', icon: '🌌', name: '岁岁晚安', desc: '累计 365 次晚安', got: nightCount >= 365 },
+        // —— 互动 ——
+        { id: 'it1', icon: '❤️', name: '甜蜜回应', desc: '第一次点赞或评论', got: interactCount >= 1 },
+        { id: 'it10', icon: '👍', name: '有来有往', desc: '累计互动 10 次', got: interactCount >= 10 },
+        { id: 'it50', icon: '💞', name: '互动达人', desc: '累计互动 50 次', got: interactCount >= 50 },
+        { id: 'it100', icon: '🎉', name: '热络日常', desc: '累计互动 100 次', got: interactCount >= 100 },
+        { id: 'it300', icon: '🌻', name: '形影不离', desc: '累计互动 300 次', got: interactCount >= 300 },
+        { id: 'cm20', icon: '🗨️', name: '评论高手', desc: '累计评论 20 条', got: commentCount >= 20 },
+        { id: 'cm100', icon: '📝', name: '妙语连珠', desc: '累计评论 100 条', got: commentCount >= 100 },
+        { id: 'lk50', icon: '💖', name: '被偏爱着', desc: '累计收到/送出 50 个赞', got: likeCount >= 50 },
+        // —— 在一起的日子 ——
+        { id: 'td1', icon: '🐣', name: '启程之日', desc: '在一起第 1 天', got: togetherDays >= 1 },
+        { id: 'td7', icon: '🌱', name: '一周相伴', desc: '在一起 7 天', got: togetherDays >= 7 },
+        { id: 'td30', icon: '🍰', name: '满月快乐', desc: '在一起 30 天', got: togetherDays >= 30 },
+        { id: 'td100', icon: '📆', name: '百日相伴', desc: '在一起 100 天', got: togetherDays >= 100 },
+        { id: 'td200', icon: '🌤️', name: '两百之约', desc: '在一起 200 天', got: togetherDays >= 200 },
+        { id: 'td365', icon: '🎂', name: '一年之约', desc: '在一起 365 天', got: togetherDays >= 365 },
+        { id: 'td520', icon: '💕', name: '我爱你', desc: '在一起 520 天', got: togetherDays >= 520 },
+        { id: 'td730', icon: '🥂', name: '两年之约', desc: '在一起 730 天', got: togetherDays >= 730 },
+        { id: 'td1000', icon: '🏅', name: '千日同心', desc: '在一起 1000 天', got: togetherDays >= 1000 },
+        // —— 亲密度等级 ——
+        { id: 'lv3', icon: '💫', name: '如胶似漆', desc: '亲密度达到 Lv.3', got: exp >= 500 },
+        { id: 'lv5', icon: '🔮', name: '难舍难分', desc: '亲密度达到 Lv.5', got: exp >= 2000 },
+        { id: 'lv7', icon: '👑', name: '一生一世', desc: '亲密度达到 Lv.7', got: exp >= 6000 },
+        // —— 组合成就 ——
+        { id: 'allround', icon: '🌈', name: '全能情侣', desc: '签到·动态·文章·晚安·互动各达一定数量', got: checkinTotal >= 30 && momentCount >= 30 && postCount >= 5 && nightCount >= 30 && interactCount >= 30 },
+        { id: 'longlove', icon: '✨', name: '长相厮守', desc: '在一起 365 天且连续签到 30 天', got: togetherDays >= 365 && sm >= 30 },
+        { id: 'soulmate', icon: '🫶', name: '灵魂伴侣', desc: '一起 520 天且互动 100 次', got: togetherDays >= 520 && interactCount >= 100 }
+      ]
+      return {
+        ok: true,
+        exp,
+        level,
+        togetherDays,
+        stats: { checkinTotal, momentCount, postCount, msgCount, nightCount, likeCount, commentCount, interactCount, streaks },
+        badges,
+        gotCount: badges.filter((b) => b.got).length,
+        badgeTotal: badges.length
+      }
+    }
+
+    // ===== 生活:待办 / 便签 / 账本(通用 CRUD,限定白名单集合) =====
+    if (action === 'lifeList') {
+      const couple = await requireCouple(user, OPENID)
+      const coll = LIFE_COLL[event.type]
+      if (!coll) return fail('参数错误')
+      await ensureLifeColl(coll)
+      let data = []
+      try {
+        const r = await db.collection(coll).where({ coupleId: couple._id }).orderBy('createdAt', 'desc').limit(100).get()
+        data = r.data || []
+      } catch (e) { data = [] }
+      const members = await loadMembers(couple.memberOpenids)
+      const map = {}
+      members.forEach((m) => { map[m.openid] = m })
+      const list = data.map((d) => ({ ...d, isMine: d._openid === OPENID, byName: (map[d._openid] || {}).nickName || '我' }))
+      return { ok: true, list }
+    }
+
+    if (action === 'lifeAdd') {
+      const couple = await requireCouple(user, OPENID)
+      const type = event.type
+      const coll = LIFE_COLL[type]
+      if (!coll) return fail('参数错误')
+      await ensureLifeColl(coll)
+      const base = { _openid: OPENID, coupleId: couple._id, createdAt: Date.now() }
+      let doc = null
+      if (type === 'todo') {
+        const text = String(event.text || '').trim().slice(0, 80)
+        if (!text) return fail('写点要做什么吧')
+        const assignee = ['me', 'partner', 'both'].includes(event.assignee) ? event.assignee : 'both'
+        const due = /^\d{4}-\d{2}-\d{2}$/.test(String(event.due || '')) ? String(event.due) : ''
+        doc = { ...base, text, assignee, done: false, due }
+      } else if (type === 'note') {
+        const text = String(event.text || '').trim().slice(0, 500)
+        if (!text) return fail('写点内容吧')
+        const color = ['pink', 'yellow', 'blue', 'green', 'purple'].includes(event.color) ? event.color : 'yellow'
+        doc = { ...base, text, color }
+      } else {
+        const amount = Math.round(Number(event.amount) * 100) / 100
+        if (!Number.isFinite(amount) || amount <= 0) return fail('金额不对哦')
+        const note = String(event.note || '').trim().slice(0, 60)
+        const payer = event.payer === 'partner' ? 'partner' : 'me'
+        const category = ['food', 'fun', 'daily', 'other'].includes(event.category) ? event.category : 'other'
+        doc = { ...base, amount, note, payer, category }
+      }
+      const add = await db.collection(coll).add({ data: doc })
+      return { ok: true, id: add._id, item: { ...doc, _id: add._id, isMine: true } }
+    }
+
+    if (action === 'lifeUpdate') {
+      const couple = await requireCouple(user, OPENID)
+      const type = event.type
+      const coll = LIFE_COLL[type]
+      if (!coll || !event.id) return fail('参数错误')
+      let doc = null
+      try { const r = await db.collection(coll).doc(event.id).get(); doc = r.data } catch (e) { doc = null }
+      if (!doc || doc.coupleId !== couple._id) return fail('找不到这条')
+      const patch = {}
+      if (type === 'todo') {
+        if (typeof event.done === 'boolean') patch.done = event.done
+      } else if (type === 'note') {
+        if (typeof event.text === 'string') {
+          const t = event.text.trim().slice(0, 500)
+          if (!t) return fail('内容不能为空')
+          patch.text = t
+        }
+      } else if (type === 'ledger') {
+        if (event.amount != null) {
+          const a = Math.round(Number(event.amount) * 100) / 100
+          if (Number.isFinite(a) && a > 0) patch.amount = a
+        }
+        if (typeof event.note === 'string') patch.note = event.note.trim().slice(0, 60)
+      }
+      if (!Object.keys(patch).length) return fail('没有要更新的内容')
+      await db.collection(coll).doc(event.id).update({ data: patch })
+      return { ok: true, patch }
+    }
+
+    if (action === 'lifeRemove') {
+      const couple = await requireCouple(user, OPENID)
+      const coll = LIFE_COLL[event.type]
+      if (!coll || !event.id) return fail('参数错误')
+      let doc = null
+      try { const r = await db.collection(coll).doc(event.id).get(); doc = r.data } catch (e) { doc = null }
+      if (!doc || doc.coupleId !== couple._id) return fail('找不到这条')
+      await db.collection(coll).doc(event.id).remove()
       return { ok: true }
     }
 
@@ -1693,6 +2442,7 @@ exports.main = async (event) => {
       members.forEach((m) => { map[m.openid] = m })
       const list = data.map((d) => ({ ...d, authorName: (map[d._openid] || {}).nickName || 'TA' }))
       await attachPhotoUrls(list, [(d) => d.photos])
+      await attachInteractions(list, 'post', OPENID, user.itinRead)
       return { ok: true, list }
     }
 
@@ -1703,6 +2453,7 @@ exports.main = async (event) => {
       const members = await loadMembers([doc._openid])
       const detail = { ...doc, authorName: (members[0] || {}).nickName || 'TA' }
       await attachPhotoUrls([detail], [(d) => d.photos])
+      await attachInteractions([detail], 'post', OPENID, user.itinRead)
       return { ok: true, detail }
     }
 
@@ -1767,12 +2518,16 @@ exports.main = async (event) => {
 
     if (action === 'sendChat') {
       const couple = await requireCouple(user, OPENID)
-      const kind = event.kind === 'image' ? 'image' : 'text'
-      const content = String(event.content || '').trim().slice(0, kind === 'image' ? 500 : 500)
+      const kind = event.kind === 'image' ? 'image' : (event.kind === 'voice' ? 'voice' : 'text')
+      const content = String(event.content || '').trim().slice(0, 500)
       if (!content) return fail('说点什么吧')
-      const add = await db.collection('chats').add({
-        data: { _openid: OPENID, coupleId: couple._id, kind, content, createdAt: Date.now() }
-      })
+      const doc = { _openid: OPENID, coupleId: couple._id, kind, content, createdAt: Date.now() }
+      if (kind === 'voice') doc.duration = Math.min(120, Math.max(1, Math.round(Number(event.duration) || 1)))
+      const add = await db.collection('chats').add({ data: doc })
+      const partnerId = (couple.memberOpenids || []).find((o) => o !== OPENID)
+      if (partnerId) {
+        try { await pushChat(partnerId, { fromName: (user && user.nickName) || 'TA', kind, content, count: 1 }) } catch (e) {}
+      }
       return { ok: true, id: add._id }
     }
 
@@ -1787,14 +2542,14 @@ exports.main = async (event) => {
       const map = {}
       members.forEach((m) => { map[m.openid] = m })
       const list = asc.map((d) => ({ ...d, isMine: d._openid === OPENID, authorName: (map[d._openid] || {}).nickName || 'TA', authorAvatar: (map[d._openid] || {}).avatarUrl || '' }))
-      // 图片消息换临时可访问链接,避免对方因存储权限看不到图
-      const files = list.filter((d) => d.kind === 'image' && d.content && d.content.startsWith('cloud://')).map((d) => d.content)
+      // 图片/语音消息换临时可访问链接,避免对方因存储权限看不到
+      const files = list.filter((d) => (d.kind === 'image' || d.kind === 'voice') && d.content && d.content.startsWith('cloud://')).map((d) => d.content)
       if (files.length) {
         try {
           const { fileList } = await cloud.getTempFileURL({ fileList: [...new Set(files)] })
           const urlMap = {}
           ;(fileList || []).forEach((f) => { if (f.fileID && f.tempFileURL) urlMap[f.fileID] = f.tempFileURL })
-          list.forEach((d) => { if (d.kind === 'image' && urlMap[d.content]) d.url = urlMap[d.content] })
+          list.forEach((d) => { if ((d.kind === 'image' || d.kind === 'voice') && urlMap[d.content]) d.url = urlMap[d.content] })
         } catch (e) { console.warn('getTempFileURL failed', e) }
       }
       const reads = await db.collection('chatReads').where({ coupleId: couple._id }).get()
@@ -1808,7 +2563,7 @@ exports.main = async (event) => {
       if (!doc || doc._openid !== OPENID) return fail('只能撤回自己的消息')
       if (Date.now() - (doc.createdAt || 0) > 2 * 60 * 1000) return fail('超过2分钟不能撤回啦')
       await db.collection('chats').doc(event.id).remove()
-      if (doc.kind === 'image') await removeFiles([doc.content])
+      if (doc.kind === 'image' || doc.kind === 'voice') await removeFiles([doc.content])
       return { ok: true }
     }
 
@@ -1851,6 +2606,7 @@ exports.main = async (event) => {
           list.forEach((d) => { d.initial = Array.from(d.authorName || 'TA')[0] || '♡' })
         }
       } catch (e) { console.warn('todayCheckins getTempFileURL failed', e) }
+      await attachInteractions(list, 'checkin', OPENID, user.itinRead)
       return { ok: true, list }
     }
 
@@ -2103,6 +2859,44 @@ exports.main = async (event) => {
       return { ok: true, count: total || 0 }
     }
 
+    if (action === 'badges') {
+      const couple = await requireCouple(user, OPENID)
+      let chat = 0
+      try {
+        const mine = await db.collection('chatReads').where({ coupleId: couple._id, _openid: OPENID }).get()
+        const since = mine.data.length ? (mine.data[0].lastReadAt || 0) : (Number(event.since) || 0)
+        const { total } = await db.collection('chats').where({ coupleId: couple._id, createdAt: _.gt(since), _openid: _.neq(OPENID) }).count()
+        chat = total || 0
+      } catch (e) {}
+      let notice = 0
+      try {
+        const itinRead = user.itinRead || {}
+        const r = await db.collection('interactions').where({ coupleId: couple._id }).orderBy('createdAt', 'desc').limit(150).get()
+        ;(r.data || []).forEach((d) => {
+          if (d._openid === OPENID) return
+          if (Number(d.createdAt) <= readTsFor(itinRead, d.targetType, d.targetId)) return
+          notice += 1
+        })
+      } catch (e) {}
+      return { ok: true, chat, notice }
+    }
+
+    if (action === 'reminderSummary') {
+      const couple = await requireCouple(user, OPENID)
+      const today = todayKey()
+      let dueTodos = 0
+      let capsuleReady = 0
+      try {
+        const r = await db.collection('todos').where({ coupleId: couple._id }).limit(200).get()
+        dueTodos = (r.data || []).filter((t) => !t.done && t.due && t.due <= today).length
+      } catch (e) {}
+      try {
+        const r = await db.collection('capsules').where({ coupleId: couple._id }).limit(100).get()
+        capsuleReady = (r.data || []).filter((c) => today >= c.unlockDate).length
+      } catch (e) {}
+      return { ok: true, dueTodos, capsuleReady }
+    }
+
     if (action === 'markChatRead') {
       const couple = await requireCouple(user, OPENID)
       const now = Date.now()
@@ -2287,6 +3081,10 @@ exports.main = async (event) => {
           data: { _openid: OPENID, coupleId: couple._id, dateKey: today, words, createdAt: Date.now() }
         })
       }
+      try {
+        const partnerId = (couple.memberOpenids || []).find((o) => o !== OPENID)
+        if (partnerId) await notifyMember(partnerId, 'night', { subject: '晚安时刻', who: user.nickName || 'TA', content: '对你说晚安啦', page: 'pages/night/index' })
+      } catch (e) {}
       return { ok: true }
     }
 
@@ -2367,6 +3165,57 @@ exports.main = async (event) => {
       if (!doc || doc.coupleId !== couple._id) return fail('找不到这个瓶子')
       if (doc._openid === OPENID) return fail('自己的心愿要等 TA 来实现哦')
       await db.collection('wishes').doc(event.id).update({ data: { done: true, doneAt: Date.now() } })
+      return { ok: true }
+    }
+
+    // ===== 时间胶囊 =====
+    if (action === 'capsuleCreate') {
+      const couple = await requireCouple(user, OPENID)
+      const content = String(event.content || '').trim().slice(0, 2000)
+      const unlockDate = /^\d{4}-\d{2}-\d{2}$/.test(String(event.unlockDate || '')) ? String(event.unlockDate) : ''
+      if (!content) return fail('先写点想说的话吧')
+      if (!unlockDate) return fail('选一个解锁日期吧')
+      if (unlockDate <= todayKey()) return fail('解锁日要在今天之后哦')
+      await ensureLifeColl('capsules')
+      const add = await db.collection('capsules').add({ data: { _openid: OPENID, coupleId: couple._id, content, unlockDate, createdAt: Date.now() } })
+      return { ok: true, id: add._id }
+    }
+
+    if (action === 'capsuleList') {
+      const couple = await requireCouple(user, OPENID)
+      await ensureLifeColl('capsules')
+      let data = []
+      try {
+        const r = await db.collection('capsules').where({ coupleId: couple._id }).limit(100).get()
+        data = r.data || []
+      } catch (e) { data = [] }
+      data.sort((a, b) => String(a.unlockDate).localeCompare(String(b.unlockDate)))
+      const members = await loadMembers(couple.memberOpenids)
+      const map = {}
+      members.forEach((m) => { map[m.openid] = m })
+      const today = todayKey()
+      const list = data.map((d) => {
+        const unlocked = today >= d.unlockDate
+        return {
+          _id: d._id,
+          unlockDate: d.unlockDate,
+          createdAt: d.createdAt,
+          mine: d._openid === OPENID,
+          byName: (map[d._openid] || {}).nickName || 'TA',
+          unlocked,
+          content: unlocked ? d.content : '',
+          leftDays: unlocked ? 0 : Math.max(0, daysBetween(today, d.unlockDate))
+        }
+      })
+      return { ok: true, list }
+    }
+
+    if (action === 'capsuleRemove') {
+      const couple = await requireCouple(user, OPENID)
+      const { data: doc } = await db.collection('capsules').doc(event.id).get()
+      if (!doc || doc.coupleId !== couple._id) return fail('找不到这个胶囊')
+      if (doc._openid !== OPENID) return fail('只能收回自己写的胶囊')
+      await db.collection('capsules').doc(event.id).remove()
       return { ok: true }
     }
 

@@ -1,0 +1,58 @@
+<view class="page intimacy-page">
+  <view wx:if="{{loading}}" class="muted center">正在计算你们的亲密度… ♡</view>
+
+  <block wx:elif="{{paired && level}}">
+    <!-- 等级心脏 -->
+    <view class="level-hero">
+      <view class="deco-layer" aria-hidden="true">
+        <text class="pt pt1">✨</text>
+        <text class="pt pt2">💗</text>
+        <text class="pt pt3">💫</text>
+        <text class="pt pt4">🌸</text>
+        <text class="pt pt5">💕</text>
+        <text class="pt pt6">⭐</text>
+      </view>
+      <view class="heart-ring">
+        <view class="heart-inner">
+          <text class="heart-emoji">💗</text>
+          <text class="heart-lv">Lv.{{level.lv}}</text>
+        </view>
+      </view>
+      <view class="level-title">{{level.title}}</view>
+      <view class="exp-line">亲密度 <text class="exp-num">{{exp}}</text></view>
+      <view class="progress-wrap">
+        <view class="progress-bar" style="width:{{level.progress}}%"></view>
+      </view>
+      <view class="progress-hint" wx:if="{{level.nextMin}}">再攒 {{toNext}} 点升到 Lv.{{level.nextLv}} 🌟</view>
+      <view class="progress-hint" wx:else>已到最高等级，一生一世 ♡</view>
+    </view>
+
+    <!-- 数据统计 -->
+    <view class="stat-grid">
+      <view class="stat-chip" wx:for="{{statChips}}" wx:key="key">
+        <text class="sc-icon">{{item.icon}}</text>
+        <text class="sc-value">{{item.value}}</text>
+        <text class="sc-label">{{item.label}}·{{item.unit}}</text>
+      </view>
+    </view>
+
+    <!-- 成就徽章 -->
+    <view class="badge-head">
+      <text class="badge-title">🏅 成就徽章</text>
+      <text class="badge-count">{{gotCount}} / {{badgeTotal}}</text>
+    </view>
+    <view class="badge-grid">
+      <view class="badge {{item.got ? 'got' : 'locked'}}" wx:for="{{badges}}" wx:key="id">
+        <text class="badge-icon">{{item.got ? item.icon : '🔒'}}</text>
+        <text class="badge-name">{{item.name}}</text>
+        <text class="badge-desc">{{item.desc}}</text>
+      </view>
+    </view>
+  </block>
+
+  <view wx:else class="card empty-card center">
+    <text class="empty-icon">💞</text>
+    <view class="title">先绑定两个人吧</view>
+    <view class="muted">有了 TA，才能一起攒亲密度 ♡</view>
+  </view>
+</view>

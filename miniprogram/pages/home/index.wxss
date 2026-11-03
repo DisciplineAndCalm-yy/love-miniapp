@@ -51,3 +51,32 @@
 }
 @keyframes beat { 0%,100% { transform: scale(1); } 30% { transform: scale(1.16); } 60% { transform: scale(1); } }
 @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12rpx); } }
+
+/* 消息中心入口 */
+.notice-entry{display:flex;align-items:center;gap:16rpx;}
+.ne-icon{width:72rpx;height:72rpx;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:38rpx;border-radius:22rpx;background:linear-gradient(135deg,#FFE9EE,#FFF3F4);border:2rpx solid var(--line);}
+.ne-body{flex:1;min-width:0;}
+.ne-title{font-size:30rpx;font-weight:800;display:flex;align-items:center;gap:10rpx;}
+.ne-badge{min-width:34rpx;height:34rpx;line-height:34rpx;padding:0 10rpx;border-radius:999rpx;background:#FF5A78;color:#fff;font-size:22rpx;font-weight:800;text-align:center;box-shadow:0 6rpx 14rpx rgba(255,90,120,.4);}
+
+/* ===== 功能宫格 ===== */
+.fn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16rpx 12rpx;margin-bottom:22rpx;}
+.fn-item{display:flex;flex-direction:column;align-items:center;gap:8rpx;padding:18rpx 0 16rpx;background:#fff;border-radius:24rpx;border:2rpx solid var(--line);box-shadow:var(--shadow-sm);transition:transform .16s ease;}
+.fn-item:active{transform:scale(.94);}
+.fn-ico{width:78rpx;height:78rpx;border-radius:22rpx;display:flex;align-items:center;justify-content:center;font-size:40rpx;background:radial-gradient(circle at 30% 25%,#FFF8F4,#FFE9EE);box-shadow:inset 0 2rpx 6rpx rgba(255,255,255,.85),0 6rpx 12rpx rgba(232,128,148,.12);}
+.fn-label{font-size:23rpx;font-weight:700;color:#6b5560;}
+.fn-more .fn-ico{background:linear-gradient(135deg,#FFE1E7,#FFD0DA);color:#D14E64;font-weight:900;}
+.gi-checkin{background:linear-gradient(135deg,#FFEFC2,#FFD36E);}
+.gi-moments{background:linear-gradient(135deg,#FFD3DE,#FF9FB2);}
+.gi-album{background:linear-gradient(135deg,#CFE6FF,#8CC5FF);}
+.gi-intimacy{background:linear-gradient(135deg,#FFC9D4,#FF8A9C);}
+.gi-life{background:linear-gradient(135deg,#CFF2D6,#8FE0A2);}
+.gi-blog{background:linear-gradient(135deg,#E9DDFF,#C6A8FF);}
+.gi-chat{background:linear-gradient(135deg,#CFEDFF,#8FD4FF);}
+
+/* ===== 到期提醒条 ===== */
+.reminder-strip{display:flex;flex-direction:column;gap:12rpx;margin-bottom:20rpx;}
+.rs-item{font-size:25rpx;font-weight:700;border-radius:18rpx;padding:18rpx 24rpx;transition:transform .16s ease;}
+.rs-item:active{transform:scale(.98);}
+.rs-item.warn{color:#C9772A;background:#FFF3E0;border:2rpx solid #FAD9A8;}
+.rs-item.gift{color:#7A5BB5;background:linear-gradient(135deg,#F3ECFF,#E9DDFF);border:2rpx solid #DED2F6;}

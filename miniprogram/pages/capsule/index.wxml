@@ -1,0 +1,53 @@
+<view class="page capsule-page">
+  <view class="cap-hero">
+    <view class="cap-deco" aria-hidden="true">
+      <text class="cd cd1">⏳</text>
+      <text class="cd cd2">✨</text>
+      <text class="cd cd3">💌</text>
+      <text class="cd cd4">🌙</text>
+    </view>
+    <view class="cap-title">⏳ 时间胶囊</view>
+    <view class="cap-sub">写给未来的 TA，到日子才能拆开 ♡</view>
+  </view>
+
+  <block wx:if="{{paired}}">
+    <view class="card cap-form">
+      <textarea class="cap-input" value="{{content}}" bindinput="onContent" maxlength="2000" placeholder="写一段想对未来的我们说的话…" />
+      <view class="cap-form-row">
+        <picker mode="date" value="{{unlockDate}}" start="{{minDate}}" bindchange="onUnlockDate">
+          <view class="cap-date {{unlockDate ? 'active' : ''}}">📅 {{unlockDate ? ('解锁于 ' + unlockDate) : '选择解锁日期'}}</view>
+        </picker>
+        <button class="btn-primary cap-add" bindtap="createCapsule" loading="{{sending}}" disabled="{{sending}}">封存</button>
+      </view>
+    </view>
+
+    <view class="cap-ready" wx:if="{{readyCount > 0}}">💌 有 {{readyCount}} 个胶囊到解锁日啦，往下拆开看看吧 ♡</view>
+
+    <view wx:if="{{loading}}" class="muted center">正在打捞时光… ♡</view>
+    <view wx:elif="{{!list.length}}" class="card empty-card center">
+      <text class="empty-icon">💌</text>
+      <view class="title">还没有时间胶囊</view>
+      <view class="muted">写一封给未来的信，封存起来吧 ♡</view>
+    </view>
+    <view wx:else class="cap-list">
+      <view class="cap-card {{item.unlocked ? 'unlocked' : 'locked'}}" wx:for="{{list}}" wx:key="_id">
+        <view class="cap-card-head">
+          <text class="cap-author">{{item.byName}}</text>
+          <text class="cap-badge">{{item.unlocked ? '已解锁' : '还有 ' + item.leftDays + ' 天'}}</text>
+        </view>
+        <view wx:if="{{item.unlocked}}" class="cap-content">{{item.content}}</view>
+        <view wx:else class="cap-sealed">🔒 封存中 · {{item.unlockDate}} 解锁</view>
+        <view class="cap-card-foot">
+          <text class="cap-date-label">解锁日 {{item.unlockDate}}</text>
+          <text wx:if="{{item.mine}}" class="cap-del" data-id="{{item._id}}" bindtap="removeCapsule">收回</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view wx:else class="card empty-card center">
+    <text class="empty-icon">💌</text>
+    <view class="title">先绑定两个人吧</view>
+    <view class="muted">有了 TA，才有要寄往未来的信 ♡</view>
+  </view>
+</view>

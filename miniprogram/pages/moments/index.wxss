@@ -35,3 +35,14 @@
 @keyframes slideIn{from{opacity:0;transform:translateX(24rpx);}to{opacity:1;transform:none;}}
 @keyframes fabPulse{0%,100%{box-shadow:0 14rpx 32rpx rgba(232,106,122,.45);}50%{box-shadow:0 14rpx 32rpx rgba(232,106,122,.45),0 0 0 18rpx rgba(232,106,122,.12);}}
 @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10rpx);}}
+
+/* 未读互动提示条 */
+.unread-banner{display:flex;align-items:center;gap:12rpx;background:linear-gradient(135deg,#FFE9EE,#FFF3F4);border:2rpx solid #F6BCC5;border-radius:24rpx;padding:18rpx 22rpx;margin-bottom:20rpx;box-shadow:var(--shadow-sm);animation:slideIn .3s ease;}
+.ub-dot{width:16rpx;height:16rpx;border-radius:50%;background:#FF5A78;flex-shrink:0;box-shadow:0 0 0 4rpx rgba(255,90,120,.18);}
+.ub-text{flex:1;font-size:25rpx;font-weight:700;color:#C9405A;line-height:1.5;}
+.ub-go{flex-shrink:0;font-size:24rpx;font-weight:800;color:var(--rose-deep);}
+/* 列表卡片底部互动计数 */
+.tl-foot{display:flex;align-items:center;gap:16rpx;margin-top:16rpx;padding-top:14rpx;border-top:2rpx dashed #F7D8DB;}
+.tf-item{font-size:24rpx;font-weight:700;color:#C08B90;}
+.tf-new{margin-left:auto;font-size:22rpx;font-weight:800;color:#D14E64;}
+

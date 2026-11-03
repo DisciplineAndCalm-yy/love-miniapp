@@ -1,3 +1,5 @@
+const { chatTmplId } = require('../../config')
+
 Page({
   data: {
     list: [],
@@ -5,6 +7,7 @@ Page({
     loading: true,
     sending: false,
     showQuick: true,
+    chatNotifyOn: false,
     quicks: ['早安 ♡', '想你了', '在干嘛呀？', '抱抱', '晚安，好梦', '吃饭了吗？', '路上小心', '爱你 ❤️'],
     emojiPanel: false,
     emojis: ['❤️', '😘', '🥺', '😂', '👀', '🫂', '🌙', '☀️', '🍓', '🐱', '🐶', '💤'],
@@ -12,21 +15,41 @@ Page({
     partnerReadAt: 0,
     lastOwnTs: 0,
     peerRead: false,
-    keyboardHeight: 0
+    keyboardHeight: 0,
+    voiceMode: false,
+    recording: false,
+    playingId: ''
   },
   pollTimer: null,
   lastTs: 0,
   pageTopTs: 0,
   marking: false,
 
-  onLoad() { this.load(true) },
+  onLoad() { this.load(true); this.initRecorder() },
   onShow() {
     this.startPoll()
     this.load(false).then(() => this.markRead())
     wx.setNavigationBarTitle({ title: '悄悄话 ♡' })
+    let on = false
+    try { on = !!wx.getStorageSync('chatNotifyOn') } catch (e) {}
+    this.setData({ chatNotifyOn: on })
   },
-  onHide() { this.stopPoll(); if (this.data.keyboardHeight) this.setData({ keyboardHeight: 0 }) },
-  onUnload() { this.stopPoll() },
+  enableChatNotify() {
+    if (!chatTmplId) { wx.showToast({ title: '未配置模板', icon: 'none' }); return }
+    wx.requestSubscribeMessage({
+      tmplIds: [chatTmplId],
+      success: (r) => {
+        if (r && r[chatTmplId] === 'accept') {
+          try { wx.setStorageSync('chatNotifyOn', true) } catch (e) {}
+          this.setData({ chatNotifyOn: true })
+          wx.showToast({ title: '已开启消息提醒 ♡', icon: 'none' })
+        }
+      },
+      fail: () => {}
+    })
+  },
+  onHide() { this.stopPoll(); this.stopAudio(); if (this.data.keyboardHeight) this.setData({ keyboardHeight: 0 }) },
+  onUnload() { this.stopPoll(); this.stopAudio() },
   onPullDownRefresh() { this.loadMore().finally(() => wx.stopPullDownRefresh()) },
   onPageScroll() {},
 
@@ -147,6 +170,77 @@ Page({
       const fileID = await uploadImage(1)
       this.doSend(fileID, 'image')
     } catch (e) {}
+  },
+
+  // ===== 语音消息 =====
+  initRecorder() {
+    if (this.recordMgr) return
+    try {
+      const rm = wx.getRecorderManager()
+      rm.onStop((res) => this.onRecordStop(res))
+      rm.onError(() => {
+        this.setData({ recording: false })
+        wx.showToast({ title: '录音失败，检查麦克风权限', icon: 'none' })
+      })
+      this.recordMgr = rm
+    } catch (e) { this.recordMgr = null }
+  },
+  toggleVoice() {
+    this.setData({ voiceMode: !this.data.voiceMode, emojiPanel: false })
+  },
+  startRecord() {
+    if (this.data.recording) return
+    this.initRecorder()
+    if (!this.recordMgr) { wx.showToast({ title: '当前环境不支持录音', icon: 'none' }); return }
+    this.setData({ recording: true })
+    try {
+      this.recordMgr.start({ duration: 60000, format: 'mp3', sampleRate: 16000, numberOfChannels: 1, encodeBitRate: 48000 })
+    } catch (e) { this.setData({ recording: false }) }
+  },
+  stopRecord() {
+    if (!this.data.recording) return
+    this.setData({ recording: false })
+    try { this.recordMgr.stop() } catch (e) {}
+  },
+  async onRecordStop(res) {
+    const ms = (res && res.duration) || 0
+    if (ms < 1000) { wx.showToast({ title: '太短啦，再按住说一会', icon: 'none' }); return }
+    const { callApi } = require('../../utils/cloud')
+    const duration = Math.min(120, Math.max(1, Math.round(ms / 1000)))
+    wx.showLoading({ title: '发送中…' })
+    try {
+      const p = (res.tempFilePath || '').split('.')
+      const ext = p.length > 1 ? p[p.length - 1] : 'mp3'
+      const cloudPath = `love/voice-${Date.now()}-${Math.random().toString(16).slice(2)}.${ext}`
+      const up = await wx.cloud.uploadFile({ cloudPath, filePath: res.tempFilePath })
+      if (!up || !up.fileID) throw new Error('upload failed')
+      await callApi('sendChat', { content: up.fileID, kind: 'voice', duration })
+      await this.load(false)
+    } catch (e) {
+      wx.showToast({ title: '语音发送失败', icon: 'none' })
+    } finally { wx.hideLoading() }
+  },
+  playVoice(e) {
+    const src = e.currentTarget.dataset.src
+    const id = e.currentTarget.dataset.id
+    if (!src) return
+    this.stopAudio()
+    try {
+      const audio = wx.createInnerAudioContext()
+      this._audio = audio
+      audio.src = src
+      this.setData({ playingId: id })
+      audio.onEnded(() => this.setData({ playingId: '' }))
+      audio.onError(() => { this.setData({ playingId: '' }); wx.showToast({ title: '播放失败', icon: 'none' }) })
+      audio.play()
+    } catch (err) { this.setData({ playingId: '' }) }
+  },
+  stopAudio() {
+    if (this._audio) {
+      try { this._audio.stop(); this._audio.destroy() } catch (e) {}
+      this._audio = null
+    }
+    if (this.data.playingId) this.setData({ playingId: '' })
   },
 
   preview(e) {

@@ -75,6 +75,11 @@
       <view class="done-mood">{{mine.mood ? moodMap[mine.mood] : ''}}</view>
       <view class="done-content" wx:if="{{mine.content}}">{{mine.content}}</view>
       <image wx:if="{{mine.photoUrl || mine.photo}}" src="{{mine.photoUrl || mine.photo}}" mode="aspectFill" class="photo" data-url="{{mine.photoUrl || mine.photo}}" bindtap="previewPhoto" />
+      <view class="done-inter">
+        <view class="di-item">❤️ {{mine.likeCount || 0}}</view>
+        <view class="di-item">💬 {{mine.commentCount || 0}}</view>
+        <view class="di-new" wx:if="{{mine.unread}}">● TA 有新互动，快去看看</view>
+      </view>
       <button class="btn-ghost" bindtap="goCalendar" style="margin-top:24rpx">去日历看两人签到 →</button>
       <button class="btn-ghost" bindtap="goMoments" style="margin-top:16rpx">去记录日常动态 →</button>
     </view>
@@ -89,6 +94,40 @@
       </view>
       <view class="partner-line">{{partnerMoodLabel}} · {{partner.content || '打卡了'}}</view>
       <image wx:if="{{partnerPhotoUrl || partner.photo}}" src="{{partnerPhotoUrl || partner.photo}}" mode="aspectFill" class="photo" data-url="{{partnerPhotoUrl || partner.photo}}" bindtap="previewPhoto" binderror="partnerPhotoError" />
+
+      <view class="interact-bar">
+        <view class="i-btn {{taLikedByMe ? 'on' : ''}}" bindtap="toggleTaLike"><text class="i-icon">{{taLikedByMe ? '❤️' : '🤍'}}</text><text class="i-txt">{{taLikeCount}}</text></view>
+        <view class="i-btn" bindtap="toggleTaComments"><text class="i-icon">💬</text><text class="i-txt">{{taComments.length}}</text></view>
+      </view>
+
+      <view class="reaction-bar">
+        <view wx:for="{{taQuickEmojis}}" wx:key="*this" class="reaction-btn" data-emoji="{{item}}" bindtap="toggleTaReaction">{{item}}</view>
+      </view>
+      <view class="reaction-summary" wx:if="{{taReactions.length}}">
+        <view class="rs-chip {{item.mine ? 'on' : ''}}" wx:for="{{taReactions}}" wx:key="emoji" data-emoji="{{item.emoji}}" bindtap="toggleTaReaction">{{item.emoji}} {{item.count}}</view>
+      </view>
+
+      <view class="cmt-list" wx:if="{{showTaComments || taComments.length}}">
+        <view class="cmt" wx:for="{{taComments}}" wx:key="_id" data-id="{{item._id}}" data-name="{{item.byName}}" bindtap="onTaReply">
+          <view class="cmt-head">
+            <text class="cmt-name">{{item.byName}}</text>
+            <text wx:if="{{item.replyToName}}" class="cmt-reply">回复 @{{item.replyToName}}</text>
+            <text class="cmt-time">{{item.timeText}}</text>
+            <text wx:if="{{item.isMine}}" class="cmt-del" data-id="{{item._id}}" catchtap="removeTaComment">删除</text>
+          </view>
+          <view class="cmt-text">{{item.content}}</view>
+        </view>
+        <view class="cmt-empty muted" wx:if="{{!taComments.length}}">还没有评论，夸夸 TA 吧 ♡</view>
+      </view>
+      <view class="reply-bar" wx:if="{{taReplyTo.id}}">
+        <text class="reply-txt">回复 @{{taReplyTo.name}}</text>
+        <text class="reply-cancel" bindtap="cancelTaReply">取消</text>
+      </view>
+      <view class="cmt-input-row">
+        <text class="at-btn" bindtap="onTaAt">@TA</text>
+        <input class="cmt-input" value="{{taCommentInput}}" bindinput="onTaCommentInput" placeholder="{{taReplyTo.id ? ('回复 @' + taReplyTo.name) : '给 TA 留句话…'}}" maxlength="200" confirm-type="send" bindconfirm="sendTaComment" cursor-spacing="24" />
+        <button class="btn-primary cmt-send" bindtap="sendTaComment" loading="{{taSending}}" disabled="{{taSending}}">发送</button>
+      </view>
     </view>
   </block>
 

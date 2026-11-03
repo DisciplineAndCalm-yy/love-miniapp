@@ -32,7 +32,7 @@
     "useCompilerPlugins": false,
     "localPlugins": false,
     "disableUseStrict": false,
-    "condition": false
+    "condition": true
   },
   "simulatorPluginLibVersion": {},
   "editorSetting": {}

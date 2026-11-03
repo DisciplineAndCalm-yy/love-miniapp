@@ -119,7 +119,7 @@ Page({
       if (adv.node === 'trail' && this.hasTrail(adv)) return false
       if (this.nodeOf(adv)) return false
     }
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     try {
       const res = await callApi('advRepair', {}, { silent: true })
       if (res.repaired) {
@@ -150,7 +150,7 @@ Page({
   },
 
   async sync(first, fromPull) {
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     try {
       if (first) this.setData({ loading: true })
       const res = await callApi('advState', {}, { silent: !first })
@@ -214,7 +214,7 @@ Page({
   },
 
   async start() {
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     try {
       await callApi('advStart', { storyId: this.data.startStory, mode: this.data.startMode })
       this.setData({ showEnd: false, endName: '', particles: [] })
@@ -224,7 +224,7 @@ Page({
   },
 
   async join() {
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     try {
       await callApi('advJoin', {})
       wx.showToast({ title: '已加入队伍 ♡', icon: 'none' })
@@ -235,7 +235,7 @@ Page({
   async trailChoose(e) {
     const which = e.currentTarget.dataset.w
     if (this.data.choosing) return
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     this.setData({ choosing: true })
     try {
       const res = await callApi('advTrail', { which })
@@ -310,7 +310,7 @@ Page({
   async choose(e) {
     const id = e.currentTarget.dataset.id
     if (this.data.choosing) return
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     this.setData({ choosing: true })
     try {
       const res = await callApi('advChoose', { choice: id })
@@ -340,7 +340,7 @@ Page({
   async battle(e) {
     const move = e.currentTarget.dataset.m
     if (this.data.battling) return
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     this.setData({ battling: true })
     try {
       const res = await callApi('advBattle', { move })
@@ -393,7 +393,7 @@ Page({
   async abandon() {
     const ok = await wx.showModal({ title: '结束本局？', content: '进度会清空，可以随时开新局', confirmText: '结束' })
     if (!ok.confirm) return
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     try {
       await callApi('advAbandon', {})
       this.setData({ adv: null, showEnd: false, endName: '', particles: [], nodeChoices: [], nodeText: '' })

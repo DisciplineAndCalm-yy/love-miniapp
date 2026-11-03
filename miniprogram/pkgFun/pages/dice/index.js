@@ -51,7 +51,7 @@ Page({
 
   roll() {
     if (this.data.rolling || this.data.options.length < 2) return
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     this.setData({ rolling: true, result: null })
     let ticks = 0
     clearInterval(this.timer)
@@ -88,7 +88,7 @@ Page({
   closeResult() { this.setData({ result: null, particles: [] }) },
 
   async loadHistory() {
-    const { callApi } = require('../../utils/cloud')
+    const { callApi } = require('../../../utils/cloud')
     try {
       this.setData({ loading: true })
       const res = await callApi('listDice', {}, { silent: true })

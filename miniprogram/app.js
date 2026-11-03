@@ -35,6 +35,18 @@ App({
     this.startChatBadge()
   },
 
+  onHide() {
+    this.stopChatBadge()
+  },
+
+  onError(err) {
+    console.error('[app onError]', err)
+  },
+
+  onUnhandledRejection(res) {
+    console.error('[app onUnhandledRejection]', res && (res.reason || res))
+  },
+
   async bootstrap() {
     try {
       const login = await wx.cloud.callFunction({ name: 'login' })
@@ -147,12 +159,12 @@ App({
     this.globalData.partner = null
   },
 
-  // ===== 悄悄话未读角标 =====
+  // ===== tab 角标：一次接口同时刷新悄悄话+互动未读 =====
   _chatBadgeTimer: null,
   startChatBadge() {
     this.stopChatBadge()
-    this.refreshChatBadge()
-    this._chatBadgeTimer = setInterval(() => this.refreshChatBadge(), 15000)
+    this.refreshBadges()
+    this._chatBadgeTimer = setInterval(() => this.refreshBadges(), 20000)
   },
   stopChatBadge() {
     if (this._chatBadgeTimer) clearInterval(this._chatBadgeTimer)
@@ -168,19 +180,26 @@ App({
     try { wx.setStorageSync(k, ts || Date.now()) } catch (e) {}
     try { wx.removeTabBarBadge({ index: 2 }) } catch (e) {}
   },
-  async refreshChatBadge() {
+  _itiUnread: 0,
+  async refreshBadges() {
     try {
       await this.whenReady()
       if (!this.globalData.couple) return
       const k = this.chatReadKey()
       const readTs = k ? (wx.getStorageSync(k) || 0) : 0
-      const res = await wx.cloud.callFunction({ name: 'api', data: { action: 'chatUnread', since: readTs } })
-      const n = (res.result && res.result.count) || 0
-      if (n > 0) {
-        wx.setTabBarBadge({ index: 2, text: n > 99 ? '99+' : String(n) })
-      } else {
-        try { wx.removeTabBarBadge({ index: 2 }) } catch (e) {}
-      }
+      const res = await wx.cloud.callFunction({ name: 'api', data: { action: 'badges', since: readTs } })
+      const r = (res && res.result) || {}
+      const chat = r.chat || 0
+      const notice = r.notice || 0
+      this._itiUnread = notice
+      try {
+        if (chat > 0) wx.setTabBarBadge({ index: 2, text: chat > 99 ? '99+' : String(chat) })
+        else wx.removeTabBarBadge({ index: 2 })
+      } catch (e) {}
+      try {
+        if (notice > 0) wx.setTabBarBadge({ index: 0, text: notice > 99 ? '99+' : String(notice) })
+        else wx.removeTabBarBadge({ index: 0 })
+      } catch (e) {}
     } catch (e) {}
   }
 })

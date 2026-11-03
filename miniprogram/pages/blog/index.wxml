@@ -11,6 +11,12 @@
     <text class="blog-sticker">🌷</text>
   </view>
 
+  <view class="unread-banner" wx:if="{{unreadTotal}}" bindtap="openUnread">
+    <text class="ub-dot"></text>
+    <text class="ub-text">💌 {{unreadName}} 给文章点了赞或留言了 · {{unreadTotal}} 条新互动</text>
+    <text class="ub-go">去看看 ›</text>
+  </view>
+
   <view class="card empty-card" wx:if="{{paired && !posts.length}}">
     <image class="empty-art" src="/assets/deco/blog.svg" mode="aspectFit" />
     <view class="title">第一页还是空白</view>
@@ -34,6 +40,11 @@
         mode="aspectFill"
         class="mini-thumb"
       />
+    </view>
+    <view class="post-foot">
+      <text class="pf-item">❤️ {{item.likeCount || 0}}</text>
+      <text class="pf-item">💬 {{item.commentCount || 0}}</text>
+      <text class="pf-new" wx:if="{{item.unread}}">● 新互动</text>
     </view>
     <view class="read-more">阅读全文 →</view>
   </view>

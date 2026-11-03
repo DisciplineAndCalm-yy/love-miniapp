@@ -1,0 +1,48 @@
+<view class="page notify-page">
+  <view class="notify-hero card">
+    <view class="deco-layer" aria-hidden="true">
+      <text class="pt pt1">💗</text>
+      <text class="pt pt2">✨</text>
+      <text class="pt pt3">💌</text>
+      <text class="pt pt4">🌸</text>
+      <text class="pt pt5">💫</text>
+      <text class="pt pt6">💕</text>
+    </view>
+    <view class="hero-icon">💌</view>
+    <view class="hero-title">我们的消息</view>
+    <view class="hero-sub">{{unread ? unread + ' 条新互动等你查看' : '重要的小事，都收在这里 ♡'}}</view>
+    <button wx:if="{{canPush}}" class="btn-ghost push-btn" bindtap="enablePush">{{(noticeOn || noticeQuota === 0) ? '再订阅一条提醒' : '订阅微信提醒'}}</button>
+    <view wx:else class="push-off">未配置模板 ID，当前仅站内提醒</view>
+
+    <block wx:if="{{canPush}}">
+      <view class="quota-warn" wx:if="{{noticeQuota === 0}}">⚠️ 提醒额度已用完，点上方「再订阅」才能继续收</view>
+      <view class="quota-ok" wx:elif="{{noticeQuota !== null && noticeQuota > 0}}">✓ 还剩 {{noticeQuota}} 次提醒额度</view>
+      <view class="push-tip">体验版也能收到；微信一次性订阅，订阅一次可收 1 条 ♡</view>
+    </block>
+  </view>
+
+  <view class="notify-tools" wx:if="{{unread}}">
+    <text class="unread-label">未读 {{unread}}</text>
+    <text class="mark-read" bindtap="markAllRead">全部标为已读</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="empty muted">正在收集你们的小消息…</view>
+  <view wx:elif="{{!feed.length}}" class="card empty-card">
+    <text class="empty-icon">🌙</text>
+    <view class="title">暂时没有新消息</view>
+    <view class="muted">TA 的点赞、评论、签到和晚安会出现在这里</view>
+  </view>
+
+  <view class="feed">
+    <view class="feed-item card {{item.unread ? 'is-unread' : ''}}" wx:for="{{feed}}" wx:key="id" data-item="{{item}}" bindtap="open">
+      <view class="feed-icon">{{item.icon}}</view>
+      <view class="feed-main">
+        <view class="feed-top"><text class="feed-name">{{item.byName}}</text><text class="feed-time">{{item.timeText}}</text></view>
+        <view class="feed-label">{{item.label}}</view>
+        <view class="feed-target">{{item.targetType === 'moment' ? '📸 日常动态' : (item.targetType === 'post' ? '💌 空间文章' : (item.targetType === 'checkin' ? '📅 每日签到' : '🌙 晚安'))}}</view>
+      </view>
+      <view class="unread-dot" wx:if="{{item.unread}}"></view>
+      <text class="feed-arrow">›</text>
+    </view>
+  </view>
+</view>

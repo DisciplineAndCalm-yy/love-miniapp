@@ -1,18 +1,18 @@
-const { callApi } = require('../../utils/cloud')
+const { callApi } = require('../../../utils/cloud')
 
 const MISSIONS = [
-  { icon: '🫂', text: '抱抱 30 秒，不许松手' },
-  { icon: '🧋', text: '请对方喝一杯奶茶' },
-  { icon: '🌟', text: '今晚一起去看星星' },
-  { icon: '🎬', text: '挑一部电影一起看完' },
-  { icon: '🍳', text: '为对方做一顿饭' },
-  { icon: '💌', text: '写一封 100 字的情书' },
-  { icon: '📸', text: '拍一张搞怪合影' },
-  { icon: '🎧', text: '分享一首单曲循环的歌' },
-  { icon: '🚶', text: '手牵手散步 20 分钟' },
-  { icon: '💆', text: '给对方按摩 5 分钟' },
-  { icon: '🍓', text: '投喂对方一种水果' },
-  { icon: '🌙', text: '互道晚安，不许先睡' }
+  { icon: 'ðŸ«‚', text: 'æŠ±æŠ± 30 ç§’ï¼Œä¸�è®¸æ�¾æ‰‹' },
+  { icon: 'ðŸ§‹', text: 'è¯·å¯¹æ–¹å–�ä¸€æ�¯å¥¶èŒ¶' },
+  { icon: 'ðŸŒŸ', text: 'ä»Šæ™šä¸€èµ·åŽ»çœ‹æ˜Ÿæ˜Ÿ' },
+  { icon: 'ðŸŽ¬', text: 'æŒ‘ä¸€éƒ¨ç”µå½±ä¸€èµ·çœ‹å®Œ' },
+  { icon: 'ðŸ�³', text: 'ä¸ºå¯¹æ–¹å�šä¸€é¡¿é¥­' },
+  { icon: 'ðŸ’Œ', text: 'å†™ä¸€å°� 100 å­—çš„æƒ…ä¹¦' },
+  { icon: 'ðŸ“¸', text: 'æ‹�ä¸€å¼ æ�žæ€ªå�ˆå½±' },
+  { icon: 'ðŸŽ§', text: 'åˆ†äº«ä¸€é¦–å�•æ›²å¾ªçŽ¯çš„æ­Œ' },
+  { icon: 'ðŸš¶', text: 'æ‰‹ç‰µæ‰‹æ•£æ­¥ 20 åˆ†é’Ÿ' },
+  { icon: 'ðŸ’†', text: 'ç»™å¯¹æ–¹æŒ‰æ‘© 5 åˆ†é’Ÿ' },
+  { icon: 'ðŸ�“', text: 'æŠ•å–‚å¯¹æ–¹ä¸€ç§�æ°´æžœ' },
+  { icon: 'ðŸŒ™', text: 'äº’é�“æ™šå®‰ï¼Œä¸�è®¸å…ˆç�¡' }
 ]
 
 Page({
@@ -55,7 +55,7 @@ Page({
   },
 
   burst() {
-    const icons = ['💗', '✨', '💕', '🌸', '💌', '⭐']
+    const icons = ['ðŸ’—', 'âœ¨', 'ðŸ’•', 'ðŸŒ¸', 'ðŸ’Œ', 'â­�']
     const arr = []
     for (let i = 0; i < 18; i++) {
       arr.push({
@@ -77,7 +77,7 @@ Page({
     const id = e.currentTarget.dataset.id
     try {
       await callApi('doneDraw', { id })
-      wx.showToast({ title: '甜蜜 +1 ♡' })
+      wx.showToast({ title: 'ç”œèœœ +1 â™¡' })
       this.reload()
     } catch (err) {}
   }

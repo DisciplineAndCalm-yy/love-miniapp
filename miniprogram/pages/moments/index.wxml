@@ -10,6 +10,11 @@
   <scroll-view scroll-x class="tags" enhanced="{{true}}" show-scrollbar="{{false}}">
     <view wx:for="{{doings}}" wx:key="id" class="tag {{filter===item.id?'on':''}}" data-id="{{item.id}}" bindtap="onFilter">{{item.label}}</view>
   </scroll-view>
+  <view class="unread-banner" wx:if="{{unreadTotal}}" bindtap="openUnread">
+    <text class="ub-dot"></text>
+    <text class="ub-text">💌 {{unreadName}} 对你的动态点了赞或留言了 · {{unreadTotal}} 条新互动</text>
+    <text class="ub-go">去看看 ›</text>
+  </view>
   <view wx:if="{{loading}}" class="muted center">正在翻开回忆… ♡</view>
   <view wx:elif="{{!list.length}}" class="card center empty-card">
     <image class="empty-art" src="/assets/deco/moments.svg" mode="aspectFit" />
@@ -28,7 +33,12 @@
           <view class="tl-author">{{item.author ? item.author.nickName : ''}}</view>
           <view wx:if="{{item.content}}" class="tl-content">{{item.content}}</view>
           <view wx:if="{{item.photos.length}}" class="pics">
-            <image wx:for="{{item.photos}}" wx:for-item="p" wx:key="*this" src="{{item.photoUrls[p] || p}}" mode="aspectFill" class="pic" data-src="{{item.photoUrls[p] || p}}" data-urls="{{item.photoUrls.__list || item.photos}}" bindtap="preview" catchtap="preview" />
+            <image wx:for="{{item.photos}}" wx:for-item="p" wx:key="*this" src="{{item.photoUrls[p] || p}}" mode="aspectFill" class="pic" lazy-load="{{true}}" data-src="{{item.photoUrls[p] || p}}" data-urls="{{item.photoUrls.__list || item.photos}}" bindtap="preview" catchtap="preview" />
+          </view>
+          <view class="tl-foot">
+            <text class="tf-item">❤️ {{item.likeCount || 0}}</text>
+            <text class="tf-item">💬 {{item.commentCount || 0}}</text>
+            <text class="tf-new" wx:if="{{item.unread}}">● 新互动</text>
           </view>
         </view>
       </view>

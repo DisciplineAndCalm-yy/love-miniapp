@@ -1,0 +1,69 @@
+<view class="mp {{mode === 'couple' ? 'couple' : ''}} {{mode === 'intimate' ? 'intimate' : ''}}">
+  <view class="mp-bg">
+    <text class="bg-e b1">💫</text>
+    <text class="bg-e b2">🎀</text>
+    <text class="bg-e b3">💗</text>
+    <text class="bg-e b4">✨</text>
+  </view>
+
+  <view class="mp-top">
+    <text class="mp-count">👥 {{players.length}}/{{maxPlayers}} 人</text>
+    <view class="mp-add" wx:if="{{players.length < maxPlayers}}" bindtap="addPlayer">＋ 加入</view>
+    <text class="mp-hint" wx:else>满员啦 ♡</text>
+  </view>
+
+  <view class="mp-board">
+    <view
+      class="mp-cell cell-{{item.t}} {{occupied[ci] ? 'here' : ''}}"
+      wx:for="{{tiles}}"
+      wx:for-index="ci"
+      wx:for-item="item"
+      wx:key="idx"
+      style="grid-row:{{item.row}};grid-column:{{item.col}};"
+    >
+      <view class="cell-inner">
+        <text class="cell-ico">{{item.icon}}</text>
+      </view>
+      <view class="cell-chips">
+        <view class="pchip pop-{{pl.key}}" wx:for="{{players}}" wx:for-item="pl" wx:key="key" wx:if="{{pl.pos === ci}}">
+          <view class="pchip-shadow"></view>
+          <view class="pchip-body">
+            <view class="pchip-face">
+              <text class="p-eye l"></text>
+              <text class="p-eye r"></text>
+              <text class="p-mouth"></text>
+            </view>
+            <view class="p-shine"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="mp-center" style="grid-row:3/9;grid-column:3/9;">
+      <view class="mp-turn">
+        <text class="turn-text" wx:if="{{done}}">🏆 {{winner}} 获胜！</text>
+        <text class="turn-text" wx:else>轮到 {{players[turn].name}} 掷骰子</text>
+        <text class="mp-secret" bindtap="secretTap">♡</text>
+      </view>
+      <view class="mp-dice {{rolling ? 'rolling' : ''}}" bindtap="diceTap">
+        <text class="dice-face">{{diceFace || '🎲'}}</text>
+      </view>
+      <view class="mp-msg">{{message}}</view>
+      <view class="mp-actions">
+        <view class="mp-btn mp-roll {{(rolling || done) ? 'is-disabled' : ''}}" hover-class="mp-roll-hover" hover-stay-time="80" bindtap="roll">
+          <text class="mp-btn-ico">🎲</text>
+          <text class="mp-btn-text">{{rolling ? '掷骰中…' : '掷骰子'}}</text>
+          <view class="mp-btn-shine"></view>
+        </view>
+        <view class="mp-btn mp-restart" hover-class="mp-restart-hover" hover-stay-time="80" bindtap="restart">
+          <text class="mp-btn-ico">🔄</text>
+          <text class="mp-btn-text">重开</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="fx-layer fx-{{fxType}}" wx:if="{{fxType}}">
+      <text class="fx-p" wx:for="{{fxItems}}" wx:key="i" style="left:{{item.left}}%;top:{{item.top}}%;font-size:{{item.size}}rpx;animation-delay:{{item.delay}}s;">{{item.emoji}}</text>
+    </view>
+  </view>
+</view>

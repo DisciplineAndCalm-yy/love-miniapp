@@ -1,0 +1,59 @@
+<view class="page album-page">
+  <view class="album-hero">
+    <view class="deco-layer" aria-hidden="true">
+      <text class="pt pt1">📷</text>
+      <text class="pt pt2">✨</text>
+      <text class="pt pt3">💗</text>
+      <text class="pt pt4">🌸</text>
+      <text class="pt pt5">💫</text>
+    </view>
+    <text class="ah-sticker">🖼️</text>
+    <view class="ah-title">我们的相册</view>
+    <view class="ah-sub">{{total ? ('一起收藏了 ' + total + ' 张回忆') : '签到、动态、文章里的照片都会聚到这里'}}</view>
+  </view>
+
+  <!-- 往年今日 -->
+  <view class="memory-block" wx:if="{{memories.length}}">
+    <view class="memory-head">⏳ 往年今日 · 时光机</view>
+    <scroll-view scroll-x class="memory-scroll" enhanced="{{true}}" show-scrollbar="{{false}}">
+      <view class="memory-card" wx:for="{{memories}}" wx:key="createdAt" data-item="{{item}}" bindtap="openMemory">
+        <image wx:if="{{item.photoUrl}}" src="{{item.photoUrl}}" mode="aspectFill" class="memory-img" lazy-load="{{true}}" />
+        <view wx:else class="memory-noimg">{{item.type === 'checkin' ? '🗓️' : (item.type === 'post' ? '💌' : '📸')}}</view>
+        <view class="memory-mask">
+          <view class="memory-year">{{item.y}} 年 · {{item.byName}}</view>
+          <view class="memory-text">{{item.content || '这一天，我们也在一起 ♡'}}</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view wx:if="{{loading}}" class="muted center">正在翻相册… ♡</view>
+  <view wx:elif="{{!groups.length}}" class="card empty-card center">
+    <text class="empty-icon">📷</text>
+    <view class="title">相册还空空的</view>
+    <view class="muted">去签到、发动态或写文章时加上照片吧</view>
+  </view>
+
+  <block wx:else>
+    <view class="album-group" wx:for="{{groups}}" wx:key="key" wx:for-item="g">
+      <view class="group-date">{{g.label}}<text class="group-count">{{g.items.length}} 张</text></view>
+      <view class="photo-grid">
+        <view
+          class="polaroid"
+          wx:for="{{g.items}}"
+          wx:key="key"
+          data-url="{{item.url}}"
+          bindtap="preview"
+        >
+          <image src="{{item.url}}" mode="aspectFill" class="polaroid-img" lazy-load="{{true}}" />
+          <view class="polaroid-cap">
+            <text class="cap-time">{{item.time}}</text>
+            <text class="cap-heart">❤</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="more-hint" wx:if="{{hasMore}}">上滑加载更多 ↓</view>
+    <view class="more-hint" wx:else>已经没有更早的回忆啦 ♡</view>
+  </block>
+</view>

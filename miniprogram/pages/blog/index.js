@@ -1,14 +1,37 @@
 const { formatDateTime } = require('../../utils/date')
 const { callApi } = require('../../utils/cloud')
+const interact = require('../../utils/interact')
 
 Page({
   data: {
     posts: [],
-    paired: false
+    paired: false,
+    unreadTotal: 0,
+    unreadName: '',
+    unreadTarget: ''
   },
 
   onShow() {
     this.load()
+    this.loadUnread()
+  },
+
+  async loadUnread() {
+    try {
+      const res = await interact.summary()
+      const posts = (res.recent || []).filter((r) => r.targetType === 'post')
+      this.setData({
+        unreadTotal: (res.byType && res.byType.post) || 0,
+        unreadName: posts[0] ? posts[0].byName : 'TA',
+        unreadTarget: posts[0] ? posts[0].targetId : ''
+      })
+    } catch (e) {}
+  },
+
+  openUnread() {
+    const id = this.data.unreadTarget
+    if (id) wx.navigateTo({ url: `/pages/blog/detail?id=${id}` })
+    else this.load()
   },
 
   onPullDownRefresh() {

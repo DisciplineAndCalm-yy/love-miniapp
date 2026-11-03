@@ -1,4 +1,4 @@
-const { callApi, requireCouple } = require('../../utils/cloud')
+const { callApi, requireCouple } = require('../../../utils/cloud')
 
 Page({
   data: {

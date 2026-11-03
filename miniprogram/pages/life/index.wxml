@@ -1,0 +1,126 @@
+<view class="page life-page">
+  <view class="life-hero">
+    <view class="deco-layer" aria-hidden="true">
+      <text class="pt pt1">🏠</text>
+      <text class="pt pt2">✨</text>
+      <text class="pt pt3">💗</text>
+      <text class="pt pt4">🌿</text>
+      <text class="pt pt5">💫</text>
+    </view>
+    <view class="lh-title">🏡 我们的小事</view>
+    <view class="lh-sub">待办 · 便签 · 账本，一起把日子过好 ♡</view>
+    <button class="home-safe" bindtap="homeSafe">🏠 我到家啦</button>
+  </view>
+
+  <view class="life-tabs">
+    <view class="lt {{tab === 'todo' ? 'on' : ''}}" data-tab="todo" bindtap="switchTab">✅ 待办<text class="lt-n" wx:if="{{todos.length}}">{{todos.length}}</text></view>
+    <view class="lt {{tab === 'note' ? 'on' : ''}}" data-tab="note" bindtap="switchTab">📝 便签</view>
+    <view class="lt {{tab === 'ledger' ? 'on' : ''}}" data-tab="ledger" bindtap="switchTab">💰 账本</view>
+  </view>
+
+  <!-- 待办 -->
+  <block wx:if="{{tab === 'todo'}}">
+    <view class="card add-row">
+      <input class="life-input" value="{{todoInput}}" bindinput="onTodoInput" placeholder="要一起做什么？" maxlength="80" confirm-type="done" bindconfirm="addTodo" />
+      <view class="seg">
+        <text class="seg-item {{todoAssignee === 'me' ? 'on' : ''}}" data-a="me" bindtap="setTodoAssignee">{{myName}}</text>
+        <text class="seg-item {{todoAssignee === 'both' ? 'on' : ''}}" data-a="both" bindtap="setTodoAssignee">一起</text>
+        <text class="seg-item {{todoAssignee === 'partner' ? 'on' : ''}}" data-a="partner" bindtap="setTodoAssignee">{{partnerName}}</text>
+      </view>
+      <picker mode="date" value="{{todoDue}}" bindchange="onTodoDue">
+        <view class="due-pick {{todoDue ? 'active' : ''}}">📅 {{todoDue ? ('截止 ' + todoDue) : '设置截止日（可选）'}}</view>
+      </picker>
+      <button class="btn-primary add-btn" bindtap="addTodo" loading="{{sending}}" disabled="{{sending}}">添加待办</button>
+    </view>
+    <view class="todo-list">
+      <view class="todo-item card {{item.done ? 'done' : ''}}" wx:for="{{todos}}" wx:key="_id">
+        <view class="todo-check {{item.done ? 'on' : ''}}" data-id="{{item._id}}" bindtap="toggleTodo">{{item.done ? '✓' : ''}}</view>
+        <view class="todo-main">
+          <view class="todo-text">{{item.text}}</view>
+          <view class="todo-foot"><text class="todo-tag">{{item.assigneeLabel}}</text><text class="todo-due {{item.overdue ? 'overdue' : ''}}" wx:if="{{item.dueLabel}}">{{item.dueLabel}}</text></view>
+        </view>
+        <text class="todo-del" data-id="{{item._id}}" bindtap="removeTodo">✕</text>
+      </view>
+      <view class="empty muted" wx:if="{{!todos.length && !loading}}">还没有待办，加一条吧 ♡</view>
+    </view>
+  </block>
+
+  <!-- 便签 -->
+  <block wx:elif="{{tab === 'note'}}">
+    <view class="card add-row">
+      <textarea class="life-textarea" value="{{noteInput}}" bindinput="onNoteInput" placeholder="写一张小便签，贴在你们的小屋…" maxlength="500" auto-height />
+      <view class="color-row">
+        <view wx:for="{{noteColors}}" wx:key="*this" class="color-dot dot-{{item}} {{noteColor === item ? 'on' : ''}}" data-c="{{item}}" bindtap="setNoteColor"></view>
+        <button class="btn-primary add-btn mini" bindtap="addNote" loading="{{sending}}" disabled="{{sending}}">贴便签</button>
+      </view>
+    </view>
+    <view class="note-grid">
+      <view class="note-card note-{{item.color}}" wx:for="{{notes}}" wx:key="_id">
+        <view class="note-text">{{item.text}}</view>
+        <view class="note-foot"><text class="note-by">{{item.isMine ? '我' : item.byName}}</text><text class="note-del" data-id="{{item._id}}" bindtap="removeNote">撕掉</text></view>
+      </view>
+      <view class="empty muted full" wx:if="{{!notes.length && !loading}}">还没有便签，写一张吧 ♡</view>
+    </view>
+  </block>
+
+  <!-- 账本 -->
+  <block wx:else>
+    <view class="card add-row">
+      <view class="amount-line">
+        <text class="yen">¥</text>
+        <input class="amount-input" type="digit" value="{{ledgerAmount}}" bindinput="onLedgerAmount" placeholder="0.00" />
+      </view>
+      <input class="life-input" value="{{ledgerNote}}" bindinput="onLedgerNote" placeholder="花在哪儿了？(可选)" maxlength="60" />
+      <view class="seg">
+        <text class="seg-item {{ledgerPayer === 'me' ? 'on' : ''}}" data-p="me" bindtap="setLedgerPayer">{{myName}}付</text>
+        <text class="seg-item {{ledgerPayer === 'partner' ? 'on' : ''}}" data-p="partner" bindtap="setLedgerPayer">{{partnerName}}付</text>
+      </view>
+      <view class="seg">
+        <text class="seg-item {{ledgerCategory === 'food' ? 'on' : ''}}" data-c="food" bindtap="setLedgerCategory">🍜 吃</text>
+        <text class="seg-item {{ledgerCategory === 'fun' ? 'on' : ''}}" data-c="fun" bindtap="setLedgerCategory">🎉 玩</text>
+        <text class="seg-item {{ledgerCategory === 'daily' ? 'on' : ''}}" data-c="daily" bindtap="setLedgerCategory">🛒 日用</text>
+        <text class="seg-item {{ledgerCategory === 'other' ? 'on' : ''}}" data-c="other" bindtap="setLedgerCategory">✨ 其他</text>
+      </view>
+      <button class="btn-primary add-btn" bindtap="addLedger" loading="{{sending}}" disabled="{{sending}}">记一笔</button>
+    </view>
+
+    <view class="ledger-total card">
+      <text class="lt-label">共同支出合计</text>
+      <text class="lt-value">¥{{ledgerTotal}}</text>
+    </view>
+    <view class="card ledger-split">
+        <view class="ls-item"><text class="ls-name">{{myName}} 付</text><text class="ls-val m">¥{{myPaid}}</text></view>
+        <view class="ls-divider"></view>
+        <view class="ls-item"><text class="ls-name">{{partnerName}} 付</text><text class="ls-val p">¥{{partnerPaid}}</text></view>
+      </view>
+      <view class="card chart-card">
+        <view class="chart-title">近 6 个月支出</view>
+        <view class="chart">
+          <view class="bar-col" wx:for="{{chartBars}}" wx:key="label">
+            <text class="bar-value">{{item.val ? ('¥' + item.val) : ''}}</text>
+            <view class="bar-track"><view class="bar-fill" style="height:{{item.h}}%"></view></view>
+            <text class="bar-label">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="card cat-card" wx:if="{{ledgerTotal > 0}}">
+        <view class="chart-title">类别占比</view>
+        <view class="cat-row" wx:for="{{catBars}}" wx:key="key">
+          <text class="cat-name">{{item.emoji}} {{item.label}}</text>
+          <view class="cat-track"><view class="cat-fill cat-{{item.key}}" style="width:{{item.pct}}%"></view></view>
+          <text class="cat-pct">{{item.pct}}%</text>
+        </view>
+      </view>
+    <view class="ledger-list">
+      <view class="ledger-item card" wx:for="{{ledgers}}" wx:key="_id">
+        <view class="ledger-main">
+          <view class="ledger-note">{{item.catEmoji}} {{item.note || '未填写'}}</view>
+          <view class="ledger-foot"><text class="ledger-payer">{{item.payerLabel}}付</text></view>
+        </view>
+        <text class="ledger-amt">¥{{item.amount}}</text>
+        <text class="ledger-del" data-id="{{item._id}}" bindtap="removeLedger">✕</text>
+      </view>
+      <view class="empty muted" wx:if="{{!ledgers.length && !loading}}">还没有账目，记一笔吧 ♡</view>
+    </view>
+  </block>
+</view>

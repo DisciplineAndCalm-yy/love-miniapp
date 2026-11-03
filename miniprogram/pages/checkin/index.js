@@ -1,5 +1,6 @@
 const { todayKey } = require('../../utils/date')
 const { requireCouple, uploadImage, fileIDToURL, fileIDsToURLs, callApi } = require('../../utils/cloud')
+const interact = require('../../utils/interact')
 const { MOOD_LIST, moodLabel, MOOD_MAP, QUICK_CHECKINS } = require('../../utils/mood')
 const { dailyPraise } = require('../../utils/praise')
 
@@ -24,7 +25,18 @@ Page({
     weatherEmoji: '🌤️',
     praise: '',
     // 签到成功撒花
-    burst: []
+    burst: [],
+    // TA 签到卡上的互动
+    taComments: [],
+    taLikeCount: 0,
+    taLikedByMe: false,
+    taReactions: [],
+    taQuickEmojis: ['😘', '🥰', '😂', '😭', '👏', '🔥'],
+    taReplyTo: { id: '', name: '' },
+    taCommentInput: '',
+    showTaComments: false,
+    taSending: false,
+    taLiking: false
   },
 
   onShow() {
@@ -88,6 +100,78 @@ Page({
     }
     this.setData(patch)
     this.loadWeather(today)
+    if (partner) this.loadTaInteractions(partner._id)
+  },
+
+  // TA 的签到卡:载入点赞/评论(打开即视为已读)
+  async loadTaInteractions(targetId) {
+    if (!targetId) return
+    try {
+      const res = await interact.listInteractions('checkin', targetId)
+      this.setData({
+        taLikeCount: res.likeCount,
+        taLikedByMe: res.likedByMe,
+        taComments: interact.decorateComments(res.comments),
+        taReactions: res.reactions || []
+      })
+    } catch (e) {}
+  },
+  async toggleTaLike() {
+    const p = this.data.partner
+    if (!p || this.data.taLiking) return
+    this.setData({ taLiking: true })
+    try {
+      const res = await interact.toggleLike('checkin', p._id)
+      this.setData({ taLikedByMe: res.liked, taLikeCount: res.likeCount })
+      wx.vibrateShort && wx.vibrateShort({ type: 'light' })
+    } catch (e) {} finally { this.setData({ taLiking: false }) }
+  },
+  toggleTaComments() { this.setData({ showTaComments: !this.data.showTaComments }) },
+  async toggleTaReaction(e) {
+    const p = this.data.partner
+    const emoji = e.currentTarget.dataset.emoji
+    if (!p || !emoji) return
+    try {
+      const res = await interact.toggleReaction('checkin', p._id, emoji)
+      this.setData({ taReactions: res.reactions || [] })
+      wx.vibrateShort && wx.vibrateShort({ type: 'light' })
+    } catch (e) {}
+  },
+  onTaReply(e) {
+    this.setData({ taReplyTo: { id: e.currentTarget.dataset.id, name: e.currentTarget.dataset.name } })
+  },
+  cancelTaReply() { this.setData({ taReplyTo: { id: '', name: '' } }) },
+  onTaAt() {
+    const name = this.data.partnerName && this.data.partnerName !== 'TA' ? this.data.partnerName : 'TA'
+    const cur = this.data.taCommentInput || ''
+    const sep = cur && !/\s$/.test(cur) ? ' ' : ''
+    this.setData({ taCommentInput: cur + sep + '@' + name + ' ' })
+  },
+  onTaCommentInput(e) { this.setData({ taCommentInput: e.detail.value }) },
+  async sendTaComment() {
+    const p = this.data.partner
+    const content = (this.data.taCommentInput || '').trim()
+    if (!p || !content || this.data.taSending) return
+    this.setData({ taSending: true })
+    const reply = this.data.taReplyTo || { id: '', name: '' }
+    try {
+      const res = await interact.addComment('checkin', p._id, content, reply.id, reply.name)
+      const c = { ...res.comment, timeText: interact.relativeTime(res.comment.createdAt) }
+      this.setData({ taComments: this.data.taComments.concat(c), taCommentInput: '', taReplyTo: { id: '', name: '' }, showTaComments: true })
+    } catch (e) {} finally { this.setData({ taSending: false }) }
+  },
+  removeTaComment(e) {
+    const id = e.currentTarget.dataset.id
+    wx.showModal({
+      title: '删除这条评论？', confirmColor: '#c94b5c',
+      success: async (r) => {
+        if (!r.confirm) return
+        try {
+          await interact.removeComment(id)
+          this.setData({ taComments: this.data.taComments.filter((c) => c._id !== id) })
+        } catch (err) {}
+      }
+    })
   },
 
   // 今日天气 + 夸夸:与签到融合在同一页;没设城市时静默降级,只留夸夸
