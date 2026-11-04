@@ -6,6 +6,14 @@
   border: 2rpx solid #fff; box-shadow: var(--shadow-sm); flex-shrink: 0;
 }
 .sec-mini { font-size: 26rpx; font-weight: 800; color: #7A5257; margin: 22rpx 0 4rpx; }
+.place-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12rpx;
+  background:#FFFAF7;border:2rpx solid var(--line);border-radius:20rpx;
+  padding:20rpx 24rpx;margin:10rpx 0 6rpx;box-shadow:var(--shadow-sm);
+}
+.place-text{font-size:26rpx;color:#7A5257;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.place-go{font-size:30rpx;color:#C99;font-weight:800;}
+.place-clear{font-size:34rpx;color:#B79A9E;line-height:1;padding:0 6rpx;}
 .tags{display:flex;flex-wrap:wrap;gap:12rpx;margin:16rpx 0 6rpx}
 .tag{
   display:inline-flex;align-items:center;gap:8rpx;

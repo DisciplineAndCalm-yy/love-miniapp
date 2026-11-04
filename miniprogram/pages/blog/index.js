@@ -1,14 +1,17 @@
 const { formatDateTime } = require('../../utils/date')
 const { callApi } = require('../../utils/cloud')
 const interact = require('../../utils/interact')
+const cache = require('../../utils/cache')
 
 Page({
   data: {
     posts: [],
     paired: false,
+    loaded: false,
     unreadTotal: 0,
     unreadName: '',
-    unreadTarget: ''
+    unreadTarget: '',
+    themeBg: '#FFF1F4'
   },
 
   onShow() {
@@ -31,19 +34,34 @@ Page({
   openUnread() {
     const id = this.data.unreadTarget
     if (id) wx.navigateTo({ url: `/pages/blog/detail?id=${id}` })
-    else this.load()
+    else this.load(true)
   },
 
   onPullDownRefresh() {
-    this.load().finally(() => wx.stopPullDownRefresh())
+    this.load(true).finally(() => wx.stopPullDownRefresh())
   },
 
-  async load() {
+  async load(force) {
+    if (!force && this._lastLoadAt && Date.now() - this._lastLoadAt < 10000) return
+    this._lastLoadAt = Date.now()
+    if (!force) {
+      const c = cache.get('blog')
+      if (c && c.data) this.setData(Object.assign({ loaded: true }, c.data))
+    }
     const app = getApp()
     await app.whenReady()
-    const couple = app.globalData.couple
+    try {
+      const th = require('../../utils/theme').themeById(app.globalData.theme || 'sakura')
+      this.setData({ themeBg: (th.palette && th.palette.bg) || '#FFF1F4' })
+      app.applyTheme(app.globalData.theme)
+    } catch (e) {}
+    let couple = app.globalData.couple
+    if (!couple && !app.globalData._coupleFetched) {
+      await app.refreshCouple()
+      couple = app.globalData.couple
+    }
     if (!couple) {
-      this.setData({ posts: [], paired: false })
+      this.setData({ posts: [], paired: false, loaded: true })
       return
     }
     const { data } = { data: [] }
@@ -68,7 +86,8 @@ const STAMPS = ['💌', '🌷', '🍓', '🌙', '☁️', '🐱']
         stamp: STAMPS[i % STAMPS.length]
       }
     })
-    this.setData({ posts, paired: true })
+    this.setData({ posts, paired: true, loaded: true })
+    cache.set('blog', { posts, paired: true })
   },
 
   write() {

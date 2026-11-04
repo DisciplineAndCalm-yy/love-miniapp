@@ -1,4 +1,6 @@
-<view class="chat-page" style="padding-bottom:calc(190rpx + {{keyboardHeight}}px);">
+<import src="/templates/loading.wxml" />
+<view class="chat-page" style="padding-bottom:calc(190rpx + {{keyboardHeight}}px); background: {{themeBg}};">
+  <template is="cute-loading" data="{{show: loading, text: '正在翻开悄悄话…'}}" />
   <view class="chat-bg">
     <image src="/assets/deco/hearts.svg" mode="aspectFit" />
     <text class="float-heart fh1">💗</text>

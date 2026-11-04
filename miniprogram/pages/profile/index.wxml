@@ -1,4 +1,6 @@
+<import src="/templates/loading.wxml" />
 <view class="page profile-page">
+  <template is="cute-loading" data="{{show: loading, text: '正在加载我的小屋…'}}" />
   <view class="profile-card">
     <view class="profile-deco">💗</view>
     <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
@@ -10,6 +12,7 @@
     </button>
     <view class="profile-meta">
       <view class="name-line">
+        <text wx:if="{{myPendantEmoji}}" class="name-pendant">{{myPendantEmoji}}</text>
         <text class="name">{{nickName || '给自己起个名字'}}</text>
       </view>
       <view class="status-dot {{paired ? 'on' : ''}}">{{paired ? '💕 已绑定' : '🌱 未绑定'}}</view>
@@ -65,10 +68,19 @@
         <view wx:else class="avatar-fallback">{{partnerInitial}}</view>
       </view>
       <view class="partner-meta">
-        <view class="partner-name">{{partnerName}}</view>
+        <view class="partner-name">{{partnerPendantEmoji ? partnerPendantEmoji + ' ' : ''}}{{partnerName}}</view>
         <view class="muted">和你共享一个小宇宙 ✨</view>
       </view>
     </view>
+  </view>
+
+  <view class="menu" bindtap="goDressup">
+    <text class="menu-icon">👑</text>
+    <view class="menu-body">
+      <view class="menu-title">主题装扮</view>
+      <view class="muted">粉樱 / 星夜 / 奶油，还有头像挂件 ♡</view>
+    </view>
+    <text class="menu-go">›</text>
   </view>
 
   <view class="menu" bindtap="goAnniversary">

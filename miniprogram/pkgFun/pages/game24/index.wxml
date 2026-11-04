@@ -1,0 +1,32 @@
+<view class="page g24-page">
+  <view class="g24-head">
+    <view class="g24-title">24 点</view>
+    <view class="g24-sub">用下面的 4 个数字，每个用一次，加减乘除凑出 24</view>
+    <view class="g24-stats">
+      <text class="g24-stat">第 {{rounds}} 题</text>
+      <text class="g24-stat ok">答对 {{wins}} 次</text>
+    </view>
+  </view>
+
+  <view class="g24-cards">
+    <view class="g24-card" wx:for="{{nums}}" wx:key="*this">{{item}}</view>
+  </view>
+
+  <view class="g24-input-wrap">
+    <input class="g24-input" value="{{expr}}" bindinput="onInput" placeholder="例如 (3+3)×(3+1)" confirm-type="done" />
+  </view>
+
+  <view class="g24-tip">支持 + − × ÷ 和括号，可用 × ÷ 或 * / 输入</view>
+
+  <view wx:if="{{status}}" class="g24-status {{statusType}}">{{status}}</view>
+
+  <view wx:if="{{showAnswer}}" class="g24-answer">
+    参考答案：<text class="g24-answer-expr">{{answer}}</text>
+  </view>
+
+  <view class="g24-actions">
+    <button class="btn-primary g24-btn" bindtap="check">我来验算</button>
+    <button class="btn-ghost g24-btn" bindtap="revealAnswer">看答案</button>
+  </view>
+  <button class="g24-next" bindtap="newRound">换一组数字 ↻</button>
+</view>

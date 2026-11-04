@@ -1529,6 +1529,170 @@ exports.main = async (event) => {
       return { ok: true, nickName: patch.nickName, avatarUrl: patch.avatarUrl || user.avatarUrl || '' }
     }
 
+    if (action === 'saveTheme') {
+      const theme = String(event.theme || '').slice(0, 20)
+      const pendant = String(event.pendant || '').slice(0, 20)
+      await db.collection('users').doc(user._id).update({ data: { theme, pendant } })
+      return { ok: true, theme, pendant }
+    }
+
+    if (action === 'getThemes') {
+      const me = { theme: user.theme || '', pendant: user.pendant || '' }
+      let partner = null
+      try {
+        if (user.coupleId) {
+          const { data: couple } = await db.collection('couples').doc(user.coupleId).get()
+          const partnerId = couple && (couple.memberOpenids || []).find((o) => o !== OPENID)
+          if (partnerId) {
+            const pu = await getUser(partnerId)
+            if (pu) {
+              partner = { name: pu.nickName || 'TA', avatarUrl: pu.avatarUrl || '', theme: pu.theme || '', pendant: pu.pendant || '' }
+            }
+          }
+        }
+      } catch (e) {}
+      return { ok: true, me, partner }
+    }
+
+    // ===== 你画我猜 =====
+    if (action === 'drawState') {
+      const couple = await requireCouple(user, OPENID)
+      let room = null
+      try {
+        const r = await db.collection('drawguess').where({ coupleId: couple._id }).limit(1).get()
+        room = (r.data || [])[0] || null
+      } catch (e) {
+        try { await db.createCollection('drawguess') } catch (x) {}
+      }
+      if (!room) {
+        const doc = { coupleId: couple._id, answer: '', drawer: '', strokes: [], round: 0, scores: {}, updatedAt: Date.now() }
+        const add = await db.collection('drawguess').add({ data: doc })
+        room = Object.assign({ _id: add._id }, doc)
+      }
+      const isDrawer = room.drawer === OPENID
+      return {
+        ok: true,
+        roomId: room._id,
+        round: room.round || 0,
+        drawer: room.drawer || '',
+        isDrawer,
+        answer: isDrawer ? (room.answer || '') : '',
+        strokes: room.strokes || [],
+        scores: room.scores || {}
+      }
+    }
+
+    if (action === 'drawStart') {
+      const couple = await requireCouple(user, OPENID)
+      const word = String(event.word || '').trim().slice(0, 12)
+      if (!word) return fail('先选个词')
+      const r = await db.collection('drawguess').where({ coupleId: couple._id }).limit(1).get()
+      const room = (r.data || [])[0]
+      if (!room) return fail('房间还没准备好，稍后再试')
+      await db.collection('drawguess').doc(room._id).update({
+        data: { answer: word, drawer: OPENID, strokes: [], round: (room.round || 0) + 1, updatedAt: Date.now() }
+      })
+      return { ok: true }
+    }
+
+    if (action === 'drawPush') {
+      const couple = await requireCouple(user, OPENID)
+      const stroke = event.stroke
+      if (!stroke || !Array.isArray(stroke.pts) || !stroke.pts.length) return fail('空笔画')
+      const r = await db.collection('drawguess').where({ coupleId: couple._id }).limit(1).get()
+      const room = (r.data || [])[0]
+      if (!room || room.drawer !== OPENID) return fail('还没轮到你画')
+      const s = { color: String(stroke.color || '#E14E68').slice(0, 20), w: Number(stroke.w) || 0.02, pts: stroke.pts.slice(0, 400) }
+      await db.collection('drawguess').doc(room._id).update({ data: { strokes: _.push([s]), updatedAt: Date.now() } })
+      return { ok: true }
+    }
+
+    if (action === 'drawClear') {
+      const couple = await requireCouple(user, OPENID)
+      const r = await db.collection('drawguess').where({ coupleId: couple._id }).limit(1).get()
+      const room = (r.data || [])[0]
+      if (!room || room.drawer !== OPENID) return fail('没权限')
+      await db.collection('drawguess').doc(room._id).update({ data: { strokes: [], updatedAt: Date.now() } })
+      return { ok: true }
+    }
+
+    if (action === 'drawEnd') {
+      const couple = await requireCouple(user, OPENID)
+      const r = await db.collection('drawguess').where({ coupleId: couple._id }).limit(1).get()
+      const room = (r.data || [])[0]
+      if (!room || room.drawer !== OPENID) return fail('没权限')
+      await db.collection('drawguess').doc(room._id).update({ data: { answer: '', drawer: '', strokes: [], updatedAt: Date.now() } })
+      return { ok: true }
+    }
+
+    if (action === 'drawGuess') {
+      const couple = await requireCouple(user, OPENID)
+      const guess = String(event.guess || '').trim()
+      if (!guess) return fail('写个答案吧')
+      const r = await db.collection('drawguess').where({ coupleId: couple._id }).limit(1).get()
+      const room = (r.data || [])[0]
+      if (!room || !room.drawer) return { ok: true, correct: false, message: '还没有人在画' }
+      if (room.drawer === OPENID) return { ok: true, correct: false, message: '这次是你画呀，让 TA 来猜' }
+      const norm = (s) => String(s || '').replace(/\s+/g, '').toLowerCase()
+      const correct = norm(guess) === norm(room.answer)
+      if (correct) {
+        const scores = Object.assign({}, room.scores || {})
+        scores[OPENID] = (scores[OPENID] || 0) + 1
+        await db.collection('drawguess').doc(room._id).update({ data: { answer: '', drawer: '', strokes: [], scores, updatedAt: Date.now() } })
+        return { ok: true, correct: true, answer: room.answer, scores }
+      }
+      return { ok: true, correct: false, message: '不对哦，再想想～' }
+    }
+
+    // ===== 照片级独立点赞/评论 =====
+    if (action === 'photoLike') {
+      const couple = await requireCouple(user, OPENID)
+      const photoKey = String(event.photoKey || '').slice(0, 120)
+      if (!photoKey) return fail('参数错误')
+      try { await db.createCollection('photoInteractions') } catch (e) {}
+      const found = await db.collection('photoInteractions')
+        .where({ coupleId: couple._id, photoKey, type: 'like', _openid: OPENID }).limit(1).get()
+      const existed = found.data && found.data.length
+      if (existed) await db.collection('photoInteractions').doc(found.data[0]._id).remove()
+      else await db.collection('photoInteractions').add({ data: { _openid: OPENID, coupleId: couple._id, photoKey, type: 'like', createdAt: Date.now() } })
+      const { data: likes } = await db.collection('photoInteractions').where({ coupleId: couple._id, photoKey, type: 'like' }).limit(1000).get()
+      return { ok: true, liked: !existed, likeCount: (likes || []).length }
+    }
+
+    if (action === 'photoComments') {
+      const couple = await requireCouple(user, OPENID)
+      const photoKey = String(event.photoKey || '').slice(0, 120)
+      if (!photoKey) return fail('参数错误')
+      let data = []
+      try {
+        const r = await db.collection('photoInteractions')
+          .where({ coupleId: couple._id, photoKey }).orderBy('createdAt', 'asc').limit(200).get()
+        data = r.data || []
+      } catch (e) {}
+      const members = await loadMembers(couple.memberOpenids)
+      const map = {}
+      members.forEach((m) => { map[m.openid] = m })
+      let likeCount = 0
+      let likedByMe = false
+      const comments = []
+      ;(data || []).forEach((d) => {
+        if (d.type === 'like') { likeCount += 1; if (d._openid === OPENID) likedByMe = true }
+        else if (d.type === 'comment') comments.push({ _id: d._id, content: d.content, createdAt: d.createdAt, isMine: d._openid === OPENID, byName: (map[d._openid] || {}).nickName || 'TA' })
+      })
+      return { ok: true, likeCount, likedByMe, comments }
+    }
+
+    if (action === 'photoComment') {
+      const couple = await requireCouple(user, OPENID)
+      const photoKey = String(event.photoKey || '').slice(0, 120)
+      const content = String(event.content || '').trim().slice(0, 200)
+      if (!photoKey) return fail('参数错误')
+      if (!content) return fail('说点什么再发吧')
+      try { await db.createCollection('photoInteractions') } catch (e) {}
+      await db.collection('photoInteractions').add({ data: { _openid: OPENID, coupleId: couple._id, photoKey, type: 'comment', content, createdAt: Date.now() } })
+      return { ok: true }
+    }
+
     if (action === 'enableRemind') {
       await db.collection('users').doc(user._id).update({
         data: {
@@ -1569,12 +1733,21 @@ exports.main = async (event) => {
           await db.collection('users').doc(user._id).update({ data: { locLat: lat, locLon: lon, locCity: city, locUpdatedAt: Date.now() } })
         } catch (e) {}
       }
+      // 天气缓存 30 分钟：避免每次首页都打外部接口导致加载慢
+      const cacheKey = `${lat}|${lon}|${city}`
+      const wc = user.weatherCache
+      if (wc && wc.key === cacheKey && wc.at && Date.now() - wc.at < 30 * 60 * 1000 && wc.data) {
+        return { ok: true, weather: wc.data, cached: true }
+      }
       let weather
       try {
         weather = await getWeather(lat, lon, city)
       } catch (err) {
         return fail('天气获取失败，稍后再试')
       }
+      try {
+        await db.collection('users').doc(user._id).update({ data: { weatherCache: { key: cacheKey, at: Date.now(), data: weather } } })
+      } catch (e) {}
       return { ok: true, weather }
     }
 
@@ -1741,6 +1914,7 @@ exports.main = async (event) => {
           moodLabel: moodLabelOf(item.mood),
           content: item.content || '',
           photo: item.photo || item.image || item.img || item.photoFileID || photos[0] || '',
+          place: item.place || '',
           createdAt: item.createdAt || 0,
           authorName: m.nickName || 'TA',
           authorAvatar: m.avatarUrl || ''
@@ -1768,13 +1942,14 @@ exports.main = async (event) => {
       const title = String(event.title || '').trim().slice(0, 40)
       const content = String(event.content || '').trim().slice(0, 5000)
       const photos = Array.isArray(event.photos) ? event.photos.slice(0, 9) : []
+      const place = String(event.place || '').trim().slice(0, 40)
       if (!title || !content) return fail('标题和正文都要写')
       if (event.id) {
         const { data: post } = await db.collection('posts').doc(event.id).get()
         if (!post || post._openid !== OPENID) return fail('只能改自己的文章')
         const removed = (post.photos || []).filter((id) => !photos.includes(id))
         await db.collection('posts').doc(event.id).update({
-          data: { title, content, photos, updatedAt: Date.now() }
+          data: { title, content, photos, place, updatedAt: Date.now() }
         })
         await removeFiles(removed)
         return { ok: true, id: event.id }
@@ -1786,6 +1961,7 @@ exports.main = async (event) => {
           title,
           content,
           photos,
+          place,
           createdAt: Date.now(),
           updatedAt: Date.now()
         }
@@ -1861,16 +2037,17 @@ exports.main = async (event) => {
       const doing = String(event.doing || '日常').slice(0, 8)
       const content = String(event.content || '').trim().slice(0, 500)
       const photos = Array.isArray(event.photos) ? event.photos.slice(0, 6) : []
+      const place = String(event.place || '').trim().slice(0, 40)
       if (!content && !photos.length) return fail('写点什么或传张图吧')
       if (event.id) {
         const { data: doc } = await db.collection('moments').doc(event.id).get()
         if (!doc || doc.coupleId !== couple._id || doc._openid !== OPENID) return fail('只能改自己的动态')
         const removed = (doc.photos || []).filter((id) => !photos.includes(id))
-        await db.collection('moments').doc(event.id).update({ data: { doing, content, photos, updatedAt: Date.now() } })
+        await db.collection('moments').doc(event.id).update({ data: { doing, content, photos, place, updatedAt: Date.now() } })
         await removeFiles(removed)
         return { ok: true, id: event.id }
       }
-      const add = await db.collection('moments').add({ data: { _openid: OPENID, coupleId: couple._id, doing, content, photos, createdAt: Date.now(), updatedAt: Date.now() } })
+      const add = await db.collection('moments').add({ data: { _openid: OPENID, coupleId: couple._id, doing, content, photos, place, createdAt: Date.now(), updatedAt: Date.now() } })
       return { ok: true, id: add._id }
     }
 
@@ -2145,13 +2322,13 @@ exports.main = async (event) => {
         } catch (e) {}
       }
       await pull('checkins', (d) => {
-        if (d.photo) entries.push({ source: 'checkin', sourceId: d._id, fileID: d.photo, createdAt: d.createdAt || 0, by: d._openid, caption: d.content || '' })
+        if (d.photo) entries.push({ source: 'checkin', sourceId: d._id, fileID: d.photo, createdAt: d.createdAt || 0, by: d._openid, caption: d.content || '', tag: d.doing || '日常', place: d.place || '' })
       })
       await pull('moments', (d) => {
-        ;(d.photos || []).forEach((p) => entries.push({ source: 'moment', sourceId: d._id, fileID: p, createdAt: d.createdAt || 0, by: d._openid, caption: d.content || d.doing || '' }))
+        ;(d.photos || []).forEach((p) => entries.push({ source: 'moment', sourceId: d._id, fileID: p, createdAt: d.createdAt || 0, by: d._openid, caption: d.content || d.doing || '', tag: d.doing || '日常', place: d.place || '' }))
       })
       await pull('posts', (d) => {
-        ;(d.photos || []).forEach((p) => entries.push({ source: 'post', sourceId: d._id, fileID: p, createdAt: d.createdAt || 0, by: d._openid, caption: d.title || '' }))
+        ;(d.photos || []).forEach((p) => entries.push({ source: 'post', sourceId: d._id, fileID: p, createdAt: d.createdAt || 0, by: d._openid, caption: d.title || '', tag: '文章', place: d.place || '' }))
       })
       entries.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
       const page = entries.slice(0, limit)
@@ -2165,7 +2342,33 @@ exports.main = async (event) => {
           ;(fileList || []).forEach((f) => { if (f.fileID && f.tempFileURL) urlMap[f.fileID] = f.tempFileURL })
         } catch (e) {}
       }
-      const list = page.map((e) => ({ ...e, url: urlMap[e.fileID] || e.fileID, byName: nameOf(e.by), key: `${e.source}_${e.sourceId}_${e.fileID}` }))
+      const photoKeys = page.map((e) => `${e.source}_${e.sourceId}_${e.fileID}`)
+      const likeMap = {}
+      const myLike = {}
+      const commentMap = {}
+      if (photoKeys.length) {
+        try {
+          const { data } = await db.collection('photoInteractions')
+            .where({ coupleId: couple._id, photoKey: _.in(photoKeys) }).limit(1000).get()
+          ;(data || []).forEach((it) => {
+            const k = it.photoKey
+            if (it.type === 'like') { likeMap[k] = (likeMap[k] || 0) + 1; if (it._openid === OPENID) myLike[k] = 1 }
+            else if (it.type === 'comment') { commentMap[k] = (commentMap[k] || 0) + 1 }
+          })
+        } catch (e) {}
+      }
+      const list = page.map((e) => {
+        const key = `${e.source}_${e.sourceId}_${e.fileID}`
+        return {
+          ...e,
+          url: urlMap[e.fileID] || e.fileID,
+          byName: nameOf(e.by),
+          key,
+          likeCount: likeMap[key] || 0,
+          liked: !!myLike[key],
+          commentCount: commentMap[key] || 0
+        }
+      })
       return { ok: true, list, hasMore, nextBefore }
     }
 

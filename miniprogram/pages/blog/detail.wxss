@@ -3,6 +3,7 @@
 .detail-stamp{position:absolute;right:16rpx;top:12rpx;font-size:88rpx;opacity:.16;transform:rotate(10deg);pointer-events:none;}
 .detail-title{font-size:42rpx;margin:18rpx 0 10rpx;line-height:1.4;}
 .author-chip{display:inline-block;font-size:24rpx;font-weight:700;color:var(--rose-deep);background:linear-gradient(180deg,#FFF6F7,var(--blush));border:2rpx solid #F6BCC5;border-radius:999rpx;padding:8rpx 24rpx;margin-bottom:24rpx;box-shadow:var(--shadow-sm);}
+.detail-place{font-size:25rpx;color:#B79A9E;font-weight:700;margin:0 0 16rpx;}
 .body {
   white-space: pre-wrap;
   line-height: 1.9;

@@ -1,4 +1,6 @@
+<import src="/templates/loading.wxml" />
 <view class="page capsule-page">
+  <template is="cute-loading" data="{{show: loading, text: '正在打开时光胶囊…'}}" />
   <view class="cap-hero">
     <view class="cap-deco" aria-hidden="true">
       <text class="cd cd1">⏳</text>

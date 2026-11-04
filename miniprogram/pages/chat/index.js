@@ -18,16 +18,26 @@ Page({
     keyboardHeight: 0,
     voiceMode: false,
     recording: false,
-    playingId: ''
+    playingId: '',
+    themeBg: '#FFF1F4'
   },
   pollTimer: null,
+  watchConn: null,
+  loadDebounce: null,
   lastTs: 0,
   pageTopTs: 0,
   marking: false,
 
-  onLoad() { this.load(true); this.initRecorder() },
+  onLoad() {
+    try {
+      const th = require('../../utils/theme').themeById(getApp().globalData.theme || 'sakura')
+      this.setData({ themeBg: (th.palette && th.palette.bg) || '#FFF1F4' })
+      getApp().applyTheme(getApp().globalData.theme)
+    } catch (e) {}
+    this.load(true); this.initRecorder()
+  },
   onShow() {
-    this.startPoll()
+    this.startRealtime()
     this.load(false).then(() => this.markRead())
     wx.setNavigationBarTitle({ title: '悄悄话 ♡' })
     let on = false
@@ -48,10 +58,60 @@ Page({
       fail: () => {}
     })
   },
-  onHide() { this.stopPoll(); this.stopAudio(); if (this.data.keyboardHeight) this.setData({ keyboardHeight: 0 }) },
-  onUnload() { this.stopPoll(); this.stopAudio() },
+  onHide() { this.stopRealtime(); this.stopPoll(); this.stopAudio(); if (this.data.keyboardHeight) this.setData({ keyboardHeight: 0 }) },
+  onUnload() { this.stopRealtime(); this.stopPoll(); this.stopAudio() },
   onPullDownRefresh() { this.loadMore().finally(() => wx.stopPullDownRefresh()) },
   onPageScroll() {},
+
+  // ===== 实时监听(云开发 watch),失败自动降级为轮询 =====
+  startRealtime() {
+    this.stopRealtime()
+    const app = getApp()
+    const couple = app && app.globalData && app.globalData.couple
+    if (!couple || !couple._id || !wx.cloud) { this.startPoll(); return }
+    try {
+      const db = wx.cloud.database()
+      this._myOpenid = (app.globalData && app.globalData.openid) || ''
+      this.watchConn = db.collection('chats')
+        .where({ coupleId: couple._id })
+        .orderBy('createdAt', 'desc')
+        .limit(20)
+        .watch({
+          onChange: (snap) => this.onChatChange(snap),
+          onError: (err) => this.onWatchError(err)
+        })
+    } catch (e) {
+      console.warn('[chat] watch init failed, fallback to poll', e)
+      this.startPoll()
+    }
+  },
+  stopRealtime() {
+    if (this.watchConn) {
+      try { this.watchConn.close() } catch (e) {}
+      this.watchConn = null
+    }
+    if (this.loadDebounce) { clearTimeout(this.loadDebounce); this.loadDebounce = null }
+  },
+  onChatChange(snap) {
+    if (!snap || snap.type === 'init') return
+    const changes = snap.docChanges || []
+    if (!changes.length) return
+    const incoming = changes.some((c) => c && c.dataType === 'add' && c.doc && c.doc._openid && c.doc._openid !== this._myOpenid)
+    if (incoming) { try { wx.vibrateShort({ type: 'light' }) } catch (e) {} }
+    this.scheduleReload()
+  },
+  onWatchError(err) {
+    console.warn('[chat] watch error, fallback to poll', err)
+    this.stopRealtime()
+    this.startPoll()
+  },
+  scheduleReload() {
+    if (this.loadDebounce) return
+    this.loadDebounce = setTimeout(() => {
+      this.loadDebounce = null
+      this.load(false)
+    }, 120)
+  },
 
   startPoll() {
     this.stopPoll()

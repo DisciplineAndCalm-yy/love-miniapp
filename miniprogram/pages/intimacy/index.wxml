@@ -1,4 +1,6 @@
+<import src="/templates/loading.wxml" />
 <view class="page intimacy-page">
+  <template is="cute-loading" data="{{show: loading, text: '正在计算你们的亲密度…'}}" />
   <view wx:if="{{loading}}" class="muted center">正在计算你们的亲密度… ♡</view>
 
   <block wx:elif="{{paired && level}}">

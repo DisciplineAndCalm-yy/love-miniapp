@@ -1,0 +1,64 @@
+<import src="/templates/loading.wxml" />
+<view class="page mb-page">
+  <template is="cute-loading" data="{{show: loading, text: '正在整理你们的心情…'}}" />
+  <view wx:if="{{loading}}" class="muted center mb-loading">正在整理你们的心情… ♡</view>
+
+  <block wx:elif="{{paired}}">
+    <view class="mb-head">
+      <view class="mb-title">心情看板</view>
+      <view class="mb-sub">{{myName}} ＋ {{partnerName}} · 在一起 {{together}} 天</view>
+    </view>
+
+    <view class="mb-card">
+      <view class="mb-card-title">📈 最近 14 天心情曲线</view>
+      <view class="mb-legend">
+        <view class="lg"><view class="dot mine"></view><text>{{myName}}</text></view>
+        <view class="lg"><view class="dot partner"></view><text>{{partnerName}}</text></view>
+      </view>
+      <canvas type="2d" id="moodChart" class="mb-canvas"></canvas>
+      <view class="mb-xaxis"><text>{{rangeText}}</text></view>
+      <view wx:if="{{!hasData}}" class="mb-empty">还没有足够的心情记录，先来几次签到吧 ♡</view>
+    </view>
+
+    <view class="mb-card">
+      <view class="mb-card-title">🗓️ 近 63 天心情热力图</view>
+      <view class="heat-grid">
+        <view class="heat-cell hl-{{item.level}}" wx:for="{{heatCells}}" wx:key="k"></view>
+      </view>
+      <view class="heat-legend">
+        <text class="muted">低落</text>
+        <view class="heat-mini hl-1"></view>
+        <view class="heat-mini hl-2"></view>
+        <view class="heat-mini hl-3"></view>
+        <view class="heat-mini hl-4"></view>
+        <text class="muted">甜蜜</text>
+      </view>
+      <view class="mb-heat-tip">共 {{heatTotal}} 天有心情记录</view>
+    </view>
+
+    <view class="mb-card">
+      <view class="mb-card-title">📊 本周看板</view>
+      <view class="board-row">
+        <view class="board-item">
+          <text class="bi-val">{{weekCheckins}}</text>
+          <text class="bi-label">本周打卡</text>
+        </view>
+        <view class="board-item">
+          <text class="bi-val">{{streakMine}}</text>
+          <text class="bi-label">{{myName}} 连签</text>
+        </view>
+        <view class="board-item">
+          <text class="bi-val">{{streakPartner}}</text>
+          <text class="bi-label">{{partnerName}} 连签</text>
+        </view>
+      </view>
+      <view class="mb-summary">{{summary}}</view>
+    </view>
+  </block>
+
+  <view wx:else class="card empty-card center">
+    <text class="empty-icon">💞</text>
+    <view class="title">先绑定两个人吧</view>
+    <view class="muted">有了 TA，才有心情曲线 ♡</view>
+  </view>
+</view>

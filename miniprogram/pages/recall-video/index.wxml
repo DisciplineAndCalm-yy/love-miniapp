@@ -1,0 +1,40 @@
+<import src="/templates/loading.wxml" />
+<view class="rv-page">
+  <template is="cute-loading" data="{{show: loading, text: '正在制作回忆视频…'}}" />
+  <view wx:if="{{loading}}" class="rv-loading">正在制作你们的回忆视频… ♡</view>
+
+  <view wx:elif="{{!count}}" class="rv-empty">
+    <text class="rv-empty-icon">🎬</text>
+    <view class="rv-empty-title">还没有照片</view>
+    <view class="rv-empty-sub">去签到、发动态加上照片，就能生成回忆视频啦</view>
+  </view>
+
+  <block wx:else>
+    <view class="rv-stage">
+      <image wx:if="{{cur}}" class="rv-img {{fadeOn ? 'on' : ''}}" src="{{cur.url}}" mode="aspectFill" />
+      <view class="rv-vignette"></view>
+
+      <view class="rv-top">
+        <text class="rv-year">{{year}}</text>
+        <text class="rv-brand">我们的回忆 ♡</text>
+      </view>
+
+      <view wx:if="{{cur}}" class="rv-caption">
+        <view class="rv-cap-date">{{cur.dateLabel}} · {{cur.byName}}</view>
+        <view wx:if="{{cur.caption}}" class="rv-cap-text">{{cur.caption}}</view>
+      </view>
+
+      <view class="rv-progress"><view class="rv-progress-fill" style="width:{{progress}}%"></view></view>
+    </view>
+
+    <view class="rv-controls">
+      <view class="rv-btn" bindtap="prev">⏮</view>
+      <view class="rv-btn main" bindtap="togglePlay">{{playing ? '⏸' : '▶'}}</view>
+      <view class="rv-btn" bindtap="next">⏭</view>
+    </view>
+
+    <view class="rv-info">{{names || '我们'}} · 共 {{count}} 张 · {{idx + 1}}/{{count}}</view>
+    <view class="rv-save" bindtap="savePhoto">💾 保存当前画面到相册</view>
+    <view class="rv-tip">动效版回忆视频。受微信端能力限制（静态照片无法直接编码成 mp4），暂以动效播放 + 保存画面呈现。</view>
+  </block>
+</view>

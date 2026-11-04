@@ -1,4 +1,6 @@
+<import src="/templates/loading.wxml" />
 <view class="page album-page">
+  <template is="cute-loading" data="{{show: loading, text: '正在翻找照片…'}}" />
   <view class="album-hero">
     <view class="deco-layer" aria-hidden="true">
       <text class="pt pt1">📷</text>
@@ -10,6 +12,40 @@
     <text class="ah-sticker">🖼️</text>
     <view class="ah-title">我们的相册</view>
     <view class="ah-sub">{{total ? ('一起收藏了 ' + total + ' 张回忆') : '签到、动态、文章里的照片都会聚到这里'}}</view>
+    <view class="hero-actions">
+      <view class="poster-entry" bindtap="openPoster">📔 年度回忆册</view>
+      <view class="poster-entry" bindtap="goRecallVideo">🎬 回忆视频</view>
+    </view>
+  </view>
+
+  <!-- 筛选 -->
+  <view class="filter-bar">
+    <scroll-view scroll-x class="filter-scroll" enhanced="{{true}}" show-scrollbar="{{false}}">
+      <view class="filter-tabs">
+        <view
+          class="filter-tab {{timeFilter === item.id ? 'on' : ''}}"
+          wx:for="{{timeTabs}}" wx:key="id" data-id="{{item.id}}" bindtap="setTimeFilter"
+        >{{item.name}}</view>
+      </view>
+      <view class="filter-tabs">
+        <view
+          class="filter-tab src {{sourceFilter === item.id ? 'on' : ''}}"
+          wx:for="{{sourceTabs}}" wx:key="id" data-id="{{item.id}}" bindtap="setSourceFilter"
+        >{{item.name}}</view>
+      </view>
+      <view class="filter-tabs">
+        <view
+          class="filter-tab tag {{tagFilter === item.id ? 'on' : ''}}"
+          wx:for="{{tagTabs}}" wx:key="id" data-id="{{item.id}}" bindtap="setTagFilter"
+        >{{item.name}}</view>
+      </view>
+      <view class="filter-tabs">
+        <view
+          class="filter-tab place {{placeFilter === item.id ? 'on' : ''}}"
+          wx:for="{{placeTabs}}" wx:key="id" data-id="{{item.id}}" bindtap="setPlaceFilter"
+        >{{item.name}}</view>
+      </view>
+    </scroll-view>
   </view>
 
   <!-- 往年今日 -->
@@ -30,11 +66,12 @@
   <view wx:if="{{loading}}" class="muted center">正在翻相册… ♡</view>
   <view wx:elif="{{!groups.length}}" class="card empty-card center">
     <text class="empty-icon">📷</text>
-    <view class="title">相册还空空的</view>
-    <view class="muted">去签到、发动态或写文章时加上照片吧</view>
+    <view class="title">{{photos.length ? '这类回忆还没找到' : '相册还空空的'}}</view>
+    <view class="muted">{{photos.length ? '换个筛选条件试试' : '去签到、发动态或写文章时加上照片吧'}}</view>
   </view>
 
   <block wx:else>
+    <view class="filter-count">共 {{filteredCount}} 张</view>
     <view class="album-group" wx:for="{{groups}}" wx:key="key" wx:for-item="g">
       <view class="group-date">{{g.label}}<text class="group-count">{{g.items.length}} 张</text></view>
       <view class="photo-grid">
@@ -42,18 +79,60 @@
           class="polaroid"
           wx:for="{{g.items}}"
           wx:key="key"
-          data-url="{{item.url}}"
-          bindtap="preview"
+          data-item="{{item}}"
+          bindtap="openLightbox"
         >
           <image src="{{item.url}}" mode="aspectFill" class="polaroid-img" lazy-load="{{true}}" />
           <view class="polaroid-cap">
             <text class="cap-time">{{item.time}}</text>
-            <text class="cap-heart">❤</text>
+            <text class="cap-heart {{item.liked ? 'on' : ''}}">❤{{item.likeCount ? item.likeCount : ''}}</text>
           </view>
+          <view wx:if="{{item.commentCount}}" class="p-cmt">💬{{item.commentCount}}</view>
         </view>
       </view>
     </view>
     <view class="more-hint" wx:if="{{hasMore}}">上滑加载更多 ↓</view>
     <view class="more-hint" wx:else>已经没有更早的回忆啦 ♡</view>
   </block>
+</view>
+
+<!-- 看图 + 点赞评论 -->
+<view wx:if="{{lbShow}}" class="lb-mask" catchtap="closeLightbox">
+  <view class="lb-card" catchtap="noop">
+    <image class="lb-img" src="{{lbItem.url}}" mode="aspectFit" bindtap="previewBig" />
+    <view class="lb-meta">
+      <text class="lb-src">{{lbSource}} · {{lbItem.byName}}{{lbItem.place ? ' · 📍' + lbItem.place : ''}}</text>
+      <text class="lb-time">{{lbItem.time}}</text>
+    </view>
+    <view class="lb-like-row">
+      <view class="lb-like {{lbLiked ? 'on' : ''}}" catchtap="toggleLike">❤ {{lbLikes}}</view>
+      <text class="lb-cmt-count">💬 {{lbComments.length}}</text>
+    </view>
+    <scroll-view scroll-y class="lb-comments">
+      <view wx:if="{{lbLoading}}" class="lb-empty">加载评论…</view>
+      <view wx:elif="{{!lbComments.length}}" class="lb-empty">还没有评论，说点什么吧 ♡</view>
+      <view class="lb-cmt" wx:for="{{lbComments}}" wx:key="_id">
+        <text class="lb-cmt-name">{{item.byName}}：</text><text class="lb-cmt-text">{{item.content}}</text>
+      </view>
+    </scroll-view>
+    <view class="lb-input-row">
+      <input class="lb-input" value="{{lbInput}}" bindinput="onCommentInput" placeholder="写句评论…" confirm-type="send" bindconfirm="submitComment" />
+      <view class="lb-send" catchtap="submitComment">发送</view>
+    </view>
+  </view>
+</view>
+
+<!-- 年度回忆册 -->
+<view wx:if="{{posterShow}}" class="poster-mask" catchtap="closePoster">
+  <view class="poster-card" catchtap="noop">
+    <view class="poster-year">{{posterYear}}</view>
+    <view class="poster-title">年度回忆册</view>
+    <view class="poster-sub">{{posterNames || '我们'}} · 共 {{posterCount}} 张回忆 ♡</view>
+    <view class="poster-grid">
+      <image class="poster-thumb" wx:for="{{posterPhotos}}" wx:key="key" src="{{item.url}}" mode="aspectFill" lazy-load="{{true}}" />
+    </view>
+    <view wx:if="{{!posterPhotos.length}}" class="poster-empty">还没有照片，先去记录几张吧～</view>
+    <view class="poster-foot">长按或截屏保存这份回忆 ♡</view>
+    <view class="poster-close" catchtap="closePoster">关闭</view>
+  </view>
 </view>

@@ -14,6 +14,7 @@
 .link-inline{color:var(--rose-deep);font-weight:800;text-decoration:underline;}
 .name-line{display:flex;align-items:center;gap:14rpx;flex-wrap:wrap;}
 .name{font-size:38rpx;font-weight:800;}
+.name-pendant{font-size:36rpx;line-height:1;filter:drop-shadow(0 2rpx 3rpx rgba(0,0,0,.14));}
 .status-dot{display:inline-block;font-size:22rpx;font-weight:800;color:var(--rose-deep);background:#fff;border:2rpx solid var(--line);border-radius:999rpx;padding:6rpx 18rpx;box-shadow:var(--shadow-sm);margin:10rpx 0 0;}
 .avatar-hint{margin-top:10rpx;}
 .profile-meta{min-width:0;flex:1;}

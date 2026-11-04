@@ -1,4 +1,5 @@
 const { callApi, requestAnniversaryRemind, uploadImage } = require('../../utils/cloud')
+const { pendantById } = require('../../utils/theme')
 
 // 取首字(emoji 安全,charAt 会把 emoji 拆成乱码问号)
 function firstChar(name, fallback) {
@@ -27,7 +28,10 @@ Page({
     partnerName: '',
     partnerAvatar: '',
     unbinding: false,
-    version: '—'
+    version: '—',
+    loading: true,
+    myPendantEmoji: '',
+    partnerPendantEmoji: ''
   },
 
   onShow() {
@@ -41,7 +45,7 @@ Page({
   async sync() {
     const app = getApp()
     await app.whenReady()
-    await app.refreshCouple()
+    if (!app.globalData.couple && !app.globalData._coupleFetched) await app.refreshCouple()
     await app.refreshMembers()
     this.setData({ version: app.version || '—' })
     const user = app.globalData.user || {}
@@ -65,6 +69,25 @@ Page({
       partnerAvatar: (partner && partner.avatarUrl) || '',
       partnerAvatarUrl: isDisplayable(partner && partner.avatarUrl) ? partner.avatarUrl : ''
     })
+    this.setData({ loading: false })
+    this.loadPendants()
+  },
+
+  async loadPendants() {
+    try {
+      const t = await callApi('getThemes', {}, { silent: true })
+      const me = t.me || {}
+      const p = t.partner || null
+      const app = getApp()
+      if (app.globalData.user) {
+        if (me.theme) app.globalData.user.theme = me.theme
+        app.globalData.user.pendant = me.pendant || ''
+      }
+      this.setData({
+        myPendantEmoji: pendantById(me.pendant).emoji,
+        partnerPendantEmoji: p ? pendantById(p.pendant).emoji : ''
+      })
+    } catch (e) {}
   },
 
   avatarError(e) {
@@ -290,6 +313,10 @@ Page({
 
   goAnniversary() {
     wx.navigateTo({ url: '/pages/anniversary/index' })
+  },
+
+  goDressup() {
+    wx.navigateTo({ url: '/pages/dressup/index' })
   },
 
   goPet() {

@@ -1,4 +1,6 @@
+<import src="/templates/loading.wxml" />
 <view class="page notify-page">
+  <template is="cute-loading" data="{{show: loading, text: '正在收消息…'}}" />
   <view class="notify-hero card">
     <view class="deco-layer" aria-hidden="true">
       <text class="pt pt1">💗</text>

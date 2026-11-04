@@ -1,6 +1,17 @@
-<view class="page">
-  <view class="hero cute-hero" wx:if="{{paired}}">
+<view class="page" style="background: {{themeBg}};">
+  <view class="sk-overlay" wx:if="{{!ready}}" style="background: {{themeBg}};">
+    <view class="sk-hero sk-shimmer"></view>
+    <view class="sk-grid">
+      <view class="sk-card sk-shimmer"></view>
+      <view class="sk-card sk-shimmer"></view>
+    </view>
+    <view class="sk-card sk-shimmer" style="height:190rpx;"></view>
+    <view class="sk-card sk-shimmer" style="height:150rpx;"></view>
+    <view class="sk-tip">正在打开两个人的小宇宙…</view>
+  </view>
+  <view class="hero cute-hero" wx:if="{{paired}}" style="background: linear-gradient(160deg, {{themeBg}} 0%, {{themeAccent}}33 100%);">
     <image class="hero-deco" src="/assets/deco/hearts.svg" mode="aspectFit" binderror="hideDeco" wx:if="{{showDeco}}" />
+    <text wx:if="{{pendantEmoji}}" class="home-pendant">{{pendantEmoji}}</text>
     <view class="pill">♥ 只属于两个人的小宇宙 ♥</view>
     <view class="couple-line">
       <text class="who">{{myName}}</text>
@@ -58,6 +69,9 @@
     <view class="fn-item" bindtap="goNight"><view class="fn-ico">🌙</view><text class="fn-label">晚安</text></view>
     <view class="fn-item" bindtap="goAdventure"><view class="fn-ico">🗺️</view><text class="fn-label">冒险</text></view>
     <view class="fn-item" bindtap="goMonopoly"><view class="fn-ico">🎡</view><text class="fn-label">大富翁</text></view>
+    <view class="fn-item" bindtap="goGame24"><view class="fn-ico">🧮</view><text class="fn-label">24点</text></view>
+    <view class="fn-item" bindtap="goFortune"><view class="fn-ico">🎋</view><text class="fn-label">抽签</text></view>
+    <view class="fn-item" bindtap="goDrawGuess"><view class="fn-ico">🎨</view><text class="fn-label">你画我猜</text></view>
     <view class="fn-item" bindtap="goQuiz"><view class="fn-ico">💞</view><text class="fn-label">默契</text></view>
     <view class="fn-item" bindtap="goWeather"><view class="fn-ico">🌤️</view><text class="fn-label">天气</text></view>
     <view class="fn-item" bindtap="goPeriod"><view class="fn-ico">🩸</view><text class="fn-label">生理期</text></view>

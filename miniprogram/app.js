@@ -1,3 +1,5 @@
+const { themeById } = require('./utils/theme')
+
 App({
   // 每次发版改这里,双方个人中心底部对比版本号,不一致就是有人没更新
   version: '1.6.1',
@@ -8,7 +10,9 @@ App({
     couple: null,
     members: [],
     partner: null,
-    ready: false
+    ready: false,
+    theme: 'sakura',
+    pendant: ''
   },
 
   onLaunch() {
@@ -49,11 +53,17 @@ App({
 
   async bootstrap() {
     try {
+      try {
+        const st = wx.getStorageSync('theme')
+        if (st) this.globalData.theme = st
+        const sp = wx.getStorageSync('pendant')
+        if (sp !== '' && sp !== undefined && sp !== null) this.globalData.pendant = sp || ''
+      } catch (e) {}
       const login = await wx.cloud.callFunction({ name: 'login' })
       if (!login || !login.result || !login.result.user) throw new Error('登录失败')
       this.globalData.openid = login.result.openid
       this.globalData.user = login.result.user
-      await this.refreshCouple()
+      await Promise.all([this.refreshCouple(), this.loadTheme()])
     } catch (err) {
       console.warn('cloud bootstrap failed', err)
       wx.showToast({ title: '网络开小差,下拉重试', icon: 'none' })
@@ -76,6 +86,7 @@ App({
   },
 
   async refreshCouple() {
+    this.globalData._coupleFetched = true
     const user = this.globalData.user
     if (!user || !user.coupleId) {
       this.globalData.couple = null
@@ -150,6 +161,44 @@ App({
       return this.globalData.partner.nickName || 'TA'
     }
     return 'TA'
+  },
+
+  async loadTheme() {
+    try {
+      const res = await wx.cloud.callFunction({ name: 'api', data: { action: 'getThemes' } })
+      const me = (res.result || {}).me || {}
+      if (me.theme) this.globalData.theme = me.theme
+      if (me.pendant !== undefined) this.globalData.pendant = me.pendant || ''
+      if (this.globalData.user) {
+        this.globalData.user.theme = this.globalData.theme
+        this.globalData.user.pendant = this.globalData.pendant
+      }
+    } catch (e) {}
+    this.applyTheme(this.globalData.theme)
+  },
+
+  applyTheme(themeId) {
+    const palette = (themeById(themeId || 'sakura') || {}).palette || {}
+    this.globalData.theme = themeId || 'sakura'
+    try {
+      wx.setNavigationBarColor({
+        frontColor: themeId === 'night' ? '#ffffff' : '#000000',
+        backgroundColor: palette.bg || '#FFF1F4',
+        animation: { duration: 200, timingFunc: 'easeIn' }
+      })
+    } catch (e) {}
+    try {
+      wx.setBackgroundColor({ backgroundColor: palette.bg || '#FFF1F4', backgroundColorTop: palette.bg || '#FFF1F4', backgroundColorBottom: palette.bg2 || '#FFE1EA' })
+    } catch (e) {}
+    // tabBar 全局换色,在 tab 页上直观可见
+    try {
+      wx.setTabBarStyle({
+        color: themeId === 'night' ? '#B8B3D6' : '#9A7F82',
+        selectedColor: palette.accent || '#E86A7A',
+        backgroundColor: themeId === 'night' ? '#2A2440' : '#FFFFFF',
+        borderStyle: themeId === 'night' ? 'white' : 'white'
+      })
+    } catch (e) {}
   },
 
   clearCoupleLocal() {

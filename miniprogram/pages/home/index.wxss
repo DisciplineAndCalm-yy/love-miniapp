@@ -80,3 +80,5 @@
 .rs-item:active{transform:scale(.98);}
 .rs-item.warn{color:#C9772A;background:#FFF3E0;border:2rpx solid #FAD9A8;}
 .rs-item.gift{color:#7A5BB5;background:linear-gradient(135deg,#F3ECFF,#E9DDFF);border:2rpx solid #DED2F6;}
+
+.home-pendant{position:absolute;right:28rpx;top:24rpx;font-size:64rpx;filter:drop-shadow(0 6rpx 12rpx rgba(0,0,0,.25));animation:pop 2.6s ease-in-out infinite;z-index:5;}

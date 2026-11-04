@@ -11,9 +11,32 @@ const TAGS = [
   { t: '日常', icon: '✨' }
 ]
 Page({
-  data: { tags: TAGS, doing: '吃饭', content: '', photos: [], saving: false },
+  data: { tags: TAGS, doing: '吃饭', content: '', photos: [], place: '', saving: false },
   pickTag(e) { this.setData({ doing: e.currentTarget.dataset.t }) },
   onContent(e) { this.setData({ content: e.detail.value }) },
+  choosePlace() {
+    wx.chooseLocation({
+      success: (res) => {
+        const name = (res && (res.name || res.address)) || ''
+        if (name) this.setData({ place: String(name).slice(0, 40) })
+      },
+      fail: (err) => {
+        const msg = String((err && err.errMsg) || '')
+        if (msg.includes('cancel')) return
+        if (msg.includes('auth') || msg.includes('permission') || msg.includes('deny')) {
+          wx.showModal({
+            title: '需要位置权限',
+            content: '请在设置里允许位置权限后再选择地点',
+            confirmText: '去设置',
+            success: (r) => { if (r.confirm && wx.openSetting) wx.openSetting({}) }
+          })
+          return
+        }
+        wx.showToast({ title: '地图选点不可用', icon: 'none' })
+      }
+    })
+  },
+  clearPlace() { this.setData({ place: '' }) },
   async addPhoto() {
     const left = 6 - this.data.photos.length
     if (left <= 0) { wx.showToast({ title: '最多6张', icon: 'none' }); return }
@@ -30,7 +53,7 @@ Page({
     if (!this.data.content.trim() && !this.data.photos.length) { wx.showToast({ title: '写点什么吧', icon: 'none' }); return }
     this.setData({ saving: true })
     try {
-      await callApi('saveMoment', { doing: this.data.doing, content: this.data.content.trim(), photos: this.data.photos })
+      await callApi('saveMoment', { doing: this.data.doing, content: this.data.content.trim(), photos: this.data.photos, place: this.data.place })
       wx.showToast({ title: '已记录' })
       wx.navigateBack()
     } catch (e) { wx.showToast({ title: '发布失败', icon: 'none' }) }

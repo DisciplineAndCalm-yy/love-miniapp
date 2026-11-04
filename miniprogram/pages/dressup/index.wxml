@@ -1,0 +1,61 @@
+<view class="page dress-page" style="background: linear-gradient(160deg, {{palette.bg}} 0%, {{palette.bg2}} 100%); min-height:100vh;">
+
+  <view class="dress-preview" style="background: {{palette.card}}; box-shadow: 0 16rpx 36rpx rgba(0,0,0,.10);">
+    <view class="prev-avatar" style="background: {{palette.accent}};">
+      <image wx:if="{{myAvatar}}" src="{{myAvatar}}" mode="aspectFill" />
+      <text wx:else class="prev-initial">{{myInitial}}</text>
+      <view wx:if="{{myPendantEmoji}}" class="prev-pendant">{{myPendantEmoji}}</view>
+    </view>
+    <view class="prev-info">
+      <view class="prev-name" style="color: {{palette.text}};">
+        <text wx:if="{{myPendantEmoji}}" class="prev-name-p">{{myPendantEmoji}}</text>{{myName}}
+      </view>
+      <view class="prev-tag" style="background: {{palette.soft}}; color: {{palette.accent2}};">
+        {{paletteName}} 主题预览
+      </view>
+    </view>
+  </view>
+
+  <view class="sec-title" style="color: {{palette.text}};">🎨 选择主题皮肤</view>
+  <view class="theme-grid">
+    <view
+      class="theme-card {{pickTheme === item.id ? 'on' : ''}}"
+      wx:for="{{themes}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="selectTheme"
+    >
+      <view class="theme-swatch" style="background: linear-gradient(150deg, {{item.palette.bg}}, {{item.palette.soft}} 55%, {{item.palette.accent}});">
+        <text class="theme-emoji">{{item.emoji}}</text>
+        <view wx:if="{{pickTheme === item.id}}" class="theme-check">✓</view>
+      </view>
+      <view class="theme-name" style="color: {{palette.text}};">{{item.name}}</view>
+      <view class="theme-desc">{{item.desc}}</view>
+    </view>
+  </view>
+
+  <view class="sec-title" style="color: {{palette.text}};">👑 头像 / 昵称挂件</view>
+  <view class="pendant-row">
+    <view
+      class="pendant-chip {{pickPendant === item.id ? 'on' : ''}}"
+      wx:for="{{pendants}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="selectPendant"
+      style="{{pickPendant === item.id ? 'border-color:' + palette.accent + ';background:' + palette.soft : ''}}"
+    >
+      <text class="pendant-emoji">{{item.emoji || '🚫'}}</text>
+      <text class="pendant-name" style="{{pickPendant === item.id ? 'color:' + palette.accent2 : ''}}">{{item.name}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{partnerPicked}}" class="partner-pick" style="background: {{palette.soft}}; color: {{palette.text}};">
+    💞 {{partnerName}} 现在选了「{{partnerThemeName}}」{{partnerPendantEmoji ? ' · 挂件 ' + partnerPendantEmoji : ''}}
+  </view>
+
+  <button class="dress-save" bindtap="save" loading="{{saving}}" disabled="{{saving}}"
+    style="background: linear-gradient(135deg, {{palette.accent}}, {{palette.accent2}});">
+    保存我的装扮 ♡
+  </button>
+  <view class="dress-tip" style="color: {{palette.sub}};">你们两个各自选择，互不影响 ♡</view>
+</view>

@@ -86,6 +86,16 @@
   justify-content: center;
 }
 
+.place-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12rpx;
+  background: #FFFAF7; border: 2rpx solid var(--line); border-radius: 18rpx;
+  padding: 22rpx 24rpx; margin-bottom: 26rpx; box-shadow: var(--shadow-sm);
+}
+.place-text { font-size: 26rpx; color: #7A5257; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.place-clear { font-size: 34rpx; color: #B79A9E; line-height: 1; padding: 0 6rpx; }
+
+.done-place, .partner-place { font-size: 24rpx; color: #B79A9E; font-weight: 700; margin-top: 10rpx; }
+
 .photo-clear {
   margin-top: 12rpx;
   color: #c94b5c;

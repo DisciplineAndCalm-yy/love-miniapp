@@ -6,6 +6,7 @@ Page({
     title: '',
     content: '',
     photos: [],
+    place: '',
     saving: false
   },
 
@@ -28,7 +29,8 @@ Page({
     this.setData({
       title: data.title,
       content: data.content,
-      photos: data.photos || []
+      photos: data.photos || [],
+      place: data.place || ''
     })
   },
 
@@ -58,6 +60,25 @@ Page({
     this.setData({ photos })
   },
 
+  choosePlace() {
+    wx.chooseLocation({
+      success: (res) => {
+        const name = (res && (res.name || res.address)) || ''
+        if (name) this.setData({ place: String(name).slice(0, 40) })
+      },
+      fail: (err) => {
+        const msg = String((err && err.errMsg) || '')
+        if (msg.includes('cancel')) return
+        if (msg.includes('auth') || msg.includes('permission') || msg.includes('deny')) {
+          wx.showModal({ title: '需要位置权限', content: '请在设置里允许位置权限后再选择地点', confirmText: '去设置', success: (r) => { if (r.confirm && wx.openSetting) wx.openSetting({}) } })
+          return
+        }
+        wx.showToast({ title: '地图选点不可用', icon: 'none' })
+      }
+    })
+  },
+  clearPlace() { this.setData({ place: '' }) },
+
   async save() {
     if (!requireCouple()) return
     const title = this.data.title.trim()
@@ -72,7 +93,8 @@ Page({
         id: this.data.id,
         title,
         content,
-        photos: this.data.photos
+        photos: this.data.photos,
+        place: this.data.place
       })
       wx.showToast({ title: this.data.id ? '已更新' : '已发布' })
       setTimeout(() => wx.navigateBack(), 400)

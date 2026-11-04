@@ -9,6 +9,12 @@
     </view>
     <view class="sec-mini">🏷️ 选个标签</view>
     <view class="tags"><view wx:for="{{tags}}" wx:key="t" class="tag {{doing===item.t?'on':''}}" data-t="{{item.t}}" bindtap="pickTag"><text class="tag-icon">{{item.icon}}</text>{{item.t}}</view></view>
+    <view class="sec-mini">📍 地点 <text class="muted">（可选）</text></view>
+    <view class="place-row" bindtap="choosePlace">
+      <text class="place-text">{{place || '选择地点 / 当前位置'}}</text>
+      <text wx:if="{{place}}" class="place-clear" catchtap="clearPlace">×</text>
+      <text wx:else class="place-go">›</text>
+    </view>
     <view class="sec-mini">💬 说点什么</view>
     <textarea class="area" maxlength="500" placeholder="比如：刚吃完午饭，困…" value="{{content}}" bindinput="onContent" cursor-spacing="80" />
     <view class="sec-mini">🖼️ 加几张照片 <text class="muted">（{{photos.length}}/6）</text></view>

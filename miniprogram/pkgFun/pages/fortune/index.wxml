@@ -1,0 +1,39 @@
+<view class="page ft-page">
+  <view class="ft-head">
+    <view class="ft-title">抽签小屋</view>
+    <view class="ft-sub">心里默念一件事，摇一摇签筒 ♡</view>
+  </view>
+
+  <view class="ft-tabs">
+    <view
+      class="ft-tab {{cur === index ? 'on' : ''}}"
+      wx:for="{{pools}}"
+      wx:key="id"
+      data-i="{{index}}"
+      bindtap="switchPool"
+    >{{item.icon}} {{item.name}}</view>
+  </view>
+
+  <view class="ft-stage">
+    <view class="ft-tube {{drawing ? 'shake' : ''}}" bindtap="draw">
+      <view class="ft-tube-inner">
+        <view class="ft-stick" wx:for="{{[0,1,2,3,4]}}" wx:key="*this"></view>
+      </view>
+      <view class="ft-tube-label">{{drawing ? preview : '点我抽一签'}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{result}}" class="ft-result">
+    <view class="ft-result-head">{{result.head}}</view>
+    <view class="ft-result-body">{{result.body}}</view>
+  </view>
+
+  <button class="ft-draw" bindtap="draw" loading="{{drawing}}" disabled="{{drawing}}">
+    {{count ? '再抽一签' : '抽一签'}}
+  </button>
+  <view class="ft-tip">已抽 {{count}} 签 · 娱乐一下，开心最重要 ♡</view>
+
+  <view class="fx-layer" wx:if="{{particles.length}}">
+    <text class="fx-p" wx:for="{{particles}}" wx:key="id" style="left:{{item.x}}%;font-size:{{item.s}}rpx;animation-delay:{{item.delay}}s;">{{item.t}}</text>
+  </view>
+</view>

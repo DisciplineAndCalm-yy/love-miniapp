@@ -1,5 +1,6 @@
 const { todayKey, buildMonthCells } = require('../../utils/date')
 const { callApi } = require('../../utils/cloud')
+const cache = require('../../utils/cache')
 
 Page({
   data: {
@@ -15,10 +16,17 @@ Page({
     dayCheckins: [],
     dayAnnis: [],
     paired: false,
-    monthSummary: { mine: 0, partner: 0, together: 0 }
+    monthSummary: { mine: 0, partner: 0, together: 0 },
+    themeBg: '#FFF1F4'
   },
 
   onShow() {
+    const app = getApp()
+    try {
+      const th = require('../../utils/theme').themeById(app.globalData.theme || 'sakura')
+      this.setData({ themeBg: (th.palette && th.palette.bg) || '#FFF1F4' })
+      app.applyTheme(app.globalData.theme)
+    } catch (e) {}
     const now = new Date()
     if (!this.data.year) {
       this.setData({
@@ -32,14 +40,33 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.render().finally(() => wx.stopPullDownRefresh())
+    this.render(true).finally(() => wx.stopPullDownRefresh())
   },
 
-  async render() {
+  async render(force) {
     const { year, month } = this.data
+    const skey = `${year}-${month}`
+    if (!force && this._lastRenderKey === skey && this._lastRenderAt && Date.now() - this._lastRenderAt < 10000) return
+    this._lastRenderKey = skey
+    this._lastRenderAt = Date.now()
     const cells = buildMonthCells(year, month)
     const monthLabel = `${year} 年 ${month + 1} 月`
     this.setData({ cells, monthLabel })
+
+    if (!force) {
+      const c = cache.get('cal_' + skey)
+      if (c && c.data) {
+        this._annis = c.data.annis || []
+        this._checkins = c.data.checkins || []
+        this.setData({
+          checkinMap: c.data.checkinMap || {},
+          anniMap: c.data.anniMap || {},
+          paired: !!c.data.paired,
+          monthSummary: c.data.monthSummary || this.data.monthSummary
+        })
+        this.refreshDay()
+      }
+    }
 
     const app = getApp()
     await app.whenReady()
@@ -106,6 +133,7 @@ Page({
     this._annis = annis.data
     this._checkins = checkinList
     this.setData({ checkinMap, anniMap, paired: true, monthSummary })
+    cache.set('cal_' + skey, { annis: annis.data, checkins: checkinList, checkinMap, anniMap, paired: true, monthSummary })
     this.refreshDay()
   },
 

@@ -1,0 +1,71 @@
+.rv-page {
+  min-height: 100vh; background: radial-gradient(120% 80% at 50% 0%, #2A1520 0%, #12080E 60%, #0B0508 100%);
+  padding: 24rpx 24rpx 50rpx; box-sizing: border-box;
+}
+
+.rv-loading, .rv-empty { padding-top: 220rpx; text-align: center; color: #C9AEB2; font-size: 28rpx; font-weight: 700; }
+.rv-empty-icon { font-size: 96rpx; display: block; margin-bottom: 18rpx; }
+.rv-empty-title { font-size: 34rpx; font-weight: 900; color: #F3D9E0; }
+.rv-empty-sub { margin-top: 10rpx; font-size: 24rpx; color: #9A8589; }
+
+.rv-stage {
+  position: relative; width: 100%; height: 900rpx; border-radius: 32rpx; overflow: hidden;
+  background: #1a0f16; box-shadow: 0 30rpx 70rpx rgba(0,0,0,.55), inset 0 0 0 2rpx rgba(255,255,255,.08);
+}
+.rv-img {
+  position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+  opacity: 0; transform: scale(1.12);
+  transition: opacity .6s ease, transform 3.2s ease;
+}
+.rv-img.on { opacity: 1; transform: scale(1.02); }
+.rv-vignette {
+  position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,0) 28%, rgba(0,0,0,0) 55%, rgba(0,0,0,.62) 100%);
+}
+.rv-top {
+  position: absolute; top: 26rpx; left: 30rpx; right: 30rpx;
+  display: flex; align-items: baseline; justify-content: space-between;
+}
+.rv-year { font-size: 46rpx; font-weight: 900; color: #fff; letter-spacing: 3rpx; text-shadow: 0 4rpx 14rpx rgba(0,0,0,.6); }
+.rv-brand { font-size: 24rpx; font-weight: 800; color: rgba(255,255,255,.82); }
+.rv-caption {
+  position: absolute; left: 30rpx; right: 30rpx; bottom: 52rpx;
+  animation: rvCapIn .8s ease .2s both;
+}
+.rv-cap-date { font-size: 24rpx; font-weight: 800; color: rgba(255,255,255,.85); letter-spacing: 1rpx; }
+.rv-cap-text {
+  margin-top: 10rpx; font-size: 30rpx; font-weight: 800; color: #fff; line-height: 1.5;
+  text-shadow: 0 4rpx 16rpx rgba(0,0,0,.7);
+}
+.rv-progress {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 6rpx; background: rgba(255,255,255,.18);
+}
+.rv-progress-fill {
+  height: 100%; background: linear-gradient(90deg, #FF9FB6, #E14E68);
+  transition: width .5s ease;
+}
+
+.rv-controls { display: flex; align-items: center; justify-content: center; gap: 40rpx; margin-top: 34rpx; }
+.rv-btn {
+  width: 92rpx; height: 92rpx; line-height: 92rpx; text-align: center; border-radius: 50%;
+  font-size: 32rpx; color: #EAD9DE; background: rgba(255,255,255,.1);
+  box-shadow: inset 0 0 0 2rpx rgba(255,255,255,.14);
+}
+.rv-btn.main {
+  width: 120rpx; height: 120rpx; line-height: 120rpx; font-size: 44rpx; color: #fff;
+  background: linear-gradient(135deg,#FF8FA8,#E14E68);
+  box-shadow: 0 12rpx 28rpx rgba(225,78,104,.5), inset 0 3rpx 0 rgba(255,255,255,.4);
+}
+.rv-btn:active { transform: scale(.94); }
+
+.rv-info { text-align: center; margin-top: 26rpx; font-size: 24rpx; color: #C9AEB2; font-weight: 700; }
+.rv-save {
+  margin: 22rpx auto 0; text-align: center; width: fit-content;
+  font-size: 24rpx; font-weight: 800; color: #F3D9E0;
+  padding: 12rpx 30rpx; border-radius: 999rpx; background: rgba(255,255,255,.08);
+}
+.rv-webgl { position: fixed; left: -9999px; top: -9999px; width: 720px; height: 1280px; }
+.rv-actions { display: flex; gap: 18rpx; justify-content: center; margin-top: 26rpx; }
+.rv-synth { background: linear-gradient(135deg,#FF9FB6,#E14E68); color: #fff; }
+
+@keyframes rvCapIn { 0% { opacity: 0; transform: translateY(16rpx); } 100% { opacity: 1; transform: translateY(0); } }

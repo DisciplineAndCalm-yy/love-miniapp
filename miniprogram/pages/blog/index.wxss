@@ -31,6 +31,7 @@
   -webkit-line-clamp: 3;
   overflow: hidden;
 }
+.post-place { font-size: 24rpx; color: #B79A9E; font-weight: 700; margin-top: 8rpx; }
 .thumb-row {
   display: flex;
   gap: 12rpx;

@@ -1,4 +1,6 @@
+<import src="/templates/loading.wxml" />
 <view class="page report-page">
+  <template is="cute-loading" data="{{show: loading, text: '正在生成恋爱报告…'}}" />
   <view wx:if="{{loading}}" class="muted center">正在生成你们的恋爱报告… ♡</view>
 
   <block wx:elif="{{paired}}">
@@ -35,6 +37,7 @@
     </view>
 
     <button class="btn-primary report-save" bindtap="savePoster">保存 / 截屏收藏</button>
+    <view class="report-mood" hover-class="report-mood-hover" bindtap="goMoodBoard">📈 心情曲线 &amp; 热力图</view>
     <view class="report-hint">点右上角「···」可分享给 TA ♡</view>
   </block>
 

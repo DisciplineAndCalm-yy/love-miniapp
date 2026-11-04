@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page" style="background: {{themeBg}};">
   <view class="cal-hero">
     <text class="cal-cloud c1">☁️</text>
     <text class="cal-cloud c2">☁️</text>
@@ -68,6 +68,7 @@
         </view>
       </view>
       <view class="ci-content" wx:if="{{item.content}}">{{item.content}}</view>
+      <view class="ci-place" wx:if="{{item.place}}">📍 {{item.place}}</view>
       <image wx:if="{{item.photoUrl || item.photo}}" class="ci-photo" src="{{item.photoUrl || item.photo}}" mode="aspectFill" data-url="{{item.photoUrl || item.photo}}" data-id="{{item._id}}" bindtap="previewPhoto" binderror="photoError" />
     </view>
     <button class="btn-ghost" wx:if="{{!paired}}" style="margin-top: 24rpx;" bindtap="goBind">去绑定</button>

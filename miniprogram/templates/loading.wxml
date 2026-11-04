@@ -1,0 +1,15 @@
+<template name="cute-loading">
+  <view class="cl-mask" wx:if="{{show}}">
+    <view class="cl-box">
+      <view class="cl-stage">
+        <text class="cl-heart cl-h1">💗</text>
+        <text class="cl-heart cl-h2">💕</text>
+        <text class="cl-heart cl-h3">💖</text>
+        <view class="cl-mascot">🐰</view>
+        <view class="cl-shadow"></view>
+      </view>
+      <view class="cl-dots"><text></text><text></text><text></text></view>
+      <view class="cl-text">{{text || '马上就回来啦 ♡'}}</view>
+    </view>
+  </view>
+</template>

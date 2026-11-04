@@ -64,5 +64,9 @@ Page({
 
   savePoster() {
     wx.showToast({ title: '长按图片或直接截屏保存吧 ♡', icon: 'none' })
+  },
+
+  goMoodBoard() {
+    wx.navigateTo({ url: '/pages/moodboard/index' })
   }
 })

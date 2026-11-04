@@ -19,7 +19,10 @@
 我们        绑定情侣、纪念日管理、资料
 消息中心    点赞/评论/表情/签到/晚安聚合 + 微信订阅提醒入口
 亲密度      经验等级、统计、约 60 个成就徽章（从易到难）
-相册        全站图片时间轴（拍立得墙）+ 往年今日时光机
+相册        全站图片时间轴（拍立得墙）+ 往年今日时光机 + 看图浮层（含地点）
+心情看板    双方心情折线/分布，回看情绪变化
+回忆视频    照片动效轮播 + 温馨 BGM + 实验性合成 MP4
+装扮        主题皮肤（粉樱/星夜/奶油）+ 头像挂件，保存后全局生效
 我们的小事  共同待办 / 便签 / 账本 / 到家报平安
 恋爱报告    在一起统计 + 最近心情轨迹，可分享
 回忆册      canvas 长图：天数/等级/统计/成就，可保存相册或分享
@@ -81,6 +84,26 @@
 - 聚合在一起天数、亲密度等级、签到/动态/文章/消息/晚安/互动统计。
 - 最近 28 条签到心情以轻量表情轨迹呈现，可通过微信分享卡片分享给 TA。
 
+### 10. 主题皮肤与挂件
+
+- 三套主题：粉樱（sakura）/ 星夜（night）/ 奶油（cream），定义在 `utils/theme.js` 的 `THEMES`（含 bg/bg2/card/text/sub/accent/soft/ring 调色板）与 `PENDANTS` 挂件列表。
+- 装扮页选择主题与挂件 → `saveTheme` 存到 `users.theme / users.pendant`；同时写本地 `wx.setStorageSync('theme'/'pendant')` 兜底。
+- `app.applyTheme(themeId)` 统一设置导航栏颜色、`wx.setBackgroundColor`、`wx.setTabBarStyle`；首页/签到/日历/空间/悄悄话根节点绑定 `themeBg`。启动时 `loadTheme` 从云或本地恢复，立即生效。
+- 首页 hero 右上角渲染挂件 emoji；个人中心显示双方挂件。
+
+### 11. 地点标注
+
+- 签到、动态、文章均可选填地点（`wx.chooseLocation` → `place` 字符串，最长 40 字）。
+- 展示位置：签到页「我的/TA 的」卡片、动态列表与详情、文章列表与详情、日历当日签到、相册看图浮层。
+- 日历通过 `listMonthCheckins` 返回的 `place` 同步展示；文章照片在 `albumList` 里也带 `place`，可纳入按地点筛选。
+
+### 12. 性能优化
+
+- 启动：`refreshCouple` 与 `loadTheme` 并行；主题/挂件本地优先；`_coupleFetched` 避免重复拉取。
+- 首页：7 个统计请求 `Promise.all` 并行；15s 新鲜度缓存；`getWeather` 服务端 30 分钟缓存。
+- 感知速度：首页/签到/空间用**骨架屏**，其余数据页用**可爱 loading 动画**（`templates/loading.wxml` + `app.wxss`）。
+- 本地缓存：`utils/cache.js` 做 stale-while-revalidate，先渲染上次数据再后台刷新（首页/签到/空间/日历）。
+
 ## 云数据库
 
 ### users
@@ -94,6 +117,8 @@
 | `remindEnabled` | 是否打开纪念日订阅提醒 |
 | `noticePush` / `noticeQuota` | 互动微信提醒：是否开启 / 剩余订阅额度（订阅 +1、成功推送 −1 软估算） |
 | `locCity` / `locLat` / `locLon` | 天气用的城市与坐标（定位或手填） |
+| `theme` / `pendant` | 主题皮肤 id（`sakura`/`night`/`cream`）与头像挂件 id（`heart`/`star`/…） |
+| `weatherCache` | 天气结果缓存 `{ key, at, data }`，30 分钟内复用，减少外部接口等待 |
 | `period` | 生理期设置 `{ lastStart, cycle, period, share, updatedAt }`，`share:false` 表示对方不可见 |
 | `createdAt` | 时间戳 |
 
@@ -117,6 +142,7 @@
 | `mood` | `love` `miss` `calm` `busy` `sad` |
 | `content` | 一句话 |
 | `photo` | 云存储 fileID，可选 |
+| `place` | 签到地点名称（地图选点，最长 40 字），可选 |
 | `createdAt` | 时间戳 |
 
 唯一建议：`coupleId + dateKey + _openid`。
@@ -130,6 +156,7 @@
 | `title` | |
 | `content` | |
 | `photos` | fileID 数组 |
+| `place` | 文章地点名称，可选 |
 | `createdAt` / `updatedAt` | |
 
 ### anniversaries
@@ -155,6 +182,7 @@
 | `doing` | 标签（吃饭/午睡/…，最长 8 字） |
 | `content` | 正文（最长 500 字） |
 | `photos` | fileID 数组，最多 6 张 |
+| `place` | 动态地点名称，可选 |
 | `createdAt` / `updatedAt` | |
 
 ### pets
@@ -270,7 +298,12 @@
 - 生理期小助手：周期记录、下次/排卵日/易孕期预测，默认对方可见可关
 - 7 个互动玩法：扭蛋机 / 默契考验 / 心愿瓶 / 掷骰子 / 真心话 / 晚安打卡 / 双人冒险
 - 双人冒险：3 条故事线、每条 30 组专属奇遇事件（共 90 组）+ 10 种专属怪物（共 30 种）、回合制战斗、装备掉落、宠物助战、多结局
-- 相册：签到/动态/文章图片自动汇成时间轴「拍立得」墙 + 往年今日时光机
+- 相册：签到/动态/文章图片自动汇成时间轴「拍立得」墙 + 往年今日时光机 + 看图浮层（含地点）
+- 主题皮肤：粉樱/星夜/奶油三套 + 头像挂件，保存后导航栏/tabBar/页面背景全局生效
+- 地点标注：签到/动态/文章支持地图选点，签到页/动态/文章/日历/相册同步展示 `📍 地点`
+- 心情看板：双方心情趋势与分布
+- 回忆视频：照片动效轮播 + 温馨 BGM（可静音），并尝试 WebGL 逐帧录制合成 MP4（失败自动回退保存画面）
+- 性能：并行请求 + 骨架屏 + 可爱 loading + 本地缓存（stale-while-revalidate）
 - 我们的小事：共同待办（指派/勾选/截止日）、便签墙、共同账本（合计 + 分账 + 近 6 月柱状图 + 类别占比）、到家报平安
 - 恋爱报告：在一起天数/等级/多维统计 + 最近心情轨迹，可分享
 - 回忆册：canvas 长图（天数/等级/统计/成就），可保存到相册或分享

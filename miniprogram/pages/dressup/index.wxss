@@ -1,0 +1,73 @@
+.dress-page { padding: 28rpx 24rpx 60rpx; box-sizing: border-box; transition: background .3s ease; }
+
+.dress-preview {
+  display: flex; align-items: center; gap: 24rpx;
+  padding: 26rpx 28rpx; border-radius: 28rpx;
+}
+.prev-avatar {
+  position: relative; width: 112rpx; height: 112rpx; border-radius: 50%; flex: none;
+  display: flex; align-items: center; justify-content: center; overflow: visible;
+  box-shadow: inset 0 -6rpx 12rpx rgba(0,0,0,.18), inset 0 6rpx 10rpx rgba(255,255,255,.4);
+}
+.prev-avatar image { width: 100%; height: 100%; border-radius: 50%; }
+.prev-initial { font-size: 48rpx; color: #fff; font-weight: 900; }
+.prev-pendant {
+  position: absolute; right: -10rpx; bottom: -6rpx; font-size: 40rpx; line-height: 1;
+  filter: drop-shadow(0 4rpx 6rpx rgba(0,0,0,.25)); animation: pendantBob 2s ease-in-out infinite;
+}
+.prev-info { flex: 1; min-width: 0; }
+.prev-name { font-size: 38rpx; font-weight: 900; display: flex; align-items: center; gap: 8rpx; }
+.prev-name-p { font-size: 34rpx; }
+.prev-tag {
+  display: inline-block; margin-top: 12rpx; font-size: 22rpx; font-weight: 800;
+  padding: 8rpx 20rpx; border-radius: 999rpx;
+}
+
+.sec-title { font-size: 28rpx; font-weight: 900; margin: 34rpx 6rpx 18rpx; }
+
+.theme-grid { display: flex; gap: 18rpx; }
+.theme-card {
+  flex: 1; background: rgba(255,255,255,.85); border-radius: 22rpx; padding: 12rpx;
+  border: 3rpx solid transparent; transition: transform .15s ease, border-color .15s ease;
+  box-shadow: 0 8rpx 18rpx rgba(120,90,90,.1);
+}
+.theme-card.on { transform: translateY(-6rpx); border-color: #E14E68; box-shadow: 0 14rpx 26rpx rgba(225,78,104,.28); }
+.theme-swatch {
+  position: relative; height: 130rpx; border-radius: 16rpx;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 3rpx 0 rgba(255,255,255,.6), inset 0 -6rpx 12rpx rgba(0,0,0,.12);
+}
+.theme-emoji { font-size: 56rpx; filter: drop-shadow(0 4rpx 6rpx rgba(0,0,0,.22)); }
+.theme-check {
+  position: absolute; top: 8rpx; right: 8rpx; width: 36rpx; height: 36rpx; border-radius: 50%;
+  background: #E14E68; color: #fff; font-size: 24rpx; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4rpx 8rpx rgba(0,0,0,.2);
+}
+.theme-name { text-align: center; font-size: 26rpx; font-weight: 900; margin-top: 14rpx; }
+.theme-desc { text-align: center; font-size: 20rpx; color: #A98E92; margin-top: 4rpx; }
+
+.pendant-row { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.pendant-chip {
+  flex: 1 1 28%; min-width: 150rpx; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: center; gap: 6rpx;
+  padding: 18rpx 8rpx; border-radius: 20rpx; background: rgba(255,255,255,.85);
+  border: 3rpx solid transparent; transition: transform .15s ease;
+}
+.pendant-chip.on { transform: translateY(-4rpx); }
+.pendant-emoji { font-size: 44rpx; line-height: 1; }
+.pendant-name { font-size: 22rpx; font-weight: 800; color: #7A5A5F; }
+
+.partner-pick {
+  margin-top: 28rpx; padding: 20rpx 24rpx; border-radius: 20rpx;
+  font-size: 24rpx; font-weight: 700; line-height: 1.5;
+}
+
+.dress-save {
+  margin-top: 34rpx; height: 96rpx; line-height: 96rpx; border-radius: 999rpx;
+  color: #fff; font-size: 30rpx; font-weight: 900; letter-spacing: .06em;
+  box-shadow: 0 10rpx 0 rgba(0,0,0,.16), 0 16rpx 28rpx rgba(0,0,0,.18);
+}
+.dress-tip { text-align: center; font-size: 22rpx; margin-top: 20rpx; }
+
+@keyframes pendantBob { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-4rpx) rotate(6deg); } }

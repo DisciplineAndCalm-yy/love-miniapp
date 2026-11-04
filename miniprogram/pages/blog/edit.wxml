@@ -10,6 +10,10 @@
       <view class="thumb add" wx:if="{{photos.length < 9}}" bindtap="addPhoto">+</view>
     </view>
     <view class="muted" style="margin-bottom: 24rpx;">最多 9 张图 · 点 × 可移除</view>
+    <view class="place-row" bindtap="choosePlace">
+      <text class="place-text">{{place ? '📍 ' + place : '📍 添加地点（可选）'}}</text>
+      <text wx:if="{{place}}" class="place-clear" catchtap="clearPlace">×</text>
+    </view>
     <button class="btn-primary" loading="{{saving}}" bindtap="save">{{id ? '保存修改' : '发布到空间'}}</button>
   </view>
 </view>

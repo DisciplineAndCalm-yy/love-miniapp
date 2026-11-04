@@ -56,6 +56,13 @@
 .p-foot { margin-top: 28rpx; font-size: 24rpx; color: #B0797F; font-weight: 700; line-height: 1.6; }
 
 .report-save { margin-top: 4rpx; }
+.report-mood {
+  margin-top: 20rpx; height: 84rpx; line-height: 84rpx; text-align: center;
+  font-size: 28rpx; font-weight: 900; color: #C9405A; border-radius: 999rpx;
+  background: linear-gradient(135deg, #FFF0F4, #FFDFE8);
+  box-shadow: 0 8rpx 0 #F3C9D4, 0 12rpx 20rpx rgba(225,120,140,.22), inset 0 3rpx 0 #fff;
+}
+.report-mood-hover { transform: translateY(3rpx) scale(.99); box-shadow: 0 3rpx 0 #F3C9D4, 0 6rpx 12rpx rgba(225,120,140,.2); }
 .report-hint { text-align: center; font-size: 22rpx; color: #C0A3A7; margin-top: 16rpx; }
 .empty-card { text-align: center; padding: 60rpx 30rpx; }
 .empty-icon { font-size: 82rpx; display: block; margin-bottom: 12rpx; animation: heartbeat 2.4s ease-in-out infinite; }

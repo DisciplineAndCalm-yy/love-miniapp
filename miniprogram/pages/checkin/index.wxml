@@ -1,5 +1,11 @@
-<view class="page">
-  <view class="empty-bind" wx:if="{{!paired}}">
+<view class="page" style="background: {{themeBg}};">
+  <view class="sk-overlay" wx:if="{{!loaded}}" style="background: {{themeBg}};">
+    <view class="sk-hero sk-shimmer" style="height:180rpx;"></view>
+    <view class="sk-card sk-shimmer" style="height:300rpx;"></view>
+    <view class="sk-card sk-shimmer" style="height:220rpx;"></view>
+    <view class="sk-tip">正在准备今天的签到…</view>
+  </view>
+  <view class="empty-bind" wx:if="{{loaded && !paired}}">
     <view class="title">打卡需要两个人的空间</view>
     <view class="muted" style="margin: 16rpx 0 32rpx;">先绑定情侣，再把今天的心情留给对方。</view>
     <button class="btn-primary" bindtap="goBind">去绑定</button>
@@ -64,6 +70,10 @@
         </block>
         <view wx:else class="photo-add" bindtap="onPickPhoto">📷 添加一张图（可选）</view>
       </view>
+      <view class="place-row" bindtap="choosePlace">
+        <text class="place-text">{{place ? '📍 ' + place : '📍 添加地点（可选）'}}</text>
+        <text wx:if="{{place}}" class="place-clear" catchtap="clearPlace">×</text>
+      </view>
       <button class="btn-primary" loading="{{saving}}" bindtap="onSubmit">完成签到 ♡</button>
       <button class="btn-ghost" bindtap="goMoments" style="margin-top:20rpx">去记录日常动态 →</button>
     </view>
@@ -74,6 +84,7 @@
       <view class="muted" style="margin: 8rpx 0 20rpx;">明天记得再来盖一次章哦 ♡</view>
       <view class="done-mood">{{mine.mood ? moodMap[mine.mood] : ''}}</view>
       <view class="done-content" wx:if="{{mine.content}}">{{mine.content}}</view>
+      <view class="done-place" wx:if="{{mine.place}}">📍 {{mine.place}}</view>
       <image wx:if="{{mine.photoUrl || mine.photo}}" src="{{mine.photoUrl || mine.photo}}" mode="aspectFill" class="photo" data-url="{{mine.photoUrl || mine.photo}}" bindtap="previewPhoto" />
       <view class="done-inter">
         <view class="di-item">❤️ {{mine.likeCount || 0}}</view>
@@ -93,6 +104,7 @@
         <view class="title">{{partnerName}} 今天</view>
       </view>
       <view class="partner-line">{{partnerMoodLabel}} · {{partner.content || '打卡了'}}</view>
+      <view class="partner-place" wx:if="{{partner.place}}">📍 {{partner.place}}</view>
       <image wx:if="{{partnerPhotoUrl || partner.photo}}" src="{{partnerPhotoUrl || partner.photo}}" mode="aspectFill" class="photo" data-url="{{partnerPhotoUrl || partner.photo}}" bindtap="previewPhoto" binderror="partnerPhotoError" />
 
       <view class="interact-bar">

@@ -1,4 +1,6 @@
+<import src="/templates/loading.wxml" />
 <view class="page mem-page">
+  <template is="cute-loading" data="{{show: loading, text: '正在整理回忆册…'}}" />
   <view class="mem-bg">
     <image class="mem-bg-img" src="/assets/deco/hearts.svg" mode="aspectFit" />
   </view>

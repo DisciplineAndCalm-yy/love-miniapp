@@ -1,4 +1,6 @@
+<import src="/templates/loading.wxml" />
 <view class="page life-page">
+  <template is="cute-loading" data="{{show: loading, text: '正在加载生活清单…'}}" />
   <view class="life-hero">
     <view class="deco-layer" aria-hidden="true">
       <text class="pt pt1">🏠</text>

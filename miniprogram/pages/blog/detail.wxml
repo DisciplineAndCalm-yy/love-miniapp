@@ -4,6 +4,7 @@
     <view class="pill">💌 我们的长信</view>
     <view class="title detail-title">{{post.title}}</view>
     <view class="author-chip">✎ {{authorName}} · {{timeText}}</view>
+    <view class="detail-place" wx:if="{{post.place}}">📍 {{post.place}}</view>
     <text class="body" user-select>{{post.content}}</text>
     <image
       wx:for="{{post.photos}}"

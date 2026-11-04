@@ -1,0 +1,39 @@
+.g24-page { padding: 30rpx 26rpx 60rpx; box-sizing: border-box; }
+
+.g24-head { text-align: center; margin-bottom: 20rpx; }
+.g24-title { font-size: 48rpx; font-weight: 900; color: #C9405A; letter-spacing: 2rpx; }
+.g24-sub { margin-top: 10rpx; font-size: 24rpx; color: #B79A9E; font-weight: 700; line-height: 1.5; }
+.g24-stats { display: flex; justify-content: center; gap: 22rpx; margin-top: 16rpx; }
+.g24-stat { font-size: 22rpx; font-weight: 800; color: #A98E92; background: #FFF0F4; padding: 6rpx 20rpx; border-radius: 999rpx; }
+.g24-stat.ok { color: #C9405A; }
+
+.g24-cards { display: flex; justify-content: center; gap: 18rpx; margin: 28rpx 0; }
+.g24-card {
+  width: 128rpx; height: 168rpx; border-radius: 20rpx;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 76rpx; font-weight: 900; color: #C9405A;
+  background: linear-gradient(160deg, #FFFFFF, #FFE9EF);
+  box-shadow: 0 10rpx 0 #F3C9D4, 0 16rpx 26rpx rgba(225,120,140,.28), inset 0 4rpx 0 #fff;
+}
+
+.g24-input-wrap { margin-top: 10rpx; }
+.g24-input {
+  height: 96rpx; line-height: 96rpx; padding: 0 28rpx; border-radius: 20rpx;
+  background: #fff; font-size: 34rpx; font-weight: 800; color: #5C4448;
+  box-shadow: inset 0 2rpx 6rpx rgba(0,0,0,.06), 0 8rpx 20rpx rgba(200,160,170,.16);
+}
+.g24-tip { margin-top: 14rpx; font-size: 22rpx; color: #B79A9E; text-align: center; }
+
+.g24-status { margin-top: 22rpx; padding: 20rpx 24rpx; border-radius: 18rpx; font-size: 26rpx; font-weight: 800; text-align: center; }
+.g24-status.ok { background: #EAF7EE; color: #2E9E5B; }
+.g24-status.warn { background: #FFF4E6; color: #C98A38; }
+
+.g24-answer { margin-top: 22rpx; padding: 20rpx 24rpx; border-radius: 18rpx; background: linear-gradient(135deg,#FFF6F8,#FFECF1); font-size: 26rpx; font-weight: 800; color: #7A5A5F; text-align: center; }
+.g24-answer-expr { color: #C9405A; }
+
+.g24-actions { display: flex; gap: 18rpx; margin-top: 30rpx; }
+.g24-btn { flex: 1; }
+.g24-next {
+  margin-top: 22rpx; height: 84rpx; line-height: 84rpx; border-radius: 999rpx;
+  font-size: 26rpx; font-weight: 800; color: #9A8589; background: #F3EEEB; border: none;
+}

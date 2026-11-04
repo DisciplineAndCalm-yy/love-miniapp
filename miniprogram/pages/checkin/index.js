@@ -3,6 +3,8 @@ const { requireCouple, uploadImage, fileIDToURL, fileIDsToURLs, callApi } = requ
 const interact = require('../../utils/interact')
 const { MOOD_LIST, moodLabel, MOOD_MAP, QUICK_CHECKINS } = require('../../utils/mood')
 const { dailyPraise } = require('../../utils/praise')
+const { themeById } = require('../../utils/theme')
+const cache = require('../../utils/cache')
 
 const COND_EMOJI = { sunny: '☀️', cloudy: '☁️', rain: '🌧️', snow: '❄️', thunder: '⛈️', fog: '🌫️', general: '🌤️' }
 
@@ -14,6 +16,8 @@ Page({
     mood: 'love',
     content: '',
     photo: '',
+    place: '',
+    themeBg: '#FFF1F4',
     mine: null,
     partner: null,
     partnerName: 'TA',
@@ -21,6 +25,7 @@ Page({
     streaks: { mine: 0, partner: 0, together: 0 },
     saving: false,
     paired: false,
+    loaded: false,
     weather: null,
     weatherEmoji: '🌤️',
     praise: '',
@@ -44,16 +49,32 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.load().finally(() => wx.stopPullDownRefresh())
+    this.load(true).finally(() => wx.stopPullDownRefresh())
   },
 
-  async load() {
+  async load(force) {
+    if (!force && this._lastLoadAt && Date.now() - this._lastLoadAt < 10000) return
+    this._lastLoadAt = Date.now()
     const app = getApp()
     await app.whenReady()
-    const couple = app.globalData.couple
+    try {
+      const palette = (themeById(app.globalData.theme || 'sakura') || {}).palette || {}
+      this.setData({ themeBg: palette.bg || '#FFF1F4' })
+      app.applyTheme(app.globalData.theme)
+    } catch (e) {}
+    if (!force) {
+      const c = cache.get('checkin')
+      if (c && c.data) this.setData(Object.assign({ loaded: true }, c.data))
+    }
+    let couple = app.globalData.couple
+    if (!couple && !app.globalData._coupleFetched) {
+      await app.refreshCouple()
+      couple = app.globalData.couple
+    }
     if (!couple) {
       this.setData({
         paired: false,
+        loaded: true,
         mine: null,
         partner: null,
         streaks: { mine: 0, partner: 0, together: 0 }
@@ -61,25 +82,18 @@ Page({
       return
     }
     const today = todayKey()
-    let todayList = []
-    try {
-      const res = await callApi('todayCheckins', { dateKey: today }, { silent: true })
-      todayList = res.list || []
-    } catch (err) {
-      console.warn('todayCheckins failed', err)
-    }
+    const [todayRes, streakRes] = await Promise.all([
+      callApi('todayCheckins', { dateKey: today }, { silent: true }).catch(() => ({})),
+      callApi('getStreaks', {}, { silent: true }).catch(() => ({}))
+    ])
+    const todayList = (todayRes && todayRes.list) || []
     const mine = todayList.find((item) => item.isMine) || null
     const partner = todayList.find((item) => !item.isMine) || null
     const partnerInfo = app.globalData.partner
-    let streaks = this.data.streaks
-    try {
-      const stats = await callApi('getStreaks', {}, { silent: true })
-      streaks = stats.streaks
-    } catch (err) {
-      console.warn(err)
-    }
+    const streaks = (streakRes && streakRes.streaks) || this.data.streaks
     const patch = {
       paired: true,
+      loaded: true,
       mine,
       partner,
       partnerName: (partner && partner.authorName) || (partnerInfo && partnerInfo.nickName) || 'TA',
@@ -97,8 +111,16 @@ Page({
       patch.content = mine.content || ''
       patch.photo = mine.photo || ''
       patch.photoUrl = mine.photoUrl || ''
+      patch.place = mine.place || ''
     }
     this.setData(patch)
+    cache.set('checkin', {
+      mine, partner,
+      partnerName: patch.partnerName, partnerInitial: patch.partnerInitial,
+      partnerMoodLabel: patch.partnerMoodLabel, partnerAvatarUrl: patch.partnerAvatarUrl,
+      partnerPhotoUrl: patch.partnerPhotoUrl, streaks,
+      mood: patch.mood, content: patch.content, photo: patch.photo, photoUrl: patch.photoUrl, place: patch.place
+    })
     this.loadWeather(today)
     if (partner) this.loadTaInteractions(partner._id)
   },
@@ -251,6 +273,30 @@ Page({
     wx.navigateTo({ url: '/pages/moments/index' })
   },
 
+  choosePlace() {
+    wx.chooseLocation({
+      success: (res) => {
+        const name = (res && (res.name || res.address)) || ''
+        if (name) this.setData({ place: String(name).slice(0, 40) })
+      },
+      fail: (err) => {
+        const msg = String((err && err.errMsg) || '')
+        if (msg.includes('cancel')) return
+        if (msg.includes('auth') || msg.includes('permission') || msg.includes('deny')) {
+          wx.showModal({
+            title: '需要位置权限',
+            content: '请在设置里允许位置权限后再选择地点',
+            confirmText: '去设置',
+            success: (r) => { if (r.confirm && wx.openSetting) wx.openSetting({}) }
+          })
+          return
+        }
+        wx.showToast({ title: '地图选点不可用', icon: 'none' })
+      }
+    })
+  },
+  clearPlace() { this.setData({ place: '' }) },
+
   goCalendar() {
     wx.switchTab({ url: '/pages/calendar/index' })
   },
@@ -282,12 +328,13 @@ Page({
       const res = await callApi('saveCheckin', {
         mood: this.data.mood,
         content: this.data.content.trim(),
-        photo: this.data.photo
+        photo: this.data.photo,
+        place: this.data.place
       })
       this.setData({ streaks: res.streaks })
       wx.showToast({ title: '已盖章 ♡' })
       this.celebrate()
-      this.load()
+      this.load(true)
     } catch (err) {
       console.error(err)
     } finally {

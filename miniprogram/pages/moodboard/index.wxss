@@ -1,0 +1,67 @@
+.mb-page { padding: 24rpx 24rpx 40rpx; }
+.mb-loading { padding: 120rpx 0; }
+
+.mb-head { padding: 6rpx 8rpx 18rpx; }
+.mb-title { font-size: 44rpx; font-weight: 900; color: #C9405A; letter-spacing: 1rpx; }
+.mb-sub { margin-top: 8rpx; font-size: 24rpx; color: #B79A9E; font-weight: 700; }
+
+.mb-card {
+  background: #fff;
+  border-radius: 28rpx;
+  padding: 26rpx 24rpx;
+  margin-bottom: 22rpx;
+  box-shadow: 0 12rpx 30rpx rgba(200, 150, 160, .14);
+  position: relative;
+  overflow: hidden;
+}
+.mb-card-title { font-size: 28rpx; font-weight: 900; color: #7A5A5F; margin-bottom: 16rpx; }
+
+/* 折线图 */
+.mb-legend { display: flex; gap: 26rpx; margin-bottom: 8rpx; }
+.mb-legend .lg { display: flex; align-items: center; gap: 8rpx; font-size: 22rpx; color: #8A6A6F; font-weight: 700; }
+.mb-legend .dot { width: 18rpx; height: 18rpx; border-radius: 50%; }
+.mb-legend .dot.mine { background: #E14E68; }
+.mb-legend .dot.partner { background: #5B8DEF; }
+.mb-canvas { width: 100%; height: 300rpx; }
+.mb-xaxis { display: flex; justify-content: space-between; font-size: 20rpx; color: #C0A3A7; margin-top: 6rpx; }
+.mb-empty { margin-top: 12rpx; text-align: center; font-size: 22rpx; color: #C0A3A7; }
+
+/* 热力图 */
+.heat-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 46rpx);
+  grid-template-columns: repeat(9, 1fr);
+  gap: 8rpx;
+  margin-top: 6rpx;
+}
+.heat-cell { border-radius: 8rpx; background: #F3EEF0; }
+.hl-0 { background: #F3EEF0; }
+.hl-1 { background: #FFE1E9; }
+.hl-2 { background: #FFB9CC; }
+.hl-3 { background: #FF81A3; }
+.hl-4 { background: #E14E68; }
+.heat-legend { display: flex; align-items: center; justify-content: flex-end; gap: 8rpx; margin-top: 16rpx; font-size: 20rpx; }
+.heat-mini { width: 22rpx; height: 22rpx; border-radius: 6rpx; }
+.mb-heat-tip { margin-top: 10rpx; text-align: right; font-size: 22rpx; color: #B79A9E; }
+
+/* 看板 */
+.board-row { display: flex; gap: 16rpx; }
+.board-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 22rpx 8rpx; border-radius: 22rpx;
+  background: linear-gradient(160deg, #FFF3F6, #FFE7EE);
+  box-shadow: inset 0 2rpx 0 #fff, 0 6rpx 14rpx rgba(225,120,140,.12);
+}
+.bi-val { font-size: 44rpx; font-weight: 900; color: #E14E68; line-height: 1.1; }
+.bi-label { margin-top: 6rpx; font-size: 21rpx; color: #B0797F; font-weight: 700; text-align: center; }
+.mb-summary {
+  margin-top: 20rpx; padding: 18rpx 20rpx; border-radius: 20rpx;
+  font-size: 24rpx; line-height: 1.6; color: #7A5A5F; font-weight: 700;
+  background: linear-gradient(135deg, #FFF6F8, #FFECF1);
+  border: 2rpx solid #FBE0E4;
+}
+
+.empty-card { text-align: center; padding: 60rpx 30rpx; }
+.empty-icon { font-size: 82rpx; display: block; margin-bottom: 12rpx; animation: mbHeartbeat 2.4s ease-in-out infinite; }
+@keyframes mbHeartbeat { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.12); } 60% { transform: scale(1); } }

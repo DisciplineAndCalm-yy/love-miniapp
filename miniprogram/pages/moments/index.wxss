@@ -25,6 +25,7 @@
 .tl-author{font-size:24rpx;color:#B79A9E;margin:6rpx 0}
 .tl-author::before{content:"✎ ";}
 .tl-content{font-size:29rpx;line-height:1.7;margin:8rpx 0}
+.tl-place{font-size:24rpx;color:#B79A9E;font-weight:700;margin:6rpx 0 4rpx;}
 .pics{display:flex;flex-wrap:wrap;gap:12rpx;margin-top:12rpx}
 .pic{width:190rpx;height:190rpx;border-radius:18rpx;border:2rpx solid #fff;box-shadow:var(--shadow-sm);}
 .fab{position:fixed;right:36rpx;bottom:120rpx;width:120rpx;height:120rpx;border-radius:50%;background:linear-gradient(135deg,#FF8A9C,#E14E68);border:4rpx solid #fff;box-shadow:0 14rpx 32rpx rgba(232,106,122,.45),inset 0 2rpx 0 rgba(255,255,255,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fabPulse 2.4s infinite;z-index:60;}

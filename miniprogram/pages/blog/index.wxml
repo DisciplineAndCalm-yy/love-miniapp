@@ -1,4 +1,10 @@
-<view class="page blog-page">
+<view class="page blog-page" style="background: {{themeBg}};">
+  <view class="sk-overlay" wx:if="{{!loaded}}" style="background: {{themeBg}};">
+    <view class="sk-hero sk-shimmer" style="height:240rpx;"></view>
+    <view class="sk-card sk-shimmer" style="height:240rpx;"></view>
+    <view class="sk-card sk-shimmer" style="height:240rpx;"></view>
+    <view class="sk-tip">正在打开两个人的长信…</view>
+  </view>
   <view class="hero blog-hero">
     <image class="blog-art" src="/assets/deco/blog.svg" mode="aspectFit" />
     <view>
@@ -31,6 +37,7 @@
       <view class="muted post-meta">✎ {{item.authorName}} · {{item.timeText}}</view>
     </view>
     <view class="excerpt">{{item.excerpt}}</view>
+    <view class="post-place" wx:if="{{item.place}}">📍 {{item.place}}</view>
     <view class="thumb-row" wx:if="{{item.coverPhotos.length}}">
       <image
         wx:for="{{item.coverPhotos}}"

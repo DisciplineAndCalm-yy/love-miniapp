@@ -1,4 +1,6 @@
+<import src="/templates/loading.wxml" />
 <view class="period-page">
+  <template is="cute-loading" data="{{show: loading, text: '正在读取日历…'}}" />
   <view class="fx-layer" wx:if="{{particles.length}}">
     <text class="fx-blossom" wx:for="{{particles}}" wx:key="id" style="left:{{item.x}}%;font-size:{{item.s}}rpx;animation-duration:{{item.d}}s;animation-delay:{{item.delay}}s">{{item.t}}</text>
   </view>

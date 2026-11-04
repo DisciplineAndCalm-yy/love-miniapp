@@ -1,4 +1,6 @@
+<import src="/templates/loading.wxml" />
 <view class="page pet-page">
+  <template is="cute-loading" data="{{show: loading, text: '小家伙马上就出来啦…'}}" />
   <!-- 领养前 -->
   <block wx:if="{{!pet}}">
     <view class="adopt-hero">

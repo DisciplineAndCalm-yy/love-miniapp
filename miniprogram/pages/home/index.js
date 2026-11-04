@@ -3,6 +3,8 @@ const { callApi, shareCard } = require('../../utils/cloud')
 const interact = require('../../utils/interact')
 const { MOOD_MAP } = require('../../utils/mood')
 const { dailyPraise } = require('../../utils/praise')
+const { themeById, pendantById } = require('../../utils/theme')
+const cache = require('../../utils/cache')
 
 const COND_EMOJI = { sunny: '☀️', cloudy: '☁️', rain: '🌧️', snow: '❄️', thunder: '⛈️', fog: '🌫️', general: '🌤️' }
 
@@ -37,17 +39,34 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.load().finally(() => wx.stopPullDownRefresh())
+    this.load(true).finally(() => wx.stopPullDownRefresh())
   },
 
-  async load() {
+  async load(force) {
+    // 短时间内重复进入(切 tab 返回)直接复用上次结果，减少云端请求
+    if (!force && this._lastLoadAt && Date.now() - this._lastLoadAt < 15000) return
+    // 先秒开本地缓存，再后台刷新（stale-while-revalidate）
+    if (!force) {
+      const c = cache.get('home')
+      if (c && c.data) this.setData(Object.assign({ ready: true }, c.data))
+    }
     const app = getApp()
     await app.whenReady()
-    await app.refreshCouple()
-    const couple = app.globalData.couple
+    let couple = app.globalData.couple
+    if (!couple && !app.globalData._coupleFetched) {
+      await app.refreshCouple()
+      couple = app.globalData.couple
+    }
     const openid = app.globalData.openid
     const user = app.globalData.user || {}
     const partner = app.globalData.partner
+
+    const theme = app.globalData.theme || 'sakura'
+    const pendant = app.globalData.pendant || ''
+    const palette = (themeById(theme) || {}).palette || {}
+    this.setData({ theme, themeBg: palette.bg || '#FFF1F4', themeAccent: palette.accent || '#E14E68', pendantEmoji: pendantById(pendant).emoji })
+    app.applyTheme(theme)
+    this._lastLoadAt = Date.now()
 
     if (!couple) {
       this.setData({ ready: true, paired: false })
@@ -58,49 +77,35 @@ Page({
     const since = normDateKey(couple.togetherSince)
     const rawDays = since ? daysBetween(since, today) + 1 : 0
     const days = Number.isFinite(rawDays) ? Math.max(since ? 1 : 0, rawDays) : 0
-    // 签到与纪念日统一走云函数读库,不再直连数据库(部分机型直连读不到对方数据)
-    let checkinList = []
-    try {
-      const res = await callApi('todayCheckins', { dateKey: today }, { silent: true })
-      checkinList = res.list || []
-    } catch (err) {
-      console.warn('todayCheckins failed', err)
-    }
+
+    // 并行拉取各卡片数据，避免串行等待，显著缩短首屏时间
+    const [checkinRes, streakRes, weatherRes, anniRes, interactRes, remindRes, intimacyRes] = await Promise.all([
+      callApi('todayCheckins', { dateKey: today }, { silent: true }).catch(() => ({})),
+      callApi('getStreaks', {}, { silent: true }).catch(() => ({})),
+      callApi('getWeather', {}, { silent: true }).catch(() => ({})),
+      callApi('listAnnis', {}, { silent: true }).catch(() => ({})),
+      interact.summary().catch(() => ({})),
+      callApi('reminderSummary', {}, { silent: true }).catch(() => ({})),
+      callApi('intimacyOverview', {}, { silent: true }).catch(() => ({}))
+    ])
+
+    const checkinList = (checkinRes && checkinRes.list) || []
     const myCheckin = checkinList.find((item) => item.isMine) || null
     const partnerCheckin = checkinList.find((item) => !item.isMine) || null
 
-    let streaks = { mine: 0, partner: 0, together: 0 }
-    try {
-      const stats = await callApi('getStreaks', {}, { silent: true })
-      streaks = stats.streaks
-    } catch (err) {
-      console.warn(err)
-    }
+    const streaks = (streakRes && streakRes.streaks) || { mine: 0, partner: 0, together: 0 }
 
-    // 今日天气 + 夸夸(没设城市/取不到就静默降级,不影响首页其它内容)
     let weather = null
     let weatherEmoji = '🌤️'
-    let praise = ''
-    try {
-      const w = await callApi('getWeather', {}, { silent: true })
-      if (w && w.weather && w.weather.now) {
-        weather = w.weather
-        const cond = weather.now.cond || 'general'
-        weatherEmoji = COND_EMOJI[cond] || '🌤️'
-        praise = dailyPraise(today, cond)
-      }
-    } catch (err) {
-      // 没有城市:仍然给一句夸夸,天气卡显示引导
-      praise = dailyPraise(today, 'general')
+    let praise = dailyPraise(today, 'general')
+    if (weatherRes && weatherRes.weather && weatherRes.weather.now) {
+      weather = weatherRes.weather
+      const cond = weather.now.cond || 'general'
+      weatherEmoji = COND_EMOJI[cond] || '🌤️'
+      praise = dailyPraise(today, cond)
     }
 
-    let anniList = []
-    try {
-      const anniRes = await callApi('listAnnis', {}, { silent: true })
-      anniList = anniRes.list || []
-    } catch (err) {
-      console.warn('listAnnis failed', err)
-    }
+    const anniList = (anniRes && anniRes.list) || []
     const upcoming = anniList
       .map((item) => {
         const date = normDateKey(item.date)
@@ -114,23 +119,12 @@ Page({
       .filter(Boolean)
       .sort((a, b) => a.left - b.left)[0] || null
 
-    let unreadNotice = this.data.unreadNotice || 0
-    try {
-      const s = await interact.summary()
-      unreadNotice = s.total || 0
-    } catch (err) {}
-
-    let reminders = this.data.reminders || { dueTodos: 0, capsuleReady: 0 }
-    try {
-      const rm = await callApi('reminderSummary', {}, { silent: true })
-      reminders = { dueTodos: rm.dueTodos || 0, capsuleReady: rm.capsuleReady || 0 }
-    } catch (err) {}
-
-    let intimacyLevel = this.data.intimacyLevel
-    try {
-      const iv = await callApi('intimacyOverview', {}, { silent: true })
-      intimacyLevel = iv.level || null
-    } catch (err) {}
+    const unreadNotice = (interactRes && interactRes.total) || 0
+    const reminders = {
+      dueTodos: (remindRes && remindRes.dueTodos) || 0,
+      capsuleReady: (remindRes && remindRes.capsuleReady) || 0
+    }
+    const intimacyLevel = (intimacyRes && intimacyRes.level) || this.data.intimacyLevel
 
     this.setData({
       ready: true,
@@ -149,6 +143,11 @@ Page({
       unreadNotice,
       reminders,
       intimacyLevel
+    })
+    cache.set('home', {
+      days, togetherSince: since, myCheckin, partnerCheckin,
+      myName: user.nickName || '我', partnerName: (partner && partner.nickName) || 'TA',
+      nextDay: upcoming, streaks, weather, weatherEmoji, praise, unreadNotice, reminders, intimacyLevel
     })
   },
 
@@ -175,6 +174,18 @@ Page({
   },
   goMonopoly() {
     wx.navigateTo({ url: '/pkgFun/pages/monopoly/index' })
+  },
+
+  goGame24() {
+    wx.navigateTo({ url: '/pkgFun/pages/game24/index' })
+  },
+
+  goFortune() {
+    wx.navigateTo({ url: '/pkgFun/pages/fortune/index' })
+  },
+
+  goDrawGuess() {
+    wx.navigateTo({ url: '/pkgFun/pages/drawguess/index' })
   },
 
   goCheckin() {
