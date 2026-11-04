@@ -12,7 +12,7 @@
   </view>
   <view class="chat-head">
     <view class="chat-tip">🔒 只属于两个人的悄悄话 · 长按自己消息可撤回</view>
-    <view class="chat-notify" wx:if="{{!chatNotifyOn}}" bindtap="enableChatNotify">🔔 开启微信消息提醒（消息来了不会错过）</view>
+    <view class="chat-notify" wx:if="{{chatQuota < 5}}" bindtap="enableChatNotify">🔔 悄悄话提醒剩余 {{chatQuota}} 次（建议补充到 5 次以上）· 点此订阅</view>
     <view class="quick-bar" wx:if="{{showQuick}}">
       <scroll-view scroll-x class="quick-scroll" enhanced="{{true}}" show-scrollbar="{{false}}">
         <text class="quick" wx:for="{{quicks}}" wx:key="*this" bindtap="sendQuick" data-text="{{item}}">{{item}}</text>

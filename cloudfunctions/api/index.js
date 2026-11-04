@@ -452,6 +452,14 @@ async function pushChat(recipientOpenid, opts) {
     const cfg = require('./config')
     const tmplId = cfg.chatTmplId
     if (!tmplId) return
+    // 一次性订阅额度估算：没额度就不发，避免无谓失败
+    let quota = null
+    try {
+      const rq = await db.collection('users').where({ _openid: recipientOpenid }).limit(1).get()
+      const ru = rq.data && rq.data[0]
+      quota = ru ? (Number(ru.chatQuota) || 0) : 0
+    } catch (e) {}
+    if (!quota || quota <= 0) return
     const f = cfg.chatFields || { title: 'thing1', count: 'thing2', from: 'thing3', note: 'thing5', time: 'time6' }
     const now = new Date()
     const p = (n) => String(n).padStart(2, '0')
@@ -471,6 +479,7 @@ async function pushChat(recipientOpenid, opts) {
       lang: 'zh_CN',
       data
     })
+    await bumpChatQuota(recipientOpenid, -1)
   } catch (e) {
     console.warn('pushChat failed', e && (e.errCode || e.errMsg || e.message))
   }
@@ -505,6 +514,30 @@ async function bumpNoticeQuota(openid, delta) {
     if (!u) return null
     const q = Math.max(0, (Number(u.noticeQuota) || 0) + delta)
     await db.collection('users').doc(u._id).update({ data: { noticeQuota: q, noticePush: q > 0 } })
+    return q
+  } catch (e) { return null }
+}
+
+async function bumpChatQuota(openid, delta) {
+  if (!openid) return null
+  try {
+    const r = await db.collection('users').where({ _openid: openid }).limit(1).get()
+    const u = r.data && r.data[0]
+    if (!u) return null
+    const q = Math.max(0, (Number(u.chatQuota) || 0) + delta)
+    await db.collection('users').doc(u._id).update({ data: { chatQuota: q } })
+    return q
+  } catch (e) { return null }
+}
+
+async function bumpAnnivQuota(openid, delta) {
+  if (!openid) return null
+  try {
+    const r = await db.collection('users').where({ _openid: openid }).limit(1).get()
+    const u = r.data && r.data[0]
+    if (!u) return null
+    const q = Math.max(0, (Number(u.annivQuota) || 0) + delta)
+    await db.collection('users').doc(u._id).update({ data: { annivQuota: q } })
     return q
   } catch (e) { return null }
 }
@@ -1694,13 +1727,11 @@ exports.main = async (event) => {
     }
 
     if (action === 'enableRemind') {
-      await db.collection('users').doc(user._id).update({
-        data: {
-          remindEnabled: !!event.enabled,
-          remindUpdatedAt: Date.now()
-        }
-      })
-      return { ok: true, remindEnabled: !!event.enabled }
+      const enabled = !!event.enabled
+      const patch = { remindEnabled: enabled, remindUpdatedAt: Date.now() }
+      if (enabled) patch.annivQuota = (Number(user.annivQuota) || 0) + 1
+      await db.collection('users').doc(user._id).update({ data: patch })
+      return { ok: true, remindEnabled: enabled, annivQuota: patch.annivQuota != null ? patch.annivQuota : (Number(user.annivQuota) || 0) }
     }
 
     if (action === 'saveLocation') {
@@ -2301,6 +2332,28 @@ exports.main = async (event) => {
         quota = (r.data && typeof r.data.noticeQuota === 'number') ? r.data.noticeQuota : null
       } catch (e) {}
       return { ok: true, noticePush: enabled, noticeQuota: quota }
+    }
+
+    // 记录一次「悄悄话订阅」额度（每允许一次 +1，可重复累积）
+    if (action === 'subChat') {
+      const q = await bumpChatQuota(OPENID, 1)
+      return { ok: true, chatQuota: q }
+    }
+
+    // 查询各类订阅额度/开关，供前端展示「还剩 N 次」
+    if (action === 'getQuota') {
+      return {
+        ok: true,
+        chatQuota: Number(user.chatQuota) || 0,
+        noticeQuota: (typeof user.noticeQuota === 'number') ? user.noticeQuota : 0,
+        annivQuota: Number(user.annivQuota) || 0,
+        remindEnabled: !!user.remindEnabled
+      }
+    }
+
+    if (action === 'subAnniversary') {
+      const q = await bumpAnnivQuota(OPENID, 1)
+      return { ok: true, annivQuota: q }
     }
 
     // ===== 相册:聚合签到/动态/文章里的照片,按时间倒序分页 =====

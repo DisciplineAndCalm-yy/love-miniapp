@@ -8,6 +8,7 @@ Page({
     sending: false,
     showQuick: true,
     chatNotifyOn: false,
+    chatQuota: 0,
     quicks: ['早安 ♡', '想你了', '在干嘛呀？', '抱抱', '晚安，好梦', '吃饭了吗？', '路上小心', '爱你 ❤️'],
     emojiPanel: false,
     emojis: ['❤️', '😘', '🥺', '😂', '👀', '🫂', '🌙', '☀️', '🍓', '🐱', '🐶', '💤'],
@@ -43,19 +44,36 @@ Page({
     let on = false
     try { on = !!wx.getStorageSync('chatNotifyOn') } catch (e) {}
     this.setData({ chatNotifyOn: on })
+    this.loadQuota()
+  },
+  async loadQuota() {
+    try {
+      const { callApi } = require('../../utils/cloud')
+      const q = await callApi('getQuota', {}, { silent: true })
+      this.setData({ chatQuota: q.chatQuota || 0 })
+    } catch (e) {}
   },
   enableChatNotify() {
     if (!chatTmplId) { wx.showToast({ title: '未配置模板', icon: 'none' }); return }
+    const { callApi } = require('../../utils/cloud')
     wx.requestSubscribeMessage({
       tmplIds: [chatTmplId],
-      success: (r) => {
+      success: async (r) => {
         if (r && r[chatTmplId] === 'accept') {
-          try { wx.setStorageSync('chatNotifyOn', true) } catch (e) {}
-          this.setData({ chatNotifyOn: true })
-          wx.showToast({ title: '已开启消息提醒 ♡', icon: 'none' })
+          try {
+            await callApi('subChat', {}, { silent: true })
+            const sub = await callApi('getQuota', {}, { silent: true })
+            try { wx.setStorageSync('chatNotifyOn', true) } catch (e) {}
+            this.setData({ chatNotifyOn: true, chatQuota: sub.chatQuota || 0 })
+            wx.showToast({ title: `悄悄话剩余 ${sub.chatQuota || 0} 次提醒`, icon: 'none' })
+          } catch (e) {
+            wx.showToast({ title: '授权成功，但额度记录失败', icon: 'none' })
+          }
+        } else {
+          wx.showToast({ title: '未开启悄悄话提醒', icon: 'none' })
         }
       },
-      fail: () => {}
+      fail: (err) => wx.showToast({ title: (err && err.errMsg || '订阅失败').slice(0, 30), icon: 'none' })
     })
   },
   onHide() { this.stopRealtime(); this.stopPoll(); this.stopAudio(); if (this.data.keyboardHeight) this.setData({ keyboardHeight: 0 }) },

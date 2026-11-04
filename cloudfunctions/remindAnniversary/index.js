@@ -75,7 +75,9 @@ exports.main = async () => {
         usersByOpenid[openid] = data[0] || null
       }
       const user = usersByOpenid[openid]
-      if (!user || !user.remindEnabled) continue
+      if (!user) continue
+      const annivAllowed = (typeof user.annivQuota === 'number') ? user.annivQuota > 0 : !!user.remindEnabled
+      if (!annivAllowed) continue
 
       const baseData = (lunarVal) => ({
         [tmpl.fieldTitle]: { value: clip(item.title, 20) || '纪念日' },
@@ -93,6 +95,11 @@ exports.main = async () => {
           await cloud.openapi.subscribeMessage.send({ touser: openid, templateId: tmpl.templateId, page: 'pages/anniversary/index', miniprogramState: 'trial', lang: 'zh_CN', data: baseData(next) })
         }
         sent.push({ openid, title: item.title, next })
+        if (typeof user.annivQuota === 'number') {
+          user.annivQuota = Math.max(0, user.annivQuota - 1)
+          await db.collection('users').doc(user._id).update({ data: { annivQuota: user.annivQuota, remindEnabled: user.annivQuota > 0 } })
+          user.remindEnabled = user.annivQuota > 0
+        }
       } catch (err) {
         console.error('send fail', openid, err)
         if (user._id && String(err.errCode) === '43101') {
@@ -126,7 +133,9 @@ exports.main = async () => {
           } catch (e) { usersByOpenid[openid] = null }
         }
         const user = usersByOpenid[openid]
-        if (!user || !user.remindEnabled) continue
+        if (!user) continue
+        const allowed = (typeof user.annivQuota === 'number') ? user.annivQuota > 0 : !!user.remindEnabled
+        if (!allowed) continue
         try {
           await cloud.openapi.subscribeMessage.send({
             touser: openid,
@@ -141,6 +150,11 @@ exports.main = async () => {
             }
           })
           reminderSent += 1
+          if (typeof user.annivQuota === 'number') {
+            user.annivQuota = Math.max(0, user.annivQuota - 1)
+            try { await db.collection('users').doc(user._id).update({ data: { annivQuota: user.annivQuota, remindEnabled: user.annivQuota > 0 } }) } catch (e) {}
+            user.remindEnabled = user.annivQuota > 0
+          }
         } catch (err) {
           console.error('reminder send fail', openid, err)
           if (user._id && String(err.errCode) === '43101') {

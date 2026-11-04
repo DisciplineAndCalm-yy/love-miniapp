@@ -1,10 +1,12 @@
 const { todayKey, daysBetween, nextOccurrence, leftText, normDateKey } = require('../../utils/date')
-const { callApi } = require('../../utils/cloud')
+const { callApi, requestAnniversaryRemind } = require('../../utils/cloud')
 
 Page({
   data: {
     list: [],
-    paired: false
+    paired: false,
+    annivQuota: 0,
+    remindEnabled: false
   },
 
   onShow() {
@@ -50,6 +52,24 @@ Page({
       return a.next > b.next ? 1 : -1
     })
     this.setData({ list, paired: true })
+    this.loadQuota()
+  },
+
+  async loadQuota() {
+    try {
+      const q = await callApi('getQuota', {}, { silent: true })
+      this.setData({ annivQuota: q.annivQuota || 0, remindEnabled: !!q.remindEnabled })
+    } catch (e) {}
+  },
+
+  async enableAnniv() {
+    try {
+      const ok = await requestAnniversaryRemind()
+      if (ok) {
+        wx.showToast({ title: '已订阅纪念日提醒 ♡', icon: 'none' })
+        this.loadQuota()
+      }
+    } catch (e) {}
   },
 
   add() {
