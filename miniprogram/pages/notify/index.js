@@ -40,7 +40,7 @@ Page({
           timeText: f.createdAt ? relativeTime(f.createdAt) : '今天'
         }
       })
-      this.setData({ feed, unread: res.unread || 0, noticeQuota: (typeof res.noticeQuota === 'number' ? res.noticeQuota : null), loading: false })
+      this.setData({ feed, unread: res.unread || 0, noticeQuota: (typeof res.noticeQuota === 'number' ? res.noticeQuota : 0), loading: false })
     } catch (e) {
       this.setData({ loading: false })
     }

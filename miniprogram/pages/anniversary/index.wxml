@@ -15,8 +15,8 @@
     <text class="anni-hero-float">🎀</text>
   </view>
   <button class="btn-primary add-btn" bindtap="add">🎈 设计一个纪念日</button>
-  <view class="anni-sub-banner" wx:if="{{paired && annivQuota < 1}}" bindtap="enableAnniv">
-    🔔 还没订阅纪念日提醒，点此订阅（到期前提醒你们）
+  <view class="anni-sub-banner" wx:if="{{paired}}" bindtap="enableAnniv">
+    🔔 纪念日提醒剩余 {{annivQuota}} 次{{annivQuota < 1 ? ' · 点此订阅' : ' · 再订阅可累积次数'}}
   </view>
   <view class="card empty-card" wx:if="{{!list.length}}">
     <image class="empty-art" src="/assets/deco/anniversary.svg" mode="aspectFit" />

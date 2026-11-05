@@ -17,9 +17,9 @@
     <view wx:else class="push-off">未配置模板 ID，当前仅站内提醒</view>
 
     <block wx:if="{{canPush}}">
-      <view class="quota-warn" wx:if="{{noticeQuota === 0}}">⚠️ 提醒额度已用完，点上方「再订阅」才能继续收</view>
-      <view class="quota-ok" wx:elif="{{noticeQuota !== null && noticeQuota > 0}}">✓ 还剩 {{noticeQuota}} 次提醒额度</view>
-      <view class="push-tip">体验版也能收到；微信一次性订阅，订阅一次可收 1 条 ♡</view>
+      <view class="quota-warn" wx:if="{{noticeQuota < 1}}">⚠️ 留言互动提醒剩余 0 次，点上方「再订阅」补充额度</view>
+      <view class="quota-ok" wx:else>✓ 留言互动提醒还剩 {{noticeQuota}} 次额度</view>
+      <view class="push-tip">体验版也能收到；微信一次性订阅，每次订阅可增加 1 次提醒额度 ♡</view>
     </block>
   </view>
 

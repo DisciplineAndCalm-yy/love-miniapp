@@ -36,8 +36,23 @@
       <view class="p-foot">在一起的第 {{days}} 天，也想一直和你走下去 ♡</view>
     </view>
 
-    <button class="btn-primary report-save" bindtap="savePoster">保存 / 截屏收藏</button>
-    <view class="report-mood" hover-class="report-mood-hover" bindtap="goMoodBoard">📈 心情曲线 &amp; 热力图</view>
+    <button class="report-save" bindtap="savePoster">
+      <text class="rs-heart rs-heart-a">💗</text>
+      <text class="rs-heart rs-heart-b">✨</text>
+      <text class="rs-ico">📸</text>
+      <text class="rs-txt">保存 / 截屏收藏</text>
+      <text class="rs-heart rs-heart-c">💖</text>
+    </button>
+    <view class="report-mood" hover-class="report-mood-hover" bindtap="goMoodBoard">
+      <text class="rm-spark rm-spark-a">✨</text>
+      <text class="rm-spark rm-spark-b">💕</text>
+      <view class="rm-ico">📈</view>
+      <view class="rm-body">
+        <view class="rm-title">心情曲线 & 热力图</view>
+        <view class="rm-sub">看看我们最近的情绪起伏 ♡</view>
+      </view>
+      <view class="rm-arrow">›</view>
+    </view>
     <view class="report-hint">点右上角「···」可分享给 TA ♡</view>
   </block>
 

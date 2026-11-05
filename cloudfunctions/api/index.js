@@ -431,6 +431,10 @@ async function pushSubscribe(ownerOpenid, opts) {
     if (f.content) data[f.content] = { value: String(opts.content || '').slice(0, 20) }
     if (f.date) data[f.date] = { value: dateStr }
     if (f.time) data[f.time] = { value: clockStr }
+    const quotaRes = await db.collection('users').where({ _openid: ownerOpenid }).limit(1).get()
+    const quotaUser = quotaRes.data && quotaRes.data[0]
+    // 额度已明确为 0 时不发（未见额度字段的旧用户保持可发，兼容）
+    if (quotaUser && typeof quotaUser.noticeQuota === 'number' && quotaUser.noticeQuota <= 0) return
     await cloud.openapi.subscribeMessage.send({
       touser: ownerOpenid,
       templateId: tmplId,
@@ -1867,6 +1871,7 @@ exports.main = async (event) => {
       const mood = MOODS.includes(event.mood) ? event.mood : 'love'
       const content = String(event.content || '').trim().slice(0, 120)
       const photo = String(event.photo || '')
+      const place = String(event.place || '').trim().slice(0, 40)
       const dateKey = todayKey()
       const { data: exists } = await db.collection('checkins').where({
         coupleId: couple._id,
@@ -1885,6 +1890,7 @@ exports.main = async (event) => {
           mood,
           content,
           photo,
+          place,
           createdAt: Date.now()
         }
       })
@@ -2323,6 +2329,7 @@ exports.main = async (event) => {
       const enabled = !!event.enabled
       if (enabled) {
         await bumpNoticeQuota(OPENID, 1)
+        try { await db.collection('users').doc(user._id).update({ data: { noticePush: true } }) } catch (e) {}
       } else {
         try { await db.collection('users').doc(user._id).update({ data: { noticePush: false } }) } catch (e) {}
       }
@@ -2841,6 +2848,7 @@ exports.main = async (event) => {
           moodLabel: moodLabelOf(item.mood),
           content: item.content || '',
           photo: item.photo || '',
+          place: item.place || '',
           createdAt: item.createdAt || 0,
           authorName: m.nickName || 'TA',
           authorAvatar: m.avatarUrl || ''

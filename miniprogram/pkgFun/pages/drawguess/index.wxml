@@ -13,7 +13,7 @@
 
   <view class="dg-stage">
     <canvas type="2d" id="dgCanvas" class="dg-canvas"
-      bindtouchstart="onTouchStart" bindtouchmove="onTouchMove" bindtouchend="onTouchEnd"></canvas>
+      catchtouchstart="onTouchStart" catchtouchmove="onTouchMove" catchtouchend="onTouchEnd"></canvas>
     <view wx:if="{{role === 'none'}}" class="dg-mask">选个词，开始画给 TA 猜 👇</view>
     <view wx:if="{{role === 'drawer'}}" class="dg-badge">你要画：<text class="dg-badge-word">{{answer}}</text></view>
     <view wx:if="{{role === 'guesser'}}" class="dg-badge guest">TA 正在画，你来猜 ♡</view>
