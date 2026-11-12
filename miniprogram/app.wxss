@@ -28,7 +28,7 @@ page {
 .page { padding: 28rpx 30rpx calc(70rpx + env(safe-area-inset-bottom)); min-height: 100vh; }
 
 /* 全局骨架屏 */
-.sk-overlay { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 99; padding: 28rpx 30rpx; box-sizing: border-box; display: flex; flex-direction: column; gap: 22rpx; }
+.sk-overlay { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 99; padding: 28rpx 30rpx; box-sizing: border-box; display: flex; flex-direction: column; gap: 22rpx; pointer-events: none; }
 .sk-hero { height: 300rpx; border-radius: 28rpx; }
 .sk-grid { display: flex; gap: 20rpx; }
 .sk-card { flex: 1; height: 150rpx; border-radius: 22rpx; }

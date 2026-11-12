@@ -29,12 +29,213 @@ Page({
     unreadNotice: 0,
     intimacyLevel: null,
     reminders: { dueTodos: 0, capsuleReady: 0 },
-    showMore: false
+    showMore: false,
+    entryGroups: [
+      {
+        key: 'daily', title: '日常陪伴', emoji: '♡', tint: 'rgba(255,143,176,.16)',
+        items: [
+          { label: '签到', icon: '🗓️', to: 'goCheckin' },
+          { label: '动态', icon: '📸', to: 'goMoments' },
+          { label: '相册', icon: '🖼️', to: 'goAlbum' },
+          { label: '悄悄话', icon: '💬', to: 'goChat' },
+          { label: '晚安', icon: '🌙', to: 'goNight' }
+        ]
+      },
+      {
+        key: 'memory', title: '回忆珍藏', emoji: '🎀', tint: 'rgba(255,196,120,.2)',
+        items: [
+          { label: '纪念日', icon: '🎈', to: 'goAnniversary' },
+          { label: '回忆册', icon: '📔', to: 'goMemories' },
+          { label: '时间胶囊', icon: '⏳', to: 'goCapsule' },
+          { label: '恋爱报告', icon: '📖', to: 'goReport' },
+          { label: '亲密度', icon: '💗', to: 'goIntimacy' },
+          { label: '空间', icon: '✏️', to: 'goBlog' }
+        ]
+      },
+      {
+        key: 'play', title: '一起玩', emoji: '🎮', tint: 'rgba(150,140,255,.16)',
+        items: [
+          { label: '扭蛋', icon: '🎰', to: 'goGame' },
+          { label: '真心话', icon: '🃏', to: 'goCards' },
+          { label: '你画我猜', icon: '🎨', to: 'goDrawGuess' },
+          { label: '默契', icon: '💞', to: 'goQuiz' },
+          { label: '大富翁', icon: '🎡', to: 'goMonopoly' },
+          { label: '24点', icon: '🧮', to: 'goGame24' },
+          { label: '抽签', icon: '🎋', to: 'goFortune' },
+          { label: '冒险', icon: '🗺️', to: 'goAdventure' },
+          { label: '宠物', icon: '🐾', to: 'goPet' },
+          { label: '心愿', icon: '🍾', to: 'goWish' }
+        ]
+      },
+      {
+        key: 'tools', title: '生活小工具', emoji: '🧰', tint: 'rgba(120,200,160,.18)',
+        items: [
+          { label: '小事', icon: '🏡', to: 'goLife' },
+          { label: '天气', icon: '🌤️', to: 'goWeather' },
+          { label: '生理期', icon: '🩸', to: 'goPeriod' },
+          { label: '吃点啥', icon: '🎲', to: 'goDice' },
+          { label: '设置', icon: '⚙️', to: 'goBind' }
+        ]
+      }
+    ],
+    editing: false,
+    hidden: {},
+    collapsed: {},
+    order: {},
+    viewGroups: [],
+    drag: { active: false }
+  },
+  loadEntryCfg() {
+    try {
+      const cfg = wx.getStorageSync('homeEntryCfg') || {}
+      this.setData(
+        { hidden: cfg.hidden || {}, collapsed: cfg.collapsed || {}, order: cfg.order || {} },
+        () => this.rebuildEntries()
+      )
+    } catch (e) { this.rebuildEntries() }
+  },
+  saveEntryCfg() {
+    try {
+      wx.setStorageSync('homeEntryCfg', {
+        hidden: this.data.hidden || {},
+        collapsed: this.data.collapsed || {},
+        order: this.data.order || {}
+      })
+    } catch (e) {}
+  },
+  rebuildEntries() {
+    const order = this.data.order || {}
+    const groups = (this.data.entryGroups || []).map((g) => {
+      let items = g.items.slice()
+      const ord = Array.isArray(order[g.key]) ? order[g.key] : []
+      if (ord.length) {
+        const baseIdx = {}
+        g.items.forEach((it, i) => { baseIdx[it.to] = i })
+        items = items.slice().sort((a, b) => {
+          let ia = ord.indexOf(a.to)
+          let ib = ord.indexOf(b.to)
+          if (ia === -1) ia = 9999 + (baseIdx[a.to] || 0)
+          if (ib === -1) ib = 9999 + (baseIdx[b.to] || 0)
+          return ia - ib
+        })
+      }
+      return { key: g.key, title: g.title, emoji: g.emoji, tint: g.tint, items }
+    })
+    this.setData({ viewGroups: groups })
+  },
+  toggleEdit() { this.setData({ editing: !this.data.editing }); this.saveEntryCfg() },
+  toggleHidden(e) {
+    const to = e.currentTarget.dataset.to
+    if (!to) return
+    const hidden = Object.assign({}, this.data.hidden)
+    hidden[to] = !hidden[to]
+    this.setData({ hidden })
+    this.saveEntryCfg()
+  },
+  toggleCollapse(e) {
+    if (this.data.editing) return
+    const key = e.currentTarget.dataset.key
+    if (!key) return
+    const collapsed = Object.assign({}, this.data.collapsed)
+    collapsed[key] = !collapsed[key]
+    this.setData({ collapsed })
+    this.saveEntryCfg()
+  },
+  resetEntries() {
+    this.setData({ hidden: {}, collapsed: {}, order: {} }, () => this.rebuildEntries())
+    this.saveEntryCfg()
+    wx.showToast({ title: '已恢复默认', icon: 'none' })
+  },
+  onEntryTap(e) {
+    if (this._justDragged) return
+    if (this.data.editing) { this.toggleHidden(e); return }
+    this.onEntry(e)
+  },
+
+  // ===== 编辑态长按拖动排序 =====
+  onDragStart(e) {
+    if (!this.data.editing) return
+    const ds = e.currentTarget.dataset
+    const to = ds.to
+    const group = ds.group
+    const g = (this.data.viewGroups || []).find((v) => v.key === group)
+    if (!g) return
+    const it = g.items.find((x) => x.to === to)
+    if (!it) return
+    const touch = (e.touches && e.touches[0]) || null
+    this._justDragged = true
+    this.setData({
+      drag: {
+        active: true, to, group,
+        x: touch ? touch.clientX - 40 : 0,
+        y: touch ? touch.clientY - 40 : 0,
+        icon: it.icon, label: it.label, tint: g.tint
+      }
+    })
+    wx.vibrateShort && wx.vibrateShort({ type: 'light' })
+    this.measureDrag(group)
+  },
+  measureDrag(group) {
+    wx.createSelectorQuery()
+      .select('#fg-' + group).boundingClientRect()
+      .selectAll('.fgi-' + group).boundingClientRect()
+      .exec((res) => {
+        const grid = res && res[0]
+        const rects = (res && res[1]) || []
+        if (!grid || !rects.length) { this._dragGeo = null; return }
+        let cellH = rects[0].height + 8
+        if (rects.length > 4) cellH = rects[4].top - rects[0].top
+        this._dragGeo = { left: grid.left, top: grid.top, cellW: grid.width / 4, cellH, count: rects.length }
+      })
+  },
+  onDragMove(e) {
+    const drag = this.data.drag
+    if (!drag || !drag.active) return
+    const touch = e.touches && e.touches[0]
+    if (!touch) return
+    this.setData({ 'drag.x': touch.clientX - 40, 'drag.y': touch.clientY - 40 })
+    const geo = this._dragGeo
+    if (!geo) return
+    let col = Math.floor((touch.clientX - geo.left) / geo.cellW)
+    let row = Math.floor((touch.clientY - geo.top) / geo.cellH)
+    col = Math.max(0, Math.min(3, col))
+    row = Math.max(0, row)
+    let slot = row * 4 + col
+    if (slot > geo.count - 1) slot = geo.count - 1
+    if (slot < 0) slot = 0
+    const dragTo = drag.to
+    const g = (this.data.viewGroups || []).find((v) => v.key === drag.group)
+    if (!g) return
+    const arr = g.items.map((it) => it.to)
+    const cur = arr.indexOf(dragTo)
+    if (cur < 0 || cur === slot) return
+    arr.splice(cur, 1)
+    arr.splice(slot, 0, dragTo)
+    const order = Object.assign({}, this.data.order)
+    order[drag.group] = arr
+    this.setData({ order }, () => this.rebuildEntries())
+  },
+  onDragEnd() {
+    const drag = this.data.drag
+    if (!drag || !drag.active) return
+    this.setData({ drag: { active: false } })
+    this._dragGeo = null
+    this.saveEntryCfg()
+    setTimeout(() => { this._justDragged = false }, 320)
   },
   hideDeco() { this.setData({ showDeco: false }) },
   hideMascot() { this.setData({ showMascot: false }) },
+  onEntry(e) {
+    const to = e.currentTarget.dataset.to
+    if (to && typeof this[to] === 'function') this[to]()
+  },
+
+  onLoad() {
+    this.rebuildEntries()
+  },
 
   onShow() {
+    this.loadEntryCfg()
     this.load()
   },
 

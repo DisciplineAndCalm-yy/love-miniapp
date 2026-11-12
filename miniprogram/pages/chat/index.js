@@ -298,20 +298,41 @@ Page({
       wx.showToast({ title: '语音发送失败', icon: 'none' })
     } finally { wx.hideLoading() }
   },
-  playVoice(e) {
-    const src = e.currentTarget.dataset.src
+  async playVoice(e) {
+    const raw = e.currentTarget.dataset.src
     const id = e.currentTarget.dataset.id
-    if (!src) return
+    if (!raw) { wx.showToast({ title: '语音加载失败，稍后再试', icon: 'none' }); return }
     this.stopAudio()
+    let src = raw
+    try {
+      if (String(src).startsWith('cloud://')) {
+        const r = await wx.cloud.getTempFileURL({ fileList: [src] })
+        const f = r && r.fileList && r.fileList[0]
+        if (f && f.tempFileURL) src = f.tempFileURL
+      }
+    } catch (err) {}
+    this.setData({ playingId: id })
     try {
       const audio = wx.createInnerAudioContext()
       this._audio = audio
+      audio.obeyMuteSwitch = false
+      audio.autoplay = false
       audio.src = src
-      this.setData({ playingId: id })
+      let started = false
+      const start = () => { if (started) return; started = true; try { audio.play() } catch (er) {} }
       audio.onEnded(() => this.setData({ playingId: '' }))
-      audio.onError(() => { this.setData({ playingId: '' }); wx.showToast({ title: '播放失败', icon: 'none' }) })
-      audio.play()
-    } catch (err) { this.setData({ playingId: '' }) }
+      audio.onCanplay(start)
+      audio.onError((err) => {
+        console.warn('[chat] voice play error', err)
+        this.setData({ playingId: '' })
+        wx.showToast({ title: '语音播放失败，稍后再试', icon: 'none' })
+      })
+      // 部分机型不触发 onCanplay，延迟兜底播放一次
+      setTimeout(start, 260)
+    } catch (err) {
+      this.setData({ playingId: '' })
+      wx.showToast({ title: '当前环境无法播放语音', icon: 'none' })
+    }
   },
   stopAudio() {
     if (this._audio) {

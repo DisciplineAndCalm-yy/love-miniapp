@@ -1,4 +1,13 @@
 <view class="page" style="background: {{themeBg}};">
+  <view class="petal-layer" wx:if="{{paired && viewMode === 'month'}}">
+    <text class="petal" style="left:4%;top:20%;animation-delay:-1s;">♥</text>
+    <text class="petal" style="right:5%;top:13%;animation-delay:-3s;font-size:20rpx;">♡</text>
+    <text class="petal" style="left:8%;top:56%;animation-delay:-2s;font-size:18rpx;">✦</text>
+    <text class="petal" style="right:7%;top:44%;animation-delay:-4s;">♥</text>
+    <text class="petal" style="left:5%;top:80%;animation-delay:-5s;font-size:20rpx;">♡</text>
+    <text class="petal" style="right:6%;top:72%;animation-delay:-6s;font-size:18rpx;">✦</text>
+  </view>
+
   <view class="cal-hero">
     <text class="cal-cloud c1">☁️</text>
     <text class="cal-cloud c2">☁️</text>
@@ -7,6 +16,12 @@
       <view class="nav-btn" bindtap="prevMonth">‹</view>
       <view class="cal-title">{{monthLabel}}</view>
       <view class="nav-btn" bindtap="nextMonth">›</view>
+    </view>
+    <view class="view-tabs">
+      <view class="vt {{viewMode === 'month' ? 'on' : ''}}" data-mode="month" bindtap="switchView">月</view>
+      <view class="vt {{viewMode === 'year' ? 'on' : ''}}" data-mode="year" bindtap="switchView">年</view>
+      <view class="vt {{viewMode === 'timeline' ? 'on' : ''}}" data-mode="timeline" bindtap="switchView">时间轴</view>
+      <view class="vt fest" bindtap="addFestival">＋节日</view>
     </view>
     <view class="cal-summary">
       <view class="sum-cell">
@@ -24,53 +39,225 @@
     </view>
   </view>
 
-  <view class="card">
-    <view class="week">
-      <text wx:for="{{weekdays}}" wx:key="*this">{{item}}</text>
+  <view class="remind-strip" wx:if="{{reminders.length}}">
+    <view class="remind-item" wx:for="{{reminders}}" wx:key="dateKey">
+      <text class="rm-ic">{{item.icon}}</text>
+      <text class="rm-date">{{item.dateKey}}</text>
+      <text class="rm-tx">{{item.text}}</text>
     </view>
-    <view class="grid">
-      <view
-        class="cell {{item.dateKey === selected ? 'sel' : ''}} {{item.dateKey === today ? 'today' : ''}}"
-        wx:for="{{cells}}"
-        wx:key="dateKey"
-        data-key="{{item.dateKey}}"
-        bindtap="selectDay"
-      >
-        <block wx:if="{{item}}">
-          <text class="day-num">{{item.day}}</text>
-          <view class="dots">
-            <view class="dot pink" wx:if="{{checkinMap[item.dateKey]}}"></view>
-            <view class="dot gold" wx:if="{{anniMap[item.dateKey]}}"></view>
-          </view>
-        </block>
-      </view>
-    </view>
-    <view class="legend"><text class="dot pink"></text> 签到　<text class="dot gold"></text> 纪念日　<span>📅 点日期看那天的故事</span></view>
   </view>
 
-  <view class="card">
-    <view class="day-head">
-      <view class="day-title">{{selected}}</view>
-      <view class="day-count muted" wx:if="{{dayCheckins.length}}">{{dayCheckins.length}} 条签到</view>
-    </view>
-    <view class="muted" wx:if="{{!paired}}">绑定后可看到共同的签到与纪念日。</view>
-    <view class="muted" wx:elif="{{!dayCheckins.length && !dayAnnis.length}}">这一天还很安静 🌙</view>
-    <view wx:for="{{dayAnnis}}" wx:key="_id" class="line anni-line">{{item.emoji || '♡'}} {{item.title}}</view>
-    <view wx:for="{{dayCheckins}}" wx:key="_id" class="checkin-item">
-      <view class="checkin-head">
-        <view class="mini-avatar">
-          <image wx:if="{{item.authorAvatarUrl || item.authorAvatar}}" src="{{item.authorAvatarUrl || item.authorAvatar}}" mode="aspectFill" data-id="{{item._id}}" binderror="avatarError" />
-          <text wx:else>{{item.initial}}</text>
-        </view>
-        <view class="checkin-meta">
-          <view class="ci-name">{{item.authorName || 'TA'}}<text wx:if="{{item.isMine}}" class="me-tag">我</text></view>
-          <view class="ci-mood">{{item.moodLabel}}</view>
+  <!-- ===== 月视图 ===== -->
+  <block wx:if="{{viewMode === 'month'}}">
+    <view class="card">
+      <view class="week">
+        <text wx:for="{{weekdays}}" wx:key="*this">{{item}}</text>
+      </view>
+      <view class="grid">
+        <view
+          class="cell {{item.dateKey === selected ? 'sel' : ''}} {{item.dateKey === today ? 'today' : ''}}"
+          wx:for="{{cells}}"
+          wx:key="dateKey"
+          data-key="{{item.dateKey}}"
+          bindtap="selectDay"
+          hover-class="cell-hover"
+          hover-stay-time="90"
+        >
+          <block wx:if="{{item}}">
+            <text class="day-num">{{item.day}}</text>
+            <view class="dots">
+              <view wx:if="{{layers.checkin && cellMeta[item.dateKey] && cellMeta[item.dateKey].mine}}" class="dot ck {{(cellMeta[item.dateKey] && cellMeta[item.dateKey].mood) ? 'mood-' + cellMeta[item.dateKey].mood : ''}}"></view>
+              <view wx:if="{{layers.checkin && cellMeta[item.dateKey] && cellMeta[item.dateKey].partner}}" class="dot partner"></view>
+              <view wx:if="{{layers.anno && cellMeta[item.dateKey] && cellMeta[item.dateKey].anno}}" class="dot gold"></view>
+              <view wx:if="{{layers.moment && cellMeta[item.dateKey] && cellMeta[item.dateKey].moment}}" class="dot green"></view>
+              <view wx:if="{{layers.night && cellMeta[item.dateKey] && cellMeta[item.dateKey].night}}" class="dot purple"></view>
+              <view wx:if="{{layers.todo && cellMeta[item.dateKey] && cellMeta[item.dateKey].todo}}" class="dot orange"></view>
+              <view wx:if="{{layers.capsule && cellMeta[item.dateKey] && cellMeta[item.dateKey].capsule}}" class="dot cyan"></view>
+            </view>
+            <view class="period-ring" wx:if="{{layers.period && cellMeta[item.dateKey] && cellMeta[item.dateKey].period}}"></view>
+          </block>
         </view>
       </view>
-      <view class="ci-content" wx:if="{{item.content}}">{{item.content}}</view>
-      <view class="ci-place" wx:if="{{item.place}}">📍 {{item.place}}</view>
-      <image wx:if="{{item.photoUrl || item.photo}}" class="ci-photo" src="{{item.photoUrl || item.photo}}" mode="aspectFill" data-url="{{item.photoUrl || item.photo}}" data-id="{{item._id}}" bindtap="previewPhoto" binderror="photoError" />
+      <view class="legend">
+        <view class="lg" bindtap="toggleLayer" data-key="checkin"><text class="dot pink {{layers.checkin ? '' : 'off'}}"></text>签到</view>
+        <view class="lg" bindtap="toggleLayer" data-key="anno"><text class="dot gold {{layers.anno ? '' : 'off'}}"></text>纪念日</view>
+        <view class="lg" bindtap="toggleLayer" data-key="moment"><text class="dot green {{layers.moment ? '' : 'off'}}"></text>动态</view>
+        <view class="lg" bindtap="toggleLayer" data-key="night"><text class="dot purple {{layers.night ? '' : 'off'}}"></text>晚安</view>
+        <view class="lg" bindtap="toggleLayer" data-key="todo"><text class="dot orange {{layers.todo ? '' : 'off'}}"></text>待办</view>
+        <view class="lg" bindtap="toggleLayer" data-key="capsule"><text class="dot cyan {{layers.capsule ? '' : 'off'}}"></text>胶囊</view>
+        <view class="lg" bindtap="toggleLayer" data-key="period"><text class="dot period {{layers.period ? '' : 'off'}}"></text>生理期</view>
+      </view>
+      <view class="legend-hint">点图例可开关图层 · 点日期看那天</view>
     </view>
-    <button class="btn-ghost" wx:if="{{!paired}}" style="margin-top: 24rpx;" bindtap="goBind">去绑定</button>
+
+    <view class="card">
+      <view class="day-head">
+        <view class="day-title">{{selected}}</view>
+        <view class="day-count muted" wx:if="{{dayCheckins.length}}">{{dayCheckins.length}} 条签到</view>
+      </view>
+      <view class="muted" wx:if="{{!paired}}">绑定后可看到共同的签到与纪念日。</view>
+      <view class="day-period" wx:if="{{dayIsPeriod}}">🌸 今天在她的生理期，记得多抱抱她</view>
+      <view class="muted" wx:elif="{{!dayCheckins.length && !dayAnnis.length && !dayMoments.length && !dayNights.length && !dayTodos.length && !dayCapsulesCount && !dayIsPeriod}}">这一天还很安静 🌙</view>
+
+      <view wx:for="{{dayAnnis}}" wx:key="_id" class="line anni-line">{{item.emoji || '♡'}} {{item.title}}</view>
+
+      <view wx:for="{{dayCheckins}}" wx:key="_id" class="checkin-item">
+        <view class="checkin-head">
+          <view class="mini-avatar">
+            <image wx:if="{{item.authorAvatarUrl || item.authorAvatar}}" src="{{item.authorAvatarUrl || item.authorAvatar}}" mode="aspectFill" data-id="{{item._id}}" binderror="avatarError" />
+            <text wx:else>{{item.initial}}</text>
+          </view>
+          <view class="checkin-meta">
+            <view class="ci-name">{{item.authorName || 'TA'}}<text wx:if="{{item.isMine}}" class="me-tag">我</text></view>
+            <view class="ci-mood">{{item.moodLabel}}</view>
+          </view>
+        </view>
+        <view class="ci-content" wx:if="{{item.content}}">{{item.content}}</view>
+        <view class="ci-place" wx:if="{{item.place}}">📍 {{item.place}}</view>
+        <image wx:if="{{item.photoUrl || item.photo}}" class="ci-photo" src="{{item.photoUrl || item.photo}}" mode="aspectFill" data-url="{{item.photoUrl || item.photo}}" data-id="{{item._id}}" bindtap="previewPhoto" binderror="photoError" />
+        <view class="ci-inter" data-id="{{item._id}}" catchtap="openCheckinDetail">
+          <text class="ci-i">❤️ {{item.likeCount || 0}}</text>
+          <text class="ci-i">💬 {{item.commentCount || 0}}</text>
+          <text class="ci-more">查看互动 ›</text>
+        </view>
+      </view>
+
+      <view class="day-sec" wx:if="{{dayMoments.length}}">
+        <view class="sec-title">📸 动态</view>
+        <view class="moment-row" wx:for="{{dayMoments}}" wx:key="_id">
+          <view class="mt-top"><text class="mt-doing">{{item.doing}}</text><text class="mt-by">{{item.byName}}</text></view>
+          <view class="mt-text" wx:if="{{item.content}}">{{item.content}}</view>
+          <view class="ci-place" wx:if="{{item.place}}">📍 {{item.place}}</view>
+          <view class="mt-photos" wx:if="{{item.photoUrls && item.photoUrls.length}}">
+            <image wx:for="{{item.photoUrls}}" wx:for-item="p" wx:key="*this" class="mt-photo" src="{{p}}" mode="aspectFill" data-url="{{p}}" bindtap="previewMomentPhoto" />
+          </view>
+        </view>
+      </view>
+
+      <view class="day-sec" wx:if="{{dayNights.length}}">
+        <view class="sec-title">🌙 晚安</view>
+        <view class="night-line" wx:for="{{dayNights}}" wx:key="name">{{item.name}}：{{item.word}}</view>
+      </view>
+
+      <view class="day-sec" wx:if="{{dayTodos.length}}">
+        <view class="sec-title">📝 待办到期</view>
+        <view class="todo-line {{item.done ? 'done' : ''}}" wx:for="{{dayTodos}}" wx:key="_id">{{item.done ? '✅' : '⏰'}} {{item.text}}</view>
+      </view>
+
+      <view class="day-sec" wx:if="{{dayCapsulesCount}}">
+        <view class="sec-title">📦 时间胶囊</view>
+        <view class="muted">这一天有 {{dayCapsulesCount}} 个时间胶囊可以拆啦</view>
+      </view>
+    </view>
+
+    <view class="card review">
+      <view class="review-title">本月小结 ♡</view>
+      <view class="review-sub">这个月，也想被好好收藏 ♡</view>
+      <view class="review-grid">
+        <view class="rv"><view class="rv-num">{{summary.checkinDays}}</view><view class="rv-lb">一起打卡</view></view>
+        <view class="rv"><view class="rv-num">{{summary.together}}</view><view class="rv-lb">同日签到</view></view>
+        <view class="rv"><view class="rv-num">{{summary.moments}}</view><view class="rv-lb">动态</view></view>
+        <view class="rv"><view class="rv-num">{{summary.nights}}</view><view class="rv-lb">晚安</view></view>
+      </view>
+      <view class="review-line" wx:if="{{summary.topMood}}">最常心情：{{summary.topMoodIcon}} {{summary.topMood}}</view>
+      <view class="review-places" wx:if="{{summary.places.length}}">
+        <text class="rp-title">足迹：</text>
+        <text class="rp-item" wx:for="{{summary.places}}" wx:key="*this">📍{{item}}</text>
+      </view>
+      <view class="review-btns">
+        <button class="act-btn act-primary" bindtap="generatePoster"><text class="act-ico">🖼️</text>生成日历长图</button>
+        <button class="act-btn act-secondary" open-type="share" bindtap="heartBurst"><text class="act-ico">💌</text>分享这个月</button>
+      </view>
+    </view>
+  </block>
+
+  <!-- ===== 年视图 ===== -->
+  <view class="card year-card" wx:elif="{{viewMode === 'year'}}">
+    <view class="year-hint">全年签到热力图 · 点月份进入</view>
+    <view class="year-month" wx:for="{{yearMonths}}" wx:key="month">
+      <view class="ym-label" data-month="{{item.month}}" bindtap="selectYearMonth">{{item.label}}</view>
+      <view class="ym-cells">
+        <view class="ym-cell lv{{c.level}}" wx:for="{{item.cells}}" wx:for-item="c" wx:key="dateKey" data-key="{{c.dateKey}}" bindtap="selectYearDay">{{c.day}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 时间轴视图 ===== -->
+  <view class="card" wx:else>
+    <view class="muted" wx:if="{{!timeline.length}}">这个月还很安静 🌙</view>
+    <view class="tl-day" wx:for="{{timeline}}" wx:key="dateKey">
+      <view class="tl-head"><text class="tl-date">{{item.dateKey}}</text><text class="tl-count">{{item.count}} 件事</text></view>
+      <view wx:for="{{item.annis}}" wx:key="_id" class="tl-item anni">{{item.emoji || '🎈'}} {{item.title}}</view>
+      <view wx:for="{{item.checkins}}" wx:for-item="c" wx:key="_id" class="tl-item ck">✅ {{c.authorName}} 签到：{{c.moodLabel}}{{c.content ? ' · ' + c.content : ''}}</view>
+      <view wx:for="{{item.moments}}" wx:for-item="mo" wx:key="_id" class="tl-item mo">📸 {{mo.doing}}{{mo.content ? ' · ' + mo.content : ''}}</view>
+      <view wx:for="{{item.night}}" wx:for-item="n" wx:key="name" class="tl-item ni">🌙 {{n.name}}：{{n.word}}</view>
+      <view wx:for="{{item.todos}}" wx:for-item="td" wx:key="_id" class="tl-item td {{td.done ? 'done' : ''}}">📝 {{td.text}}</view>
+      <view wx:if="{{item.capsule}}" class="tl-item cap">📦 有 {{item.capsule}} 个时间胶囊可拆</view>
+    </view>
+  </view>
+
+  <canvas type="2d" id="calCanvas" class="poster-canvas" style="width:750px;height:1200px;"></canvas>
+
+  <view class="burst-layer" wx:if="{{bursts.length}}">
+    <view class="burst" wx:for="{{bursts}}" wx:key="id" style="left:{{item.x}}px;top:{{item.y}}px;">
+      <text class="bp">♥</text>
+      <text class="bp">♡</text>
+      <text class="bp">♥</text>
+      <text class="bp">✦</text>
+      <text class="bp">♥</text>
+    </view>
+  </view>
+
+  <view class="ci-mask" wx:if="{{showDetail}}" bindtap="closeCheckinDetail">    <view class="ci-sheet" catchtap="noop">
+      <view class="ci-sheet-grip"></view>
+      <view class="ci-sheet-head">
+        <view class="mini-avatar">
+          <image wx:if="{{detail.authorAvatarUrl || detail.authorAvatar}}" src="{{detail.authorAvatarUrl || detail.authorAvatar}}" mode="aspectFill" />
+          <text wx:else>{{detail.initial}}</text>
+        </view>
+        <view class="ci-sheet-meta">
+          <view class="ci-name">{{detail.authorName || 'TA'}}<text wx:if="{{detail.isMine}}" class="me-tag">我</text></view>
+          <view class="ci-mood">{{detail.moodLabel}}</view>
+        </view>
+        <view class="ci-sheet-close" bindtap="closeCheckinDetail">×</view>
+      </view>
+
+      <scroll-view scroll-y class="ci-sheet-body">
+        <view class="ci-content" wx:if="{{detail.content}}">{{detail.content}}</view>
+        <view class="ci-place" wx:if="{{detail.place}}">📍 {{detail.place}}</view>
+        <image wx:if="{{detail.photoUrl || detail.photo}}" class="ci-photo" src="{{detail.photoUrl || detail.photo}}" mode="aspectFill" bindtap="previewDetailPhoto" />
+
+        <view class="ci-reactions">
+          <view class="ci-like {{detailLikedByMe ? 'on' : ''}}" bindtap="toggleDetailLike">{{detailLikedByMe ? '❤️' : '🤍'}} {{detailLikeCount}}</view>
+          <view wx:for="{{detailEmojis}}" wx:key="*this" class="ci-emoji" data-emoji="{{item}}" bindtap="toggleDetailReaction">{{item}}</view>
+        </view>
+        <view class="ci-rx-summary" wx:if="{{detailReactions.length}}">
+          <view class="ci-rx-chip {{item.mine ? 'on' : ''}}" wx:for="{{detailReactions}}" wx:key="emoji" data-emoji="{{item.emoji}}" bindtap="toggleDetailReaction">{{item.emoji}} {{item.count}}</view>
+        </view>
+
+        <view class="ci-cmts">
+          <view class="ci-cmt" wx:for="{{detailComments}}" wx:key="_id" data-id="{{item._id}}" data-name="{{item.byName}}" bindtap="onDetailReply">
+            <view class="ci-cmt-head">
+              <text class="ci-cmt-name">{{item.byName}}</text>
+              <text wx:if="{{item.replyToName}}" class="ci-cmt-reply">回复 @{{item.replyToName}}</text>
+              <text class="ci-cmt-time">{{item.timeText}}</text>
+              <text wx:if="{{item.isMine}}" class="ci-cmt-del" data-id="{{item._id}}" catchtap="removeDetailComment">删除</text>
+            </view>
+            <view class="ci-cmt-text">{{item.content}}</view>
+          </view>
+          <view class="ci-cmt-empty muted" wx:if="{{!detailComments.length}}">还没有评论，说点什么吧 ♡</view>
+        </view>
+      </scroll-view>
+
+      <view class="ci-reply-bar" wx:if="{{detailReplyTo.id}}">
+        <text class="ci-reply-txt">回复 @{{detailReplyTo.name}}</text>
+        <text class="ci-reply-cancel" bindtap="cancelDetailReply">取消</text>
+      </view>
+      <view class="ci-input-row">
+        <text class="ci-at" bindtap="onDetailAt">@TA</text>
+        <input class="ci-input" value="{{detailInput}}" bindinput="onDetailInput" placeholder="{{detailReplyTo.id ? ('回复 @' + detailReplyTo.name) : '给 TA 留句话…'}}" maxlength="200" confirm-type="send" bindconfirm="sendDetailComment" cursor-spacing="24" />
+        <button class="btn-primary ci-send" bindtap="sendDetailComment" loading="{{detailSending}}" disabled="{{detailSending}}">发送</button>
+      </view>
+    </view>
   </view>
 </view>

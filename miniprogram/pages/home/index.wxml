@@ -45,38 +45,51 @@
     <view class="rs-item gift" wx:if="{{reminders.capsuleReady}}" bindtap="goCapsule">💌 {{reminders.capsuleReady}} 个时间胶囊可拆啦</view>
   </view>
 
-  <!-- 功能宫格 -->
-  <view class="fn-grid" wx:if="{{paired}}">
-    <view class="fn-item" bindtap="goCheckin"><view class="fn-ico gi-checkin">🗓️</view><text class="fn-label">签到</text></view>
-    <view class="fn-item" bindtap="goMoments"><view class="fn-ico gi-moments">📸</view><text class="fn-label">动态</text></view>
-    <view class="fn-item" bindtap="goAlbum"><view class="fn-ico gi-album">🖼️</view><text class="fn-label">相册</text></view>
-    <view class="fn-item" bindtap="goIntimacy"><view class="fn-ico gi-intimacy">💗</view><text class="fn-label">亲密度</text></view>
-    <view class="fn-item" bindtap="goLife"><view class="fn-ico gi-life">🏡</view><text class="fn-label">小事</text></view>
-    <view class="fn-item" bindtap="goBlog"><view class="fn-ico gi-blog">✏️</view><text class="fn-label">空间</text></view>
-    <view class="fn-item" bindtap="goChat"><view class="fn-ico gi-chat">💬</view><text class="fn-label">悄悄话</text></view>
-    <view class="fn-item fn-more" bindtap="toggleMore"><view class="fn-ico">{{showMore ? '▲' : '⋯'}}</view><text class="fn-label">{{showMore ? '收起' : '更多'}}</text></view>
-  </view>
+  <!-- 功能分区 -->
+  <block wx:if="{{paired}}">
+    <view class="fn-edit-bar">
+      <text class="feb-title">快捷入口</text>
+      <text class="feb-hint" wx:if="{{editing}}">点图标可隐藏 / 显示</text>
+      <text class="feb-btn" bindtap="toggleEdit">{{editing ? '完成' : '编辑'}}</text>
+    </view>
 
-  <view class="fn-grid" wx:if="{{paired && showMore}}">
-    <view class="fn-item" bindtap="goReport"><view class="fn-ico">📖</view><text class="fn-label">报告</text></view>
-    <view class="fn-item" bindtap="goCapsule"><view class="fn-ico">⏳</view><text class="fn-label">胶囊</text></view>
-    <view class="fn-item" bindtap="goMemories"><view class="fn-ico">📔</view><text class="fn-label">回忆册</text></view>
-    <view class="fn-item" bindtap="goAnniversary"><view class="fn-ico">🎈</view><text class="fn-label">纪念日</text></view>
-    <view class="fn-item" bindtap="goPet"><view class="fn-ico">🐾</view><text class="fn-label">宠物</text></view>
-    <view class="fn-item" bindtap="goGame"><view class="fn-ico">🎰</view><text class="fn-label">扭蛋</text></view>
-    <view class="fn-item" bindtap="goWish"><view class="fn-ico">🍾</view><text class="fn-label">心愿</text></view>
-    <view class="fn-item" bindtap="goCards"><view class="fn-ico">🃏</view><text class="fn-label">真心话</text></view>
-    <view class="fn-item" bindtap="goNight"><view class="fn-ico">🌙</view><text class="fn-label">晚安</text></view>
-    <view class="fn-item" bindtap="goAdventure"><view class="fn-ico">🗺️</view><text class="fn-label">冒险</text></view>
-    <view class="fn-item" bindtap="goMonopoly"><view class="fn-ico">🎡</view><text class="fn-label">大富翁</text></view>
-    <view class="fn-item" bindtap="goGame24"><view class="fn-ico">🧮</view><text class="fn-label">24点</text></view>
-    <view class="fn-item" bindtap="goFortune"><view class="fn-ico">🎋</view><text class="fn-label">抽签</text></view>
-    <view class="fn-item" bindtap="goDrawGuess"><view class="fn-ico">🎨</view><text class="fn-label">你画我猜</text></view>
-    <view class="fn-item" bindtap="goQuiz"><view class="fn-ico">💞</view><text class="fn-label">默契</text></view>
-    <view class="fn-item" bindtap="goWeather"><view class="fn-ico">🌤️</view><text class="fn-label">天气</text></view>
-    <view class="fn-item" bindtap="goPeriod"><view class="fn-ico">🩸</view><text class="fn-label">生理期</text></view>
-    <view class="fn-item" bindtap="goDice"><view class="fn-ico">🎲</view><text class="fn-label">吃点啥</text></view>
-    <view class="fn-item" bindtap="goBind"><view class="fn-ico">⚙️</view><text class="fn-label">设置</text></view>
+    <view class="fn-group" wx:for="{{viewGroups}}" wx:key="key">
+      <view class="fn-group-head" data-key="{{item.key}}" bindtap="toggleCollapse">
+        <text class="fg-emoji">{{item.emoji}}</text>
+        <text class="fg-title">{{item.title}}</text>
+        <text class="fg-count">{{item.items.length}}</text>
+        <text class="fg-caret" wx:if="{{!editing}}">{{collapsed[item.key] ? '▸' : '▾'}}</text>
+      </view>
+      <view class="fn-grid" id="fg-{{item.key}}" wx:if="{{editing || !collapsed[item.key]}}">
+        <view
+          class="fn-item fgi-{{item.key}} {{hidden[it.to] ? 'off' : ''}} {{drag.active && drag.to === it.to ? 'dragging' : ''}}"
+          wx:for="{{item.items}}"
+          wx:for-item="it"
+          wx:if="{{editing || !hidden[it.to]}}"
+          wx:key="label"
+          data-to="{{it.to}}"
+          data-group="{{item.key}}"
+          bindtap="onEntryTap"
+          bindlongpress="onDragStart"
+          bindtouchmove="onDragMove"
+          bindtouchend="onDragEnd"
+          bindtouchcancel="onDragEnd"
+        >
+          <view class="fn-ico" style="background: {{item.tint}};">{{it.icon}}</view>
+          <text class="fn-label">{{it.label}}</text>
+          <view class="fn-mark" wx:if="{{editing}}">{{hidden[it.to] ? '＋' : '✓'}}</view>
+        </view>
+      </view>
+      <view class="fn-collapsed-tip" wx:if="{{!editing && collapsed[item.key]}}">已收起 · 点标题展开</view>
+    </view>
+
+    <view class="fn-edit-tip" wx:if="{{editing}}">长按图标可拖动排序 · 点击可隐藏/显示</view>
+    <view class="fn-reset" wx:if="{{editing}}" bindtap="resetEntries">恢复默认</view>
+  </block>
+
+  <view class="drag-ghost" wx:if="{{drag.active}}" style="left:{{drag.x}}px;top:{{drag.y}}px;">
+    <view class="fn-ico" style="background: {{drag.tint}};">{{drag.icon}}</view>
+    <text class="fn-label">{{drag.label}}</text>
   </view>
 
   <view class="card" wx:if="{{paired}}">

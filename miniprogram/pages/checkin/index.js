@@ -46,6 +46,7 @@ Page({
 
   onShow() {
     this.load()
+    if (this.data.partner && this.data.partner._id) this.loadTaInteractions(this.data.partner._id)
   },
 
   onPullDownRefresh() {
@@ -148,7 +149,11 @@ Page({
       wx.vibrateShort && wx.vibrateShort({ type: 'light' })
     } catch (e) {} finally { this.setData({ taLiking: false }) }
   },
-  toggleTaComments() { this.setData({ showTaComments: !this.data.showTaComments }) },
+  toggleTaComments() {
+    const show = !this.data.showTaComments
+    this.setData({ showTaComments: show })
+    if (show && this.data.partner && this.data.partner._id) this.loadTaInteractions(this.data.partner._id)
+  },
   async toggleTaReaction(e) {
     const p = this.data.partner
     const emoji = e.currentTarget.dataset.emoji

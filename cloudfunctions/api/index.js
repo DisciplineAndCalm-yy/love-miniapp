@@ -1703,8 +1703,9 @@ exports.main = async (event) => {
       let data = []
       try {
         const r = await db.collection('photoInteractions')
-          .where({ coupleId: couple._id, photoKey }).orderBy('createdAt', 'asc').limit(200).get()
+          .where({ coupleId: couple._id, photoKey }).limit(200).get()
         data = r.data || []
+        data.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
       } catch (e) {}
       const members = await loadMembers(couple.memberOpenids)
       const map = {}
@@ -1971,7 +1972,103 @@ exports.main = async (event) => {
           })
         }
       } catch (e) { console.warn('monthCheckins getTempFileURL failed', e) }
+      try { await attachInteractions(list, 'checkin', OPENID, user.itinRead) } catch (e) {}
       return { ok: true, list, members }
+    }
+
+    // ===== 日历扩展:动态/晚安/待办到期/时间胶囊/生理期预测 =====
+    if (action === 'calendarExtras') {
+      const couple = await requireCouple(user, OPENID)
+      const start = String(event.start || '').slice(0, 10)
+      const end = String(event.end || '').slice(0, 10)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) return fail('日期范围错误')
+      const startMs = new Date(`${start}T00:00:00+08:00`).getTime()
+      const endMs = new Date(`${end}T23:59:59+08:00`).getTime()
+      const keyOf = (ts) => new Date(ts).toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).slice(0, 10)
+
+      const members = await loadMembers(couple.memberOpenids)
+      const nmap = {}
+      members.forEach((m) => { nmap[m.openid] = m.nickName || 'TA' })
+
+      // 动态:按天聚合
+      let momentsRaw = []
+      try {
+        const r = await db.collection('moments').where({ coupleId: couple._id, createdAt: _.gte(startMs).and(_.lte(endMs)) }).limit(300).get()
+        momentsRaw = r.data || []
+      } catch (e) { momentsRaw = [] }
+      const momentsByDay = {}
+      momentsRaw.forEach((d) => {
+        const k = keyOf(d.createdAt || 0)
+        if (!k) return
+        if (!momentsByDay[k]) momentsByDay[k] = []
+        momentsByDay[k].push({
+          _id: d._id, doing: d.doing || '日常', content: d.content || '',
+          photos: Array.isArray(d.photos) ? d.photos : [], place: d.place || '',
+          createdAt: d.createdAt || 0, byName: nmap[d._openid] || 'TA'
+        })
+      })
+      // 动态图片换临时链接
+      try {
+        const allPhotos = []
+        Object.keys(momentsByDay).forEach((k) => (momentsByDay[k] || []).forEach((m) => (m.photos || []).forEach((p) => allPhotos.push(p))))
+        const uniq = [...new Set(allPhotos.filter((p) => p && String(p).startsWith('cloud://')))].slice(0, 100)
+        if (uniq.length) {
+          const { fileList } = await cloud.getTempFileURL({ fileList: uniq })
+          const urlMap = {}
+          ;(fileList || []).forEach((f) => { if (f.fileID && f.tempFileURL) urlMap[f.fileID] = f.tempFileURL })
+          Object.keys(momentsByDay).forEach((k) => (momentsByDay[k] || []).forEach((m) => { m.photoUrls = (m.photos || []).map((p) => urlMap[p] || p) }))
+        }
+      } catch (e) {}
+
+      // 晚安
+      let nights = []
+      try {
+        const r = await db.collection('nights').where({ coupleId: couple._id, dateKey: _.gte(start).and(_.lte(end)) }).limit(120).get()
+        nights = (r.data || []).map((d) => {
+          const words = Object.keys(d.words || {}).map((o) => ({ name: nmap[o] || 'TA', word: d.words[o] }))
+          return { dateKey: d.dateKey, words }
+        })
+      } catch (e) {}
+
+      // 待办到期
+      let todos = []
+      try {
+        const r = await db.collection('todos').where({ coupleId: couple._id, due: _.gte(start).and(_.lte(end)) }).limit(200).get()
+        todos = (r.data || []).map((d) => ({ _id: d._id, dateKey: d.due, text: d.text || '', done: !!d.done, assignee: d.assignee || 'both' }))
+      } catch (e) {}
+
+      // 时间胶囊可拆
+      let capsules = []
+      try {
+        const r = await db.collection('capsules').where({ coupleId: couple._id, unlockDate: _.gte(start).and(_.lte(end)) }).limit(100).get()
+        capsules = (r.data || []).map((d) => ({ _id: d._id, dateKey: d.unlockDate }))
+      } catch (e) {}
+
+      // 生理期预测(仅本人,且开启分享)
+      const periodDays = []
+      try {
+        const p = user.period
+        if (p && p.share !== false && p.lastStart) {
+          const cycle = Math.min(45, Math.max(20, Number(p.cycle) || 28))
+          const length = Math.min(10, Math.max(2, Number(p.period) || 5))
+          const last = p.lastStart
+          const gap = daysBetween(last, start)
+          let idx = Math.floor((Number.isFinite(gap) ? gap : 0) / cycle) - 1
+          if (idx < 0) idx = 0
+          let base = shiftDate(last, idx * cycle)
+          let guard = 0
+          while (base <= end && guard < 400) {
+            for (let i = 0; i < length; i += 1) {
+              const d = shiftDate(base, i)
+              if (d >= start && d <= end) periodDays.push(d)
+            }
+            base = shiftDate(base, cycle)
+            guard += 1
+          }
+        }
+      } catch (e) {}
+
+      return { ok: true, momentsByDay, nights, todos, capsules, periodDays, memberNames: nmap }
     }
 
     if (action === 'savePost') {
@@ -2209,9 +2306,11 @@ exports.main = async (event) => {
       try {
         const r = await db.collection('interactions')
           .where({ coupleId: couple._id, targetType, targetId })
-          .orderBy('createdAt', 'asc').limit(200).get()
+          .limit(200).get()
         data = r.data || []
       } catch (e) { data = [] }
+      // 不依赖 createdAt 复合索引,直接在内存排序,避免因缺索引导致评论/点赞查询整体失败
+      data.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
       const members = await loadMembers(couple.memberOpenids)
       const map = {}
       members.forEach((m) => { map[m.openid] = m })
